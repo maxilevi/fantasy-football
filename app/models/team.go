@@ -9,6 +9,7 @@ type Team struct {
 	Name string
 	Country string
 	Players []Player
+	Owner User
 }
 
 func (team *Team) MarketValue() int32 {
