@@ -3,10 +3,9 @@ package app
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/postgres"
 	"log"
 	"net/http"
 	"os"
@@ -42,7 +41,7 @@ func createApp(address string) (*App, error) {
 	}
 
 	migrations.Migrate()
-	
+
 	app := App{}
 	app.address = address
 	app.db = db
