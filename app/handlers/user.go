@@ -63,7 +63,7 @@ func validEmail(email string) bool {
 
 func emailExists(email string, repo repos.Repository) bool {
 	var user models.User
-	err := repo.GetUser(&models.User{Email: email}, &user)
+	err := repo.GetUser(email, &user)
 	return err == nil
 }
 
@@ -73,6 +73,6 @@ func registerUser(reg userRegistration, repo repos.Repository) error {
 		return err
 	}
 
-	repo.Create(reg.Email, hashedPassword, 0)
+	repo.CreateUser(reg.Email, hashedPassword, 0)
 	return nil
 }

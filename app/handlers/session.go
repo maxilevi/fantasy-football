@@ -44,7 +44,7 @@ func handlePostSession(w http.ResponseWriter, req *http.Request, repo repos.Repo
 
 func getUser(params sessionCreation, repo repos.Repository) (*models.User, error) {
 	var user models.User
-	err := repo.GetUser(&models.User{Email: params.Email}, &user)
+	err := repo.GetUser(params.Email, &user)
 	if err != nil {
 		return &user, err
 	}
