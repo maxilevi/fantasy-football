@@ -1,7 +1,9 @@
 package models
 
 import (
-"github.com/jinzhu/gorm"
+	"github.com/jinzhu/gorm"
+	"math/rand"
+	"github.com/Pallinder/go-randomdata"
 )
 
 type Player struct {
@@ -9,12 +11,21 @@ type Player struct {
 	FirstName string
 	LastName string
 	Country string
-	Age string
+	Age int
 	MarketValue int32
 }
 
 func RandomPlayer() Player {
 	return Player{
-
+		MarketValue: 1000000,
+		FirstName: randomdata.FirstName(randomdata.RandomGender),
+		LastName: randomdata.LastName(),
+		Age: randomAge(),
+		Country: randomdata.Country(randomdata.FullCountry),
 	}
+}
+
+
+func randomAge() int {
+	return rand.Intn(40 - 18) + 18
 }
