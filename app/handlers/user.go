@@ -12,7 +12,7 @@ import (
 )
 
 func AddUserRoutes(r *mux.Router, repo repos.Repository) {
-	r.HandleFunc("/users", wrap(handlePostUser, repo)).Methods( "POST")
+	r.HandleFunc("/user", wrap(handlePostUser, repo)).Methods( "POST")
 }
 
 type userRegistration struct {
