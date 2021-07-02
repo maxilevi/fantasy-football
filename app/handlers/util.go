@@ -1,17 +1,17 @@
 package handlers
 
 import (
-	"gorm.io/gorm"
 	"log"
 	"net/http"
+	"../repos"
 )
 
 type HandlerFunc func (w http.ResponseWriter, req *http.Request)
-type HandlerFuncWithDb func (w http.ResponseWriter, req *http.Request, db *gorm.DB)
+type HandlerFuncWithDb func (w http.ResponseWriter, req *http.Request, repo *repos.Repository)
 
-func wrap(f HandlerFuncWithDb, db *gorm.DB) HandlerFunc {
+func wrap(f HandlerFuncWithDb, repo *repos.Repository) HandlerFunc {
 	return func (w http.ResponseWriter, req *http.Request) {
-		f(w, req, db)
+		f(w, req, repo)
 	}
 }
 

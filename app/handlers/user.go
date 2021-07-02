@@ -9,10 +9,11 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
+	"../repos"
 )
 
-func AddUserRoutes(r *mux.Router, db *gorm.DB) {
-	r.HandleFunc("/users", wrap(handlePostUser, db)).Methods( "POST")
+func AddUserRoutes(r *mux.Router, repo *repos.Repository) {
+	r.HandleFunc("/users", wrap(handlePostUser, repo)).Methods( "POST")
 }
 
 type userRegistration struct {
@@ -20,7 +21,7 @@ type userRegistration struct {
 	Password string
 }
 
-func handlePostUser(w http.ResponseWriter, req *http.Request, db *gorm.DB) {
+func handlePostUser(w http.ResponseWriter, req *http.Request, repo *repos.Repository) {
 	decoder := json.NewDecoder(req.Body)
 	var t userRegistration
 	err := decoder.Decode(&t)
@@ -32,7 +33,7 @@ func handlePostUser(w http.ResponseWriter, req *http.Request, db *gorm.DB) {
 		writeError(w, http.StatusBadRequest, "Invalid email")
 		return
 	}
-	if emailExists(t.Email, db) {
+	if emailExists(t.Email, repo) {
 		writeError(w, http.StatusBadRequest, "Provided email is already registered")
 		return
 	}
@@ -43,7 +44,7 @@ func handlePostUser(w http.ResponseWriter, req *http.Request, db *gorm.DB) {
 
 	log.Println("Registering a new user...")
 
-	err = registerUser(t)
+	err = registerUser(t, repo)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
@@ -61,21 +62,22 @@ func validEmail(email string) bool {
 	return err == nil
 }
 
-func emailExists(email string, db *gorm.DB) bool {
+func emailExists(email string, repo *repos.Repository) bool {
 	var user models.User
-	result := db.Where(&models.User{Email: email}).First(&user)
-	return result.Error != nil
+	err := repo.GetUser(&models.User{Email: email}, &user)
+	return err == nil
 }
 
-func registerUser(reg userRegistration) error {
+func registerUser(reg userRegistration, repo *repos.Repository) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(reg.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
-	user := models.User{}
-	user.Email = reg.Email
-	user.PasswordHash = hashedPassword
-	user.PermissionLevel = 0
+	repo.Create(
+		Email: reg.Email,
+		PasswordHash: hashedPassword,
+		PermissionLevel: 0,
+	)
 	return nil
 }

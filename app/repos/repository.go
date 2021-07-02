@@ -1,7 +1,7 @@
-package app
+package repos
 
 import "gorm.io/gorm"
-import "./models"
+import "../models"
 
 type Repository interface {
 	Create(email string, hash []byte, permission int)
