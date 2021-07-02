@@ -5,6 +5,8 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+const teamSize = 20
+
 type Team struct {
 	gorm.Model
 	Name string
@@ -22,7 +24,7 @@ func (team *Team) MarketValue() int32 {
 }
 
 func RandomTeam() Team {
-	players := make([]Player, 20)
+	players := make([]Player, teamSize)
 	for i := 0; i < len(players); i++ {
 		players[i] = RandomPlayer()
 	}

@@ -11,7 +11,7 @@ func TestValidPassword(t *testing.T) {
 	if validPassword("1234") || validPassword("1234567") || validPassword("")  {
 		t.Error("Invalid password was marked as valid")
 	}
-	if !(validEmail("12345678") && validEmail("12345678890") ) {
+	if !(validPassword("12345678") && validPassword("12345678890") ) {
 		t.Error("Valid password was marked as invalid")
 	}
 }
@@ -27,13 +27,13 @@ func TestEmail(t *testing.T) {
 
 func TestHasEmail(t *testing.T) {
 	email := "test@gmail.com"
-	repo := repos.RepositoryMemory{Users: make([]models.User, 10)}
+	repo := repos.RepositoryMemory{Users: make([]models.User, 0)}
 	repo.CreateUser(email, []byte{}, 0)
 
-	if !emailExists(email, repo) {
+	if !emailExists(email, &repo) {
 		t.Error()
 	}
-	if emailExists("nosuchemail", repo) {
+	if emailExists("nosuchemail", &repo) {
 		t.Error()
 	}
 }
@@ -41,15 +41,18 @@ func TestHasEmail(t *testing.T) {
 func TestRegisterUser(t *testing.T) {
 	email := "test@gmail.com"
 	pass := "hello123"
-	repo := repos.RepositoryMemory{Users: make([]models.User, 10)}
-	err := registerUser(userRegistration{Email: email, Password: pass}, repo)
+	repo := repos.RepositoryMemory{Users: make([]models.User, 0)}
+	err := registerUser(userRegistration{Email: email, Password: pass}, &repo)
 	if err != nil {
 		t.Error()
 	}
 	var user models.User
 	err = repo.GetUser("test@gmail.com", &user)
-	if err != nil || user.Email != email || user.PermissionLevel != 0 {
-		t.Error()
+	if err != nil {
+		t.Error(err)
+	}
+	if user.Email != email || user.PermissionLevel != 0 {
+		t.Error("user does not match")
 	}
 	err = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(pass))
 	if err != nil {

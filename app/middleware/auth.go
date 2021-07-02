@@ -49,9 +49,9 @@ func Auth(next http.Handler) http.Handler {
 			failedAuth(w, http.StatusBadRequest, `{error: true, message: "Bad request"}`)
 			return
 		}
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		if token.Valid {
 			context.Set(r, "token", token)
-			context.Set(r, "email", claims["email"])
+			context.Set(r, "email", claims.Email)
 			next.ServeHTTP(w, r)
 		} else {
 			failedAuth(w, http.StatusUnauthorized, `{error: true, message: "Unauthorized"}`)
