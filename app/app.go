@@ -19,10 +19,11 @@ type App struct {
 	db *gorm.DB
 }
 
-func Configure() *mux.Router {
+func Configure(db *gorm.DB) *mux.Router {
 	r := mux.NewRouter().PathPrefix("/api").Subrouter()
 	r.Use(middleware.Common)
-	handlers.AddUserRoutes(r)
+	handlers.AddUserRoutes(r, db)
+	handlers.AddSessionRoutes(r, db)
 	return r
 }
 
