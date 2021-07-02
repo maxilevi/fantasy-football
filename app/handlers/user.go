@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"../middleware"
 	"../models"
 	"../repos"
 	"encoding/json"
@@ -13,6 +14,59 @@ import (
 
 func AddUserRoutes(r *mux.Router, repo repos.Repository) {
 	r.HandleFunc("/user", wrap(handlePostUser, repo)).Methods( "POST")
+	rAuth := r.PathPrefix("/user").Subrouter()
+	rAuth.Use(middleware.Auth(repo))
+	rAuth.HandleFunc("", wrap(handleGetMe, repo)).Methods( "GET")
+	//rAuth.HandleFunc("/{id}", wrap(handleGetUser, repo)).Methods( "GET")
+}
+
+func handleGetMe(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
+	user, err := getUserFromRequest(w, req)
+	if err != nil {
+		return
+	}
+
+	payload, err := getUserJson(user, repo)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	writeResponse(w, http.StatusOK, payload)
+}
+
+func handleGetUser(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
+	/*user, err := getUserFromRequest(w, req, repo)
+
+	payload, err := getUserJson(user, repo)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}*/
+}
+
+func getUserJson(user models.User, repo repos.Repository) ([]byte, error) {
+	team, err := repo.GetUserTeam(user)
+	if err != nil {
+		return nil, err
+	}
+
+	type userJson struct {
+		Email string `json:"email"`
+		Team uint `json:"team"`
+	}
+
+	data := userJson{
+		Email: user.Email,
+		Team: team.ID,
+	}
+
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return payload, nil
 }
 
 type userRegistration struct {

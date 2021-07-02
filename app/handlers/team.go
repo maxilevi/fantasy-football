@@ -1,22 +1,22 @@
 package handlers
 
 import (
+	"../middleware"
+	"../models"
+	"../repos"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"../repos"
-	"../middleware"
 	"net/http"
 	"strconv"
-	"../models"
 )
 
 func AddTeamRoutes(r *mux.Router, repo repos.Repository) {
-	authR := r.PathPrefix("/team").Subrouter()
-	authR.Use(middleware.Auth)
-	authR.HandleFunc("/team/{id}", wrap(handleGetTeam, repo)).Methods( "GET")
-	authR.HandleFunc("/team/{id}", wrap(handlePatchTeam, repo)).Methods( "PATCH")
+	rTeam := r.PathPrefix("/team").Subrouter()
+	rTeam.Use(middleware.Auth(repo))
+	rTeam.HandleFunc("/{id}", wrap(handleGetTeam, repo)).Methods( "GET")
+	rTeam.HandleFunc("/{id}", wrap(handlePatchTeam, repo)).Methods( "PATCH")
 }
 
 func handleGetTeam(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
@@ -37,12 +37,19 @@ func handleGetTeam(w http.ResponseWriter, req *http.Request, repo repos.Reposito
 
 func makeTeamJson(team models.Team, repo repos.Repository) ([]byte, error) {
 	type TeamJson struct {
-		id uint
-		name string
-		country string
-		value int
+		Id uint `json:"id"`
+		Name string `json:"name"`
+		Country string `json:"country"`
+		Value int `json:"value"`
+		Budget int `json:"budget"`
 	}
-	t := TeamJson{id: team.ID, name: team.Name, country: team.Country, value: int(teamMarketValue(team, repo))}
+	t := TeamJson{
+		Id: team.ID,
+		Name: team.Name,
+		Country: team.Country,
+		Value: int(teamMarketValue(team, repo)),
+		Budget: team.Budget,
+	}
 	return json.Marshal(t)
 }
 
@@ -57,6 +64,7 @@ func teamMarketValue(team models.Team, repo repos.Repository) int32 {
 type patchTeamData struct {
 	country string
 	name string
+	budget int
 }
 
 func handlePatchTeam(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
@@ -76,6 +84,9 @@ func handlePatchTeam(w http.ResponseWriter, req *http.Request, repo repos.Reposi
 
 	team.Country = t.country
 	team.Name = t.name
+	if user.IsAdmin() {
+		team.Budget = t.budget
+	}
 	repo.UpdateTeam(team)
 	writeResponse(w, http.StatusOK, []byte(`{"error": false}`))
 }

@@ -15,7 +15,7 @@ func wrap(f HandlerFuncWithDb, repo repos.Repository) HandlerFunc {
 	}
 }
 
-func writeResponse(w http.ResponseWriter, code int, message [] byte) {
+func writeResponse(w http.ResponseWriter, code int, message []byte) {
 	w.WriteHeader(code)
 	_, err := w.Write(message)
 	if err != nil {

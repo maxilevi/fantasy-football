@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -73,6 +74,31 @@ func TestCantQueryUserIfNotLoggedIn(t *testing.T) {
 	}
 
 	t.Cleanup(func() { truncateDb() })
+}
+
+func TestQueryUserAndTeamInformation(t *testing.T) {
+	token := getUserToken(t, "test@gmail.com")
+	resp, err := doGetRequest( "user", token)
+
+	if err != nil || resp["email"].(string) != "test@gmail.com" {
+		t.Fatal(err)
+	}
+
+	resp, err = doGetRequest("team/" + strconv.Itoa(int(resp["team"].(float64))), token)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() { truncateDb() })
+}
+
+func TestPatchingTeamInformation(t *testing.T) {
+
+}
+
+func getUserToken(t *testing.T, email string) string {
+	assertOkRegisteringUser(t, email, "test1234")
+	return assertOkCreatingSession(t, email, "test1234")
 }
 
 func truncateDb() {
@@ -152,20 +178,54 @@ func doPostRequest(resource string, body map[string]string) (map[string]interfac
 	if err != nil {
 		return nil, err
 	}
+
 	responseBody := bytes.NewBuffer(postBody)
 	resp, err := http.Post("http://" + testAddr + "/api/" + resource, "application/json", responseBody)
 	if err != nil {
 		return nil, err
 	}
+
 	bodystr, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
+
 	var m map[string]interface{}
 	err = json.Unmarshal(bodystr, &m)
 	if err != nil {
 		fmt.Println(string(bodystr))
 		return nil, err
 	}
+	return m, nil
+}
+
+func doGetRequest(resource string, token string) (map[string]interface{}, error) {
+
+	req, err := http.NewRequest("GET", "http://" + testAddr + "/api/" + resource, nil)
+	if err != nil {
+		return nil, err
+	}
+	if token != "" {
+		req.Header.Add("Authorization", "Bearer "+token)
+	}
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	bodystr, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(bodystr)
+		return nil, err
+	}
+
+	var m map[string]interface{}
+	err = json.Unmarshal(bodystr, &m)
+	if err != nil {
+		fmt.Println(string(bodystr))
+		return nil, err
+	}
+
 	return m, nil
 }
