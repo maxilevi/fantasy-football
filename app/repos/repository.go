@@ -14,6 +14,7 @@ type Repository interface {
 	GetPlayers(teamId uint) []models.Player
 	UpdateTeam(team models.Team)
 	UpdatePlayer(player models.Player)
+	GetUserTeam(user models.User) (models.Team, error)
 }
 
 type RepositorySQL struct {
@@ -49,7 +50,7 @@ func (u RepositorySQL) GetTeam(id uint) (models.Team, error) {
 
 func (u RepositorySQL) GetPlayers(teamId uint) []models.Player {
 	var players []models.Player
-	u.Db.Where(&models.Player{TeamID: teamId}).Find(players)
+	u.Db.Where(&models.Player{TeamID: teamId}).Find(&players)
 	return players
 }
 
@@ -65,6 +66,12 @@ func (u RepositorySQL) UpdateTeam(team models.Team) {
 
 func (u RepositorySQL) UpdatePlayer(player models.Player) {
 	u.Db.Save(player)
+}
+
+func (u RepositorySQL) GetUserTeam(user models.User) (models.Team, error) {
+	var team models.Team
+	res := u.Db.Where(&models.Team{OwnerID: user.ID}).Find(&team)
+	return team, res.Error
 }
 
 type RepositoryMemory struct {
@@ -121,5 +128,9 @@ func (u *RepositoryMemory) UpdateTeam(team models.Team) {
 }
 
 func (u *RepositoryMemory) UpdatePlayer(player models.Player) {
+	panic("implement me")
+}
+
+func (u *RepositoryMemory) GetUserTeam(user models.User) (models.Team, error) {
 	panic("implement me")
 }
