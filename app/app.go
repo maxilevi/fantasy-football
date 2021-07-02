@@ -27,6 +27,7 @@ func Configure(db *gorm.DB) *mux.Router {
 	repo := repos.RepositorySQL{Db: db}
 	handlers.AddUserRoutes(r, repo)
 	handlers.AddSessionRoutes(r, repo)
+	handlers.AddTeamRoutes(r, repo)
 	return r
 }
 
