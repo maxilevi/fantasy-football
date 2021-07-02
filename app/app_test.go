@@ -66,6 +66,15 @@ func TestCantCreateUserTwice(t *testing.T) {
 	t.Cleanup(func() { truncateDb() })
 }
 
+func TestCantQueryUserIfNotLoggedIn(t *testing.T) {
+	resp, err := doGetRequest( "user", "")
+	if err != nil || !resp["error"].(bool) {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() { truncateDb() })
+}
+
 func truncateDb() {
 	app.db.Where("1 = 1").Delete(&models.Player{})
 	app.db.Where("1 = 1").Delete(&models.Team{})
