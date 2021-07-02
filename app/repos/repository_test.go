@@ -7,7 +7,7 @@ import (
 
 func TestRepositoryMemoryCreateUser(t *testing.T) {
 	email := "test@gmail.com"
-	repo := &RepositoryMemory{Users: make([]models.User, 0)}
+	repo := CreateRepositoryMemory()
 	repo.CreateUser(email, []byte{}, 0)
 	if len(repo.Users) != 1 {
 		t.Error("user was not created")
@@ -16,7 +16,7 @@ func TestRepositoryMemoryCreateUser(t *testing.T) {
 
 func TestRepositoryMemoryGetUser(t *testing.T) {
 	email := "test@gmail.com"
-	repo := &RepositoryMemory{Users: make([]models.User, 0)}
+	repo := CreateRepositoryMemory()
 	repo.CreateUser(email, []byte{}, 0)
 
 	var user models.User

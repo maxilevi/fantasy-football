@@ -9,6 +9,11 @@ import "../models"
 type Repository interface {
 	CreateUser(email string, hash []byte, permission int)
 	GetUser(email string, user *models.User) error
+	GetTeam(id uint) (models.Team, error)
+	GetPlayer(playerId uint) (models.Player, error)
+	GetPlayers(teamId uint) []models.Player
+	UpdateTeam(team models.Team)
+	UpdatePlayer(player models.Player)
 }
 
 type RepositorySQL struct {
@@ -36,6 +41,32 @@ func (u RepositorySQL) GetUser(email string, user *models.User) error {
 	return res.Error
 }
 
+func (u RepositorySQL) GetTeam(id uint) (models.Team, error) {
+	var team models.Team
+	res := u.Db.First(&team, id)
+	return team, res.Error
+}
+
+func (u RepositorySQL) GetPlayers(teamId uint) []models.Player {
+	var players []models.Player
+	u.Db.Where(&models.Player{TeamID: teamId}).Find(players)
+	return players
+}
+
+func (u RepositorySQL) GetPlayer(playerId uint) (models.Player, error) {
+	var player models.Player
+	res := u.Db.Find(&player, playerId)
+	return player, res.Error
+}
+
+func (u RepositorySQL) UpdateTeam(team models.Team) {
+	u.Db.Save(team)
+}
+
+func (u RepositorySQL) UpdatePlayer(player models.Player) {
+	u.Db.Save(player)
+}
+
 type RepositoryMemory struct {
 	Users []models.User
 	Teams map[string]models.Team
@@ -45,8 +76,8 @@ type RepositoryMemory struct {
 func CreateRepositoryMemory() *RepositoryMemory {
 	return &RepositoryMemory{
 		Users: make([]models.User, 0),
-		Teams: map[string]models.Team{},
-		Players: map[string]models.Player{},
+		Teams: make(map[string]models.Team),
+		Players: make(map[string]models.Player),
 	}
 }
 
@@ -71,4 +102,24 @@ func (u *RepositoryMemory) GetUser(email string, user *models.User) error {
 		}
 	}
 	return fmt.Errorf("user not found")
+}
+
+func (u *RepositoryMemory) GetTeam(id uint) (models.Team, error) {
+	panic("implement me")
+}
+
+func (u *RepositoryMemory) GetPlayer(playerId uint) (models.Player, error) {
+	panic("implement me")
+}
+
+func (u *RepositoryMemory) GetPlayers(teamId uint) []models.Player {
+	panic("implement me")
+}
+
+func (u *RepositoryMemory) UpdateTeam(team models.Team) {
+	panic("implement me")
+}
+
+func (u *RepositoryMemory) UpdatePlayer(player models.Player) {
+	panic("implement me")
 }

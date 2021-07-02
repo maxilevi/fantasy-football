@@ -15,18 +15,6 @@ type Team struct {
 	Owner User
 }
 
-func (team *Team) GetPlayers() []Player {
-	return []Player{}
-}
-
-func (team *Team) MarketValue() int32 {
-	var sum int32
-	for _, player := range team.GetPlayers() {
-		sum += player.MarketValue
-	}
-	return sum
-}
-
 func RandomTeam() (Team, []Player) {
 	team := Team{
 		Name: randomdata.SillyName(),
