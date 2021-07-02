@@ -10,3 +10,7 @@ type User struct {
 	PasswordHash []byte
 	PermissionLevel int
 }
+
+func (u User) IsAdmin() bool {
+	return u.PermissionLevel > 0
+}
