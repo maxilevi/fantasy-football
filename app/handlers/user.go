@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"net/mail"
 	"../repos"
 )
 
-func AddUserRoutes(r *mux.Router, repo *repos.Repository) {
+func AddUserRoutes(r *mux.Router, repo repos.Repository) {
 	r.HandleFunc("/users", wrap(handlePostUser, repo)).Methods( "POST")
 }
 
@@ -21,7 +20,7 @@ type userRegistration struct {
 	Password string
 }
 
-func handlePostUser(w http.ResponseWriter, req *http.Request, repo *repos.Repository) {
+func handlePostUser(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
 	decoder := json.NewDecoder(req.Body)
 	var t userRegistration
 	err := decoder.Decode(&t)
@@ -62,22 +61,18 @@ func validEmail(email string) bool {
 	return err == nil
 }
 
-func emailExists(email string, repo *repos.Repository) bool {
+func emailExists(email string, repo repos.Repository) bool {
 	var user models.User
 	err := repo.GetUser(&models.User{Email: email}, &user)
 	return err == nil
 }
 
-func registerUser(reg userRegistration, repo *repos.Repository) error {
+func registerUser(reg userRegistration, repo repos.Repository) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(reg.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
-	repo.Create(
-		Email: reg.Email,
-		PasswordHash: hashedPassword,
-		PermissionLevel: 0,
-	)
+	repo.Create(reg.Email, hashedPassword, 0)
 	return nil
 }

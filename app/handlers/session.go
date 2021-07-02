@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func AddSessionRoutes(r *mux.Router, repo *repos.Repository) {
+func AddSessionRoutes(r *mux.Router, repo repos.Repository) {
 	r.HandleFunc("/session", wrap(handlePostSession, repo)).Methods( "POST")
 }
 
@@ -21,7 +21,7 @@ type sessionCreation struct {
 	Password string
 }
 
-func handlePostSession(w http.ResponseWriter, req *http.Request, repo *repos.Repository) {
+func handlePostSession(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
 	decoder := json.NewDecoder(req.Body)
 	var t sessionCreation
 	err := decoder.Decode(&t)
@@ -42,9 +42,9 @@ func handlePostSession(w http.ResponseWriter, req *http.Request, repo *repos.Rep
 	writeResponse(w, 200, []byte(`{"error": false, "token": ` + token + `}`))
 }
 
-func getUser(params sessionCreation, repo *repos.Repository) (*models.User, error) {
+func getUser(params sessionCreation, repo repos.Repository) (*models.User, error) {
 	var user models.User
-	err := repo.GetUser(&models.User{Email: params.Email})
+	err := repo.GetUser(&models.User{Email: params.Email}, &user)
 	if err != nil {
 		return &user, err
 	}

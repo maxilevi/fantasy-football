@@ -23,8 +23,9 @@ type App struct {
 func Configure(db *gorm.DB) *mux.Router {
 	r := mux.NewRouter().PathPrefix("/api").Subrouter()
 	r.Use(middleware.Common)
-	handlers.AddUserRoutes(r, &repos.RepositorySQL{db: db})
-	handlers.AddSessionRoutes(r, &repos.RepositorySQL{db: db})
+	repo := repos.RepositorySQL{Db: db}
+	handlers.AddUserRoutes(r, repo)
+	handlers.AddSessionRoutes(r, repo)
 	return r
 }
 
@@ -50,7 +51,7 @@ func CreateApp(address string) (*App, error) {
 	app := App{}
 	app.address = address
 	app.db = db
-	app.router = Configure()
+	app.router = Configure(db)
 	return &app, nil
 }
 

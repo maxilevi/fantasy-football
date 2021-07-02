@@ -9,18 +9,18 @@ type Repository interface {
 }
 
 type RepositorySQL struct {
-	db *gorm.DB
+	Db *gorm.DB
 }
 
-func (u *RepositorySQL) Create(email string, hash []byte, permission int) {
-	u.db.Create(&models.User{
+func (u RepositorySQL) Create(email string, hash []byte, permission int) {
+	u.Db.Create(&models.User{
 		Email: email,
 		PasswordHash: hash,
 		PermissionLevel: permission,
 	})
 }
 
-func (u *RepositorySQL) GetUser(options *models.User, user *models.User) error {
-	res := u.db.Where(options).First(&user)
+func (u RepositorySQL) GetUser(options *models.User, user *models.User) error {
+	res := u.Db.Where(options).First(&user)
 	return res.Error
 }
