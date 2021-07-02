@@ -14,55 +14,58 @@ import (
 )
 
 const testAddr = "localhost:8080"
+var app *App
+
+func TestMain(m *testing.M) {
+	app = setupTestApp()
+	code := m.Run()
+	app.Close()
+	os.Exit(code)
+}
+
 
 func TestRegisteringUserAndCreatingNewSession(t *testing.T) {
-	app := setupTestApp(t)
-	defer app.Close()
-
 	assertOkRegisteringUser(t, "test@gmail.com", "test1234")
 	token := assertOkCreatingSession(t, "test@gmail.com", "test1234")
-	fmt.Println(token)
+	if token == "" {
+		t.Fatal("invalid token")
+	}
+	t.Cleanup(func() { truncateDb() })
 }
 
 func TestFailRegisteringUser(t *testing.T) {
-	app := setupTestApp(t)
-	defer app.Close()
-
 	assertFailureWhenRegisteringUserWithMessage(t, "test@gmail.com", "12", "Password needs a minimum of at least 8 characters")
 	assertFailureWhenRegisteringUserWithMessage(t, "test", "12345678", "Invalid email")
-	assertFailureWhenRegisteringUserWithMessage(t, "test@gmail.com", "12", "Incorrect body parameters")
+	t.Cleanup(func() { truncateDb() })
 }
 
 func TestCantCreateUserTwice(t *testing.T) {
-	app := setupTestApp(t)
-	defer app.Close()
-
 	assertOkRegisteringUser(t, "test@gmail.com", "12345678")
-	assertFailureWhenRegisteringUserWithMessage(t, "test@gmail.com", "32413", "Provided email is already registered")
+	assertFailureWhenRegisteringUserWithMessage(t, "test@gmail.com", "dasasdasd2", "Provided email is already registered")
+	t.Cleanup(func() { truncateDb() })
 }
 
-func truncateDb(a *App) {
-	a.db.Where("1 = 1").Delete(&models.User{})
+func truncateDb() {
+	app.db.Where("1 = 1").Delete(&models.User{})
 	//a.db.Where("1 = 1").Delete(&models.Player{})
 	//a.db.Where("1 = 1").Delete(&models.Team{})
 }
 
-func setupTestApp(t *testing.T) *App {
+func setupTestApp() *App {
 	err := godotenv.Load("../.env")
 	if err != nil {
-		t.Fatal("error loading .env file")
+		panic("error loading .env file")
 	}
 	app, err := CreateApp(testAddr, os.Getenv("TEST_DB_HOST"), os.Getenv("TEST_DB_USER"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_NAME"), os.Getenv("TEST_DB_PORT"))
 	if err != nil {
-		t.Fatal(err)
+		panic(err)
 	}
-	truncateDb(app)
 	go app.Run()
 	timeout := time.Now().Add(5 * time.Second)
 	for {
 		if app.IsRunning || time.Now().After(timeout) {
 			if !app.IsRunning {
-				t.Fatal("failed to start app (timeout)")
+				panic("failed to start app (timeout)")
 			}
 			break
 		}
@@ -105,7 +108,8 @@ func assertFailureWhenRegisteringUserWithMessage(t *testing.T, email string, pas
 	if err != nil {
 		t.Error(err)
 	}
-	if err, valid := resp["error"].(bool); err || !valid  {
+
+	if err, valid := resp["error"].(bool); !err || !valid  {
 		t.Error("unexpected response")
 	}
 	if resp["message"] != msg {
