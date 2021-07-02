@@ -4,20 +4,21 @@ import (
 	"./handlers"
 	"./middleware"
 	"./models"
+	"./repos"
 	"fmt"
 	"github.com/gorilla/mux"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
+	"net"
 	"net/http"
-	"os"
-	"./repos"
 )
 
 type App struct {
 	address string
 	router *mux.Router
 	db *gorm.DB
+	IsRunning bool
 }
 
 func Configure(db *gorm.DB) *mux.Router {
@@ -36,9 +37,9 @@ func Migrate(db *gorm.DB) {
 	}
 }
 
-func CreateApp(address string) (*App, error) {
+func CreateApp(address, host, user, password, dbname, port string) (*App, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s",
-		os.Getenv("DB_HOST"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_PORT"))
+		host, user, password, dbname, port)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
 	if err != nil {
@@ -58,7 +59,13 @@ func CreateApp(address string) (*App, error) {
 func (a *App) Run() {
 	http.Handle("/", a.router)
 	log.Printf("Listening on address %s\n", a.address)
-	log.Fatal(http.ListenAndServe(a.address, nil))
+	l, err := net.Listen("tcp", a.address)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	a.IsRunning = true
+	log.Fatal(http.Serve(l, nil))
 }
 
 func (a *App) Close() {
