@@ -1,14 +1,16 @@
 package app
 
 import (
+	"./models"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/joho/godotenv"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 	"testing"
+	"time"
 )
 
 const testAddr = "localhost:8080"
@@ -39,12 +41,32 @@ func TestCantCreateUserTwice(t *testing.T) {
 	assertFailureWhenRegisteringUserWithMessage(t, "test@gmail.com", "32413", "Provided email is already registered")
 }
 
+func truncateDb(a *App) {
+	a.db.Where("1 = 1").Delete(&models.User{})
+	//a.db.Where("1 = 1").Delete(&models.Player{})
+	//a.db.Where("1 = 1").Delete(&models.Team{})
+}
+
 func setupTestApp(t *testing.T) *App {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		t.Fatal("error loading .env file")
+	}
 	app, err := CreateApp(testAddr, os.Getenv("TEST_DB_HOST"), os.Getenv("TEST_DB_USER"), os.Getenv("TEST_DB_PASSWORD"), os.Getenv("TEST_DB_NAME"), os.Getenv("TEST_DB_PORT"))
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
+	truncateDb(app)
 	go app.Run()
+	timeout := time.Now().Add(5 * time.Second)
+	for {
+		if app.IsRunning || time.Now().After(timeout) {
+			if !app.IsRunning {
+				t.Fatal("failed to start app (timeout)")
+			}
+			break
+		}
+	}
 	return app
 }
 
@@ -54,10 +76,10 @@ func assertOkRegisteringUser(t *testing.T, email string, pass string) {
 		"password": pass,
 	})
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
-	if ok, err := strconv.ParseBool(resp["error"]); !ok || err != nil {
-		t.Error("unexpected response")
+	if err, valid := resp["error"].(bool); err || !valid {
+		t.Fatalf("unexpected response %v %v", valid, err)
 	}
 }
 
@@ -69,10 +91,10 @@ func assertOkCreatingSession(t *testing.T, email string, pass string) string {
 	if err != nil {
 		t.Error(err)
 	}
-	if ok, err := strconv.ParseBool(resp["error"]); !ok || err != nil {
+	if err, valid := resp["error"].(bool); err || !valid {
 		t.Error("unexpected response")
 	}
-	return resp["token"]
+	return resp["token"].(string)
 }
 
 func assertFailureWhenRegisteringUserWithMessage(t *testing.T, email string, pass string, msg string) {
@@ -83,7 +105,7 @@ func assertFailureWhenRegisteringUserWithMessage(t *testing.T, email string, pas
 	if err != nil {
 		t.Error(err)
 	}
-	if ok, err := strconv.ParseBool(resp["error"]); ok || err != nil {
+	if err, valid := resp["error"].(bool); err || !valid  {
 		t.Error("unexpected response")
 	}
 	if resp["message"] != msg {
@@ -91,7 +113,7 @@ func assertFailureWhenRegisteringUserWithMessage(t *testing.T, email string, pas
 	}
 }
 
-func doPostRequest(resource string, body map[string]string) (map[string]string, error) {
+func doPostRequest(resource string, body map[string]string) (map[string]interface{}, error) {
 	postBody, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
@@ -105,9 +127,10 @@ func doPostRequest(resource string, body map[string]string) (map[string]string, 
 	if err != nil {
 		return nil, err
 	}
-	var m map[string]string
+	var m map[string]interface{}
 	err = json.Unmarshal(bodystr, &m)
 	if err != nil {
+		fmt.Println(string(bodystr))
 		return nil, err
 	}
 	return m, nil
