@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"./repos"
 )
 
 type App struct {
@@ -22,8 +23,8 @@ type App struct {
 func Configure(db *gorm.DB) *mux.Router {
 	r := mux.NewRouter().PathPrefix("/api").Subrouter()
 	r.Use(middleware.Common)
-	handlers.AddUserRoutes(r, db)
-	handlers.AddSessionRoutes(r, db)
+	handlers.AddUserRoutes(r, &repos.RepositorySQL{db: db})
+	handlers.AddSessionRoutes(r, &repos.RepositorySQL{db: db})
 	return r
 }
 
