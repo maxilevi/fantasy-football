@@ -13,6 +13,8 @@ type Player struct {
 	Country string
 	Age int
 	MarketValue int32
+	TeamID uint
+	Team Team
 }
 
 func RandomPlayer() Player {

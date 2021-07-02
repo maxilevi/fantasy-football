@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"../models"
+	"../repos"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"net/mail"
-	"../repos"
 )
 
 func AddUserRoutes(r *mux.Router, repo repos.Repository) {

@@ -27,13 +27,13 @@ func TestEmail(t *testing.T) {
 
 func TestHasEmail(t *testing.T) {
 	email := "test@gmail.com"
-	repo := repos.RepositoryMemory{Users: make([]models.User, 0)}
+	repo := repos.CreateRepositoryMemory()
 	repo.CreateUser(email, []byte{}, 0)
 
-	if !emailExists(email, &repo) {
+	if !emailExists(email, repo) {
 		t.Error()
 	}
-	if emailExists("nosuchemail", &repo) {
+	if emailExists("nosuchemail", repo) {
 		t.Error()
 	}
 }
@@ -41,8 +41,8 @@ func TestHasEmail(t *testing.T) {
 func TestRegisterUser(t *testing.T) {
 	email := "test@gmail.com"
 	pass := "hello123"
-	repo := repos.RepositoryMemory{Users: make([]models.User, 0)}
-	err := registerUser(userRegistration{Email: email, Password: pass}, &repo)
+	repo := repos.CreateRepositoryMemory()
+	err := registerUser(userRegistration{Email: email, Password: pass}, repo)
 	if err != nil {
 		t.Error()
 	}

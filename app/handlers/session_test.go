@@ -12,7 +12,7 @@ import (
 func TestGetUser(t *testing.T) {
 	email := "test@gmail.com"
 	pass := "hello123"
-	repo := &repos.RepositoryMemory{Users: make([]models.User, 0)}
+	repo := repos.CreateRepositoryMemory()
 	err := registerUser(userRegistration{Email: email, Password: pass}, repo)
 	if err != nil {
 		t.Error()

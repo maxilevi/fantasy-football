@@ -11,27 +11,30 @@ type Team struct {
 	gorm.Model
 	Name string
 	Country string
-	Players []Player
+	OwnerID uint
 	Owner User
+}
+
+func (team *Team) GetPlayers() []Player {
+	return []Player{}
 }
 
 func (team *Team) MarketValue() int32 {
 	var sum int32
-	for _, player := range team.Players {
+	for _, player := range team.GetPlayers() {
 		sum += player.MarketValue
 	}
 	return sum
 }
 
-func RandomTeam() Team {
+func RandomTeam() (Team, []Player) {
+	team := Team{
+		Name: randomdata.SillyName(),
+		Country: randomdata.Country(randomdata.FullCountry),
+	}
 	players := make([]Player, teamSize)
 	for i := 0; i < len(players); i++ {
 		players[i] = RandomPlayer()
 	}
-	team := Team{
-		Players: players,
-		Name: randomdata.SillyName(),
-		Country: randomdata.Country(randomdata.FullCountry),
-	}
-	return team
+	return team, players
 }
