@@ -30,11 +30,20 @@ func Configure(db *gorm.DB) *mux.Router {
 	return r
 }
 
-func Migrate(db *gorm.DB) {
+func Migrate(db *gorm.DB) error {
 	err := db.AutoMigrate(&models.User{})
 	if err != nil {
-
+		return err
 	}
+	err = db.AutoMigrate(&models.Team{})
+	if err != nil {
+		return err
+	}
+	err = db.AutoMigrate(&models.Player{})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func CreateApp(address, host, user, password, dbname, port string) (*App, error) {
@@ -47,7 +56,11 @@ func CreateApp(address, host, user, password, dbname, port string) (*App, error)
 		return nil, err
 	}
 
-	Migrate(db)
+	err = Migrate(db)
+	if err != nil {
+		log.Fatal("Failed to migrate db")
+		return nil, err
+	}
 
 	app := App{}
 	app.address = address
