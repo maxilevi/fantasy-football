@@ -93,7 +93,23 @@ func TestQueryUserAndTeamInformation(t *testing.T) {
 }
 
 func TestPatchingTeamInformation(t *testing.T) {
+	token := getUserToken(t, "test@gmail.com")
+	resp, _ := doGetRequest( "user", token)
+	res := "team/" + strconv.Itoa(int(resp["team"].(float64)))
+	resp, err := doPatchRequest(res, token, map[string]string{
+		"name": "New name",
+		"country": "New country",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
+	resp, err = doGetRequest(res, token)
+	if err != nil || resp["name"] != "New name" || resp["country"] != "New country" {
+		t.Fatal(err, resp["name"], resp["country"])
+	}
+
+	t.Cleanup(func() { truncateDb() })
 }
 
 func getUserToken(t *testing.T, email string) string {
@@ -173,35 +189,27 @@ func assertFailureWhenRegisteringUserWithMessage(t *testing.T, email string, pas
 	}
 }
 
-func doPostRequest(resource string, body map[string]string) (map[string]interface{}, error) {
+func doPostRequest(resource string, body interface{}) (map[string]interface{}, error) {
+	return doRequest(resource, "", "POST", body)
+}
+
+func doGetRequest(resource string, token string) (map[string]interface{}, error) {
+	return doRequest(resource, token, "GET", map[string]string{})
+}
+
+func doPatchRequest(resource string, token string, body interface{}) (map[string]interface{}, error) {
+	return doRequest(resource, token, "PATCH", body)
+}
+
+func doRequest(resource string, token string, method string, body interface{}) (map[string]interface{}, error) {
+
 	postBody, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 
-	responseBody := bytes.NewBuffer(postBody)
-	resp, err := http.Post("http://" + testAddr + "/api/" + resource, "application/json", responseBody)
-	if err != nil {
-		return nil, err
-	}
-
-	bodystr, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var m map[string]interface{}
-	err = json.Unmarshal(bodystr, &m)
-	if err != nil {
-		fmt.Println(string(bodystr))
-		return nil, err
-	}
-	return m, nil
-}
-
-func doGetRequest(resource string, token string) (map[string]interface{}, error) {
-
-	req, err := http.NewRequest("GET", "http://" + testAddr + "/api/" + resource, nil)
+	requestBody := bytes.NewBuffer(postBody)
+	req, err := http.NewRequest(method, "http://" + testAddr + "/api/" + resource, requestBody)
 	if err != nil {
 		return nil, err
 	}

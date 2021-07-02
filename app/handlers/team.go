@@ -61,12 +61,6 @@ func teamMarketValue(team models.Team, repo repos.Repository) int32 {
 	return sum
 }
 
-type patchTeamData struct {
-	country string
-	name string
-	budget int
-}
-
 func handlePatchTeam(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
 	user, err := getUserFromRequest(w, req)
 	team, err := getTeamFromRequest(w, req, repo)
@@ -74,6 +68,12 @@ func handlePatchTeam(w http.ResponseWriter, req *http.Request, repo repos.Reposi
 		return
 	}
 
+	type patchTeamData struct {
+		Country string `json:"country"`
+		Name string `json:"name"`
+		Budget int `json:"budget"`
+	}
+	
 	decoder := json.NewDecoder(req.Body)
 	var t patchTeamData
 	err = decoder.Decode(&t)
@@ -82,10 +82,10 @@ func handlePatchTeam(w http.ResponseWriter, req *http.Request, repo repos.Reposi
 		return
 	}
 
-	team.Country = t.country
-	team.Name = t.name
+	team.Country = t.Country
+	team.Name = t.Name
 	if user.IsAdmin() {
-		team.Budget = t.budget
+		team.Budget = t.Budget
 	}
 	repo.UpdateTeam(team)
 	writeResponse(w, http.StatusOK, []byte(`{"error": false}`))
