@@ -1,9 +1,19 @@
 package handlers
 
 import (
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 )
+
+type HandlerFunc func (w http.ResponseWriter, req *http.Request)
+type HandlerFuncWithDb func (w http.ResponseWriter, req *http.Request, db *gorm.DB)
+
+func wrap(f HandlerFuncWithDb, db *gorm.DB) HandlerFunc {
+	return func (w http.ResponseWriter, req *http.Request) {
+		f(w, req, db)
+	}
+}
 
 func writeResponse(w http.ResponseWriter, code int, message [] byte) {
 	w.WriteHeader(code)
