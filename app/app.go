@@ -1,6 +1,9 @@
 package app
 
 import (
+	"./handlers"
+	"./middleware"
+	"./models"
 	"fmt"
 	"github.com/gorilla/mux"
 	"gorm.io/driver/postgres"
@@ -8,8 +11,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"./models"
-	"./handlers"
 )
 
 type App struct {
@@ -20,6 +21,7 @@ type App struct {
 
 func Configure() *mux.Router {
 	r := mux.NewRouter().PathPrefix("/api").Subrouter()
+	r.Use(middleware.Common)
 	handlers.AddUserRoutes(r)
 	return r
 }
