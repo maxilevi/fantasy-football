@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/Pallinder/go-randomdata"
 	"github.com/jinzhu/gorm"
 )
 
@@ -18,4 +19,17 @@ func (team *Team) MarketValue() int32 {
 		sum += player.MarketValue
 	}
 	return sum
+}
+
+func RandomTeam() Team {
+	players := make([]Player, 20)
+	for i := 0; i < len(players); i++ {
+		players[i] = RandomPlayer()
+	}
+	team := Team{
+		Players: players,
+		Name: randomdata.SillyName(),
+		Country: randomdata.Country(randomdata.FullCountry),
+	}
+	return team
 }
