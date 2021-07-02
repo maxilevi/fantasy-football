@@ -32,7 +32,7 @@ type RepositoryMemory struct {
 	Users []models.User
 }
 
-func (u RepositoryMemory) CreateUser(email string, hash []byte, permission int) {
+func (u *RepositoryMemory) CreateUser(email string, hash []byte, permission int) {
 	u.Users = append(u.Users, models.User{
 		Email: email,
 		PasswordHash: hash,
@@ -40,7 +40,7 @@ func (u RepositoryMemory) CreateUser(email string, hash []byte, permission int) 
 	})
 }
 
-func (u RepositoryMemory) GetUser(email string, user *models.User) error {
+func (u *RepositoryMemory) GetUser(email string, user *models.User) error {
 	for i := range u.Users {
 		if u.Users[i].Email == email {
 			*user = u.Users[i]
