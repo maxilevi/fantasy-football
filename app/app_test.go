@@ -18,6 +18,7 @@ var app *App
 
 func TestMain(m *testing.M) {
 	app = setupTestApp()
+	truncateDb()
 	code := m.Run()
 	app.Close()
 	os.Exit(code)
@@ -29,6 +30,26 @@ func TestRegisteringUserAndCreatingNewSession(t *testing.T) {
 	token := assertOkCreatingSession(t, "test@gmail.com", "test1234")
 	if token == "" {
 		t.Fatal("invalid token")
+	}
+	t.Cleanup(func() { truncateDb() })
+}
+
+func TestCantLoginWithWrongPassword(t *testing.T) {
+	assertOkRegisteringUser(t, "test@gmail.com", "test1234")
+	resp, err := doPostRequest("session", map[string]string{
+		"email": "test@gmail.com",
+		"password": "asd12345",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	val, ok := resp["error"].(bool)
+	if !ok || !val {
+		t.Fatal("was able to login with incorrect password")
+	}
+	_, ok = resp["token"].(string)
+	if ok {
+		t.Fatal("returned a valid token")
 	}
 	t.Cleanup(func() { truncateDb() })
 }
@@ -46,9 +67,9 @@ func TestCantCreateUserTwice(t *testing.T) {
 }
 
 func truncateDb() {
+	app.db.Where("1 = 1").Delete(&models.Player{})
+	app.db.Where("1 = 1").Delete(&models.Team{})
 	app.db.Where("1 = 1").Delete(&models.User{})
-	//a.db.Where("1 = 1").Delete(&models.Player{})
-	//a.db.Where("1 = 1").Delete(&models.Team{})
 }
 
 func setupTestApp() *App {
@@ -82,7 +103,7 @@ func assertOkRegisteringUser(t *testing.T, email string, pass string) {
 		t.Fatal(err)
 	}
 	if err, valid := resp["error"].(bool); err || !valid {
-		t.Fatalf("unexpected response %v %v", valid, err)
+		t.Fatalf("unexpected response %v", resp["message"])
 	}
 }
 
@@ -92,10 +113,10 @@ func assertOkCreatingSession(t *testing.T, email string, pass string) string {
 		"password": pass,
 	})
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	if err, valid := resp["error"].(bool); err || !valid {
-		t.Error("unexpected response")
+		t.Fatal("unexpected response")
 	}
 	return resp["token"].(string)
 }
@@ -106,14 +127,14 @@ func assertFailureWhenRegisteringUserWithMessage(t *testing.T, email string, pas
 		"password": pass,
 	})
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if err, valid := resp["error"].(bool); !err || !valid  {
-		t.Error("unexpected response")
+		t.Fatal("unexpected response")
 	}
 	if resp["message"] != msg {
-		t.Error("wrong error msg")
+		t.Fatalf("wrong error msg %v", resp["message"])
 	}
 }
 
