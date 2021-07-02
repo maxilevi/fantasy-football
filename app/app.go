@@ -3,12 +3,13 @@ package app
 import (
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"os"
+	"./models"
+	"./handlers"
 )
 
 type App struct {
@@ -17,20 +18,20 @@ type App struct {
 	db *gorm.DB
 }
 
-func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	app, err := createApp("http://localhost:8080")
-	if err != nil {
-		log.Fatal("Failed to start app")
-	}
-	defer app.Close()
-	app.Run()
+func Configure() *mux.Router {
+	r := mux.NewRouter().PathPrefix("/api").Subrouter()
+	handlers.AddUserRoutes(r)
+	return r
 }
 
-func createApp(address string) (*App, error) {
+func Migrate(db *gorm.DB) {
+	err := db.AutoMigrate(&models.User{})
+	if err != nil {
+
+	}
+}
+
+func CreateApp(address string) (*App, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s",
 		os.Getenv("DB_HOST"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_PORT"))
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -40,17 +41,18 @@ func createApp(address string) (*App, error) {
 		return nil, err
 	}
 
-	migrations.Migrate()
+	Migrate(db)
 
 	app := App{}
 	app.address = address
 	app.db = db
-	app.router = routes.Configure()
+	app.router = Configure()
 	return &app, nil
 }
 
 func (a *App) Run() {
 	http.Handle("/", a.router)
+	log.Printf("Listening on address %s\n", a.address)
 	log.Fatal(http.ListenAndServe(a.address, nil))
 }
 
