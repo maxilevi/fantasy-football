@@ -28,6 +28,7 @@ func Configure(db *gorm.DB) *mux.Router {
 	handlers.AddUserRoutes(r, repo)
 	handlers.AddSessionRoutes(r, repo)
 	handlers.AddTeamRoutes(r, repo)
+	handlers.AddPlayerRoutes(r, repo)
 	return r
 }
 
