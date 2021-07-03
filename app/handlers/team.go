@@ -13,10 +13,16 @@ import (
 )
 
 func AddTeamRoutes(r *mux.Router, repo repos.Repository) {
-	rTeam := r.PathPrefix("/team").Subrouter()
-	rTeam.Use(middleware.Auth(repo))
-	rTeam.HandleFunc("/{id}", wrap(handleGetTeam, repo)).Methods("GET")
-	rTeam.HandleFunc("/{id}", wrap(handlePatchTeam, repo)).Methods("PATCH")
+	rAuth := r.PathPrefix("/team").Subrouter()
+	rAuth.Use(middleware.Auth(repo))
+	rAuth.HandleFunc("/{id}", wrap(handleGetTeam, repo)).Methods("GET")
+	rAuth.HandleFunc("/{id}", wrap(handlePatchTeam, repo)).Methods("PATCH")
+
+	rAdmin := r.PathPrefix("/team").Subrouter()
+	rAdmin.Use(middleware.Auth(repo))
+	rAdmin.Use(middleware.Admin)
+	rAdmin.HandleFunc("/{id}", wrap(handlePostTeam, repo)).Methods( "POST")
+	rAdmin.HandleFunc("/{id}", wrap(handleDeleteTeam, repo)).Methods( "DELETE")
 }
 
 func handleGetTeam(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
@@ -86,7 +92,11 @@ func handlePatchTeam(w http.ResponseWriter, req *http.Request, repo repos.Reposi
 	if user.IsAdmin() {
 		team.Budget = t.Budget
 	}
-	repo.UpdateTeam(team)
+	err = repo.UpdateTeam(team)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
 	writeResponse(w, http.StatusOK, []byte(`{"error": false}`))
 }
 
@@ -105,7 +115,7 @@ func getUserFromRequest(w http.ResponseWriter, req *http.Request) (models.User, 
 }
 
 func getTeamFromRequest(w http.ResponseWriter, req *http.Request, repo repos.Repository) (models.Team, error) {
-	id, err := parseTeamId(w, req)
+	id, err := parseIdFromRequest(w, req)
 	team, err := repo.GetTeam(id)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Not found")
@@ -122,12 +132,12 @@ func validateTeamOwner(w http.ResponseWriter, user models.User, team models.Team
 	return true
 }
 
-func parseTeamId(w http.ResponseWriter, req *http.Request) (uint, error) {
+func parseIdFromRequest(w http.ResponseWriter, req *http.Request) (uint, error) {
 	vars := mux.Vars(req)
 	id, ok := strconv.ParseInt(vars["id"], 10, 32)
 	if ok != nil {
-		writeError(w, http.StatusBadRequest, "Invalid team id")
-		return 0, fmt.Errorf("invalid team id")
+		writeError(w, http.StatusBadRequest, "Invalid id")
+		return 0, fmt.Errorf("invalid id")
 	}
 	return uint(id), nil
 }
