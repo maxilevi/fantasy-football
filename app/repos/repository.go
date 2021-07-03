@@ -12,8 +12,9 @@ type Repository interface {
 	GetTeam(id uint) (models.Team, error)
 	GetPlayer(playerId uint) (models.Player, error)
 	GetPlayers(teamId uint) []models.Player
-	UpdateTeam(team models.Team)
-	UpdatePlayer(player models.Player)
+	UpdateTeam(team models.Team) error
+	UpdatePlayer(player models.Player) error
+	DeletePlayer(player models.Player) error
 	GetUserTeam(user models.User) (models.Team, error)
 }
 
@@ -60,12 +61,19 @@ func (u RepositorySQL) GetPlayer(playerId uint) (models.Player, error) {
 	return player, res.Error
 }
 
-func (u RepositorySQL) UpdateTeam(team models.Team) {
-	u.Db.Save(team)
+func (u RepositorySQL) UpdateTeam(team models.Team) error {
+	res := u.Db.Save(team)
+	return res.Error
 }
 
-func (u RepositorySQL) UpdatePlayer(player models.Player) {
-	u.Db.Save(player)
+func (u RepositorySQL) UpdatePlayer(player models.Player) error {
+	res := u.Db.Save(player)
+	return res.Error
+}
+
+func (u RepositorySQL) DeletePlayer(player models.Player) error {
+	res := u.Db.Delete(player)
+	return res.Error
 }
 
 func (u RepositorySQL) GetUserTeam(user models.User) (models.Team, error) {
@@ -123,11 +131,11 @@ func (u *RepositoryMemory) GetPlayers(teamId uint) []models.Player {
 	panic("implement me")
 }
 
-func (u *RepositoryMemory) UpdateTeam(team models.Team) {
+func (u *RepositoryMemory) UpdateTeam(team models.Team) error {
 	panic("implement me")
 }
 
-func (u *RepositoryMemory) UpdatePlayer(player models.Player) {
+func (u *RepositoryMemory) UpdatePlayer(player models.Player) error {
 	panic("implement me")
 }
 
