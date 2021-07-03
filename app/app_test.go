@@ -26,6 +26,8 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+/* Auth tests */
+
 func TestRegisteringUserAndCreatingNewSession(t *testing.T) {
 	assertOkRegisteringUser(t, "test@gmail.com", "test1234")
 	token := assertOkCreatingSession(t, "test@gmail.com", "test1234")
@@ -76,6 +78,8 @@ func TestCantQueryUserIfNotLoggedIn(t *testing.T) {
 	t.Cleanup(func() { truncateDb() })
 }
 
+/* Team tests */
+
 func TestQueryUserAndTeamInformation(t *testing.T) {
 	token := getUserToken(t, "test@gmail.com")
 	resp, err := doGetRequest("user", token)
@@ -84,7 +88,8 @@ func TestQueryUserAndTeamInformation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err = doGetRequest("team/"+strconv.Itoa(int(resp["team"].(float64))), token)
+	teamId := strconv.Itoa(int(resp["team"].(float64)))
+	resp, err = doGetRequest("team/"+teamId, token)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,6 +112,25 @@ func TestPatchingTeamInformation(t *testing.T) {
 	resp, err = doGetRequest(res, token)
 	if err != nil || resp["name"] != "New name" || resp["country"] != "New country" {
 		t.Fatal(err, resp["name"], resp["country"])
+	}
+
+	t.Cleanup(func() { truncateDb() })
+}
+
+/* Player tests */
+
+func TestGetPlayerInformation(t *testing.T) {
+	token := getUserToken(t, "test@gmail.com")
+	resp, err := doGetRequest("player", token)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	teamId := strconv.Itoa(int(resp["team"].(float64)))
+	resp, err = doGetRequest("team/"+teamId, token)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	t.Cleanup(func() { truncateDb() })
