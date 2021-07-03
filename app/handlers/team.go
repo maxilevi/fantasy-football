@@ -15,8 +15,8 @@ import (
 func AddTeamRoutes(r *mux.Router, repo repos.Repository) {
 	rTeam := r.PathPrefix("/team").Subrouter()
 	rTeam.Use(middleware.Auth(repo))
-	rTeam.HandleFunc("/{id}", wrap(handleGetTeam, repo)).Methods( "GET")
-	rTeam.HandleFunc("/{id}", wrap(handlePatchTeam, repo)).Methods( "PATCH")
+	rTeam.HandleFunc("/{id}", wrap(handleGetTeam, repo)).Methods("GET")
+	rTeam.HandleFunc("/{id}", wrap(handlePatchTeam, repo)).Methods("PATCH")
 }
 
 func handleGetTeam(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
@@ -34,21 +34,20 @@ func handleGetTeam(w http.ResponseWriter, req *http.Request, repo repos.Reposito
 	writeResponse(w, http.StatusOK, data)
 }
 
-
 func makeTeamJson(team models.Team, repo repos.Repository) ([]byte, error) {
 	type TeamJson struct {
-		Id uint `json:"id"`
-		Name string `json:"name"`
+		Id      uint   `json:"id"`
+		Name    string `json:"name"`
 		Country string `json:"country"`
-		Value int `json:"value"`
-		Budget int `json:"budget"`
+		Value   int    `json:"value"`
+		Budget  int    `json:"budget"`
 	}
 	t := TeamJson{
-		Id: team.ID,
-		Name: team.Name,
+		Id:      team.ID,
+		Name:    team.Name,
 		Country: team.Country,
-		Value: int(teamMarketValue(team, repo)),
-		Budget: team.Budget,
+		Value:   int(teamMarketValue(team, repo)),
+		Budget:  team.Budget,
 	}
 	return json.Marshal(t)
 }
@@ -70,10 +69,10 @@ func handlePatchTeam(w http.ResponseWriter, req *http.Request, repo repos.Reposi
 
 	type patchTeamData struct {
 		Country string `json:"country"`
-		Name string `json:"name"`
-		Budget int `json:"budget"`
+		Name    string `json:"name"`
+		Budget  int    `json:"budget"`
 	}
-	
+
 	decoder := json.NewDecoder(req.Body)
 	var t patchTeamData
 	err = decoder.Decode(&t)

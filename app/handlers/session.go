@@ -13,11 +13,11 @@ import (
 )
 
 func AddSessionRoutes(r *mux.Router, repo repos.Repository) {
-	r.HandleFunc("/session", wrap(handlePostSession, repo)).Methods( "POST")
+	r.HandleFunc("/session", wrap(handlePostSession, repo)).Methods("POST")
 }
 
 type sessionCreation struct {
-	Email string
+	Email    string
 	Password string
 }
 
@@ -39,7 +39,7 @@ func handlePostSession(w http.ResponseWriter, req *http.Request, repo repos.Repo
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	writeResponse(w, 200, []byte(`{"error": false, "token": "` + token + `"}`))
+	writeResponse(w, 200, []byte(`{"error": false, "token": "`+token+`"}`))
 }
 
 func getUser(params sessionCreation, repo repos.Repository) (*models.User, error) {

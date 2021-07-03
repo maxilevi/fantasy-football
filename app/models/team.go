@@ -9,18 +9,18 @@ const teamSize = 20
 
 type Team struct {
 	gorm.Model
-	Name string
+	Name    string
 	Country string
-	Budget int
+	Budget  int
 	OwnerID uint
-	Owner User
+	Owner   User
 }
 
 func RandomTeam() (Team, []Player) {
 	team := Team{
-		Name: randomdata.SillyName(),
+		Name:    randomdata.SillyName(),
 		Country: randomdata.Country(randomdata.FullCountry),
-		Budget: 5000000,
+		Budget:  5000000,
 	}
 	players := make([]Player, teamSize)
 	for i := 0; i < len(players); i++ {

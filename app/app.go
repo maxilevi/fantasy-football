@@ -15,9 +15,9 @@ import (
 )
 
 type App struct {
-	address string
-	router *mux.Router
-	db *gorm.DB
+	address   string
+	router    *mux.Router
+	db        *gorm.DB
 	IsRunning bool
 }
 

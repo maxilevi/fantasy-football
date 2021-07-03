@@ -13,10 +13,10 @@ import (
 )
 
 func AddUserRoutes(r *mux.Router, repo repos.Repository) {
-	r.HandleFunc("/user", wrap(handlePostUser, repo)).Methods( "POST")
+	r.HandleFunc("/user", wrap(handlePostUser, repo)).Methods("POST")
 	rAuth := r.PathPrefix("/user").Subrouter()
 	rAuth.Use(middleware.Auth(repo))
-	rAuth.HandleFunc("", wrap(handleGetMe, repo)).Methods( "GET")
+	rAuth.HandleFunc("", wrap(handleGetMe, repo)).Methods("GET")
 	//rAuth.HandleFunc("/{id}", wrap(handleGetUser, repo)).Methods( "GET")
 }
 
@@ -53,12 +53,12 @@ func getUserJson(user models.User, repo repos.Repository) ([]byte, error) {
 
 	type userJson struct {
 		Email string `json:"email"`
-		Team uint `json:"team"`
+		Team  uint   `json:"team"`
 	}
 
 	data := userJson{
 		Email: user.Email,
-		Team: team.ID,
+		Team:  team.ID,
 	}
 
 	payload, err := json.Marshal(data)
@@ -70,7 +70,7 @@ func getUserJson(user models.User, repo repos.Repository) ([]byte, error) {
 }
 
 type userRegistration struct {
-	Email string
+	Email    string
 	Password string
 }
 

@@ -6,8 +6,8 @@ import (
 
 type User struct {
 	gorm.Model
-	Email string
-	PasswordHash []byte
+	Email           string
+	PasswordHash    []byte
 	PermissionLevel int
 }
 

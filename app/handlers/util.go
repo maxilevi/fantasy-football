@@ -1,16 +1,16 @@
 package handlers
 
 import (
+	"../repos"
 	"log"
 	"net/http"
-	"../repos"
 )
 
-type HandlerFunc func (w http.ResponseWriter, req *http.Request)
-type HandlerFuncWithDb func (w http.ResponseWriter, req *http.Request, repo repos.Repository)
+type HandlerFunc func(w http.ResponseWriter, req *http.Request)
+type HandlerFuncWithDb func(w http.ResponseWriter, req *http.Request, repo repos.Repository)
 
 func wrap(f HandlerFuncWithDb, repo repos.Repository) HandlerFunc {
-	return func (w http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		f(w, req, repo)
 	}
 }

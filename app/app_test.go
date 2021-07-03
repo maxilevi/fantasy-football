@@ -15,6 +15,7 @@ import (
 )
 
 const testAddr = "localhost:8080"
+
 var app *App
 
 func TestMain(m *testing.M) {
@@ -24,7 +25,6 @@ func TestMain(m *testing.M) {
 	app.Close()
 	os.Exit(code)
 }
-
 
 func TestRegisteringUserAndCreatingNewSession(t *testing.T) {
 	assertOkRegisteringUser(t, "test@gmail.com", "test1234")
@@ -38,7 +38,7 @@ func TestRegisteringUserAndCreatingNewSession(t *testing.T) {
 func TestCantLoginWithWrongPassword(t *testing.T) {
 	assertOkRegisteringUser(t, "test@gmail.com", "test1234")
 	resp, err := doPostRequest("session", map[string]string{
-		"email": "test@gmail.com",
+		"email":    "test@gmail.com",
 		"password": "asd12345",
 	})
 	if err != nil {
@@ -68,7 +68,7 @@ func TestCantCreateUserTwice(t *testing.T) {
 }
 
 func TestCantQueryUserIfNotLoggedIn(t *testing.T) {
-	resp, err := doGetRequest( "user", "")
+	resp, err := doGetRequest("user", "")
 	if err != nil || !resp["error"].(bool) {
 		t.Fatal(err)
 	}
@@ -78,13 +78,13 @@ func TestCantQueryUserIfNotLoggedIn(t *testing.T) {
 
 func TestQueryUserAndTeamInformation(t *testing.T) {
 	token := getUserToken(t, "test@gmail.com")
-	resp, err := doGetRequest( "user", token)
+	resp, err := doGetRequest("user", token)
 
 	if err != nil || resp["email"].(string) != "test@gmail.com" {
 		t.Fatal(err)
 	}
 
-	resp, err = doGetRequest("team/" + strconv.Itoa(int(resp["team"].(float64))), token)
+	resp, err = doGetRequest("team/"+strconv.Itoa(int(resp["team"].(float64))), token)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,10 +94,10 @@ func TestQueryUserAndTeamInformation(t *testing.T) {
 
 func TestPatchingTeamInformation(t *testing.T) {
 	token := getUserToken(t, "test@gmail.com")
-	resp, _ := doGetRequest( "user", token)
+	resp, _ := doGetRequest("user", token)
 	res := "team/" + strconv.Itoa(int(resp["team"].(float64)))
 	resp, err := doPatchRequest(res, token, map[string]string{
-		"name": "New name",
+		"name":    "New name",
 		"country": "New country",
 	})
 	if err != nil {
@@ -147,7 +147,7 @@ func setupTestApp() *App {
 
 func assertOkRegisteringUser(t *testing.T, email string, pass string) {
 	resp, err := doPostRequest("user", map[string]string{
-		"email": email,
+		"email":    email,
 		"password": pass,
 	})
 	if err != nil {
@@ -160,7 +160,7 @@ func assertOkRegisteringUser(t *testing.T, email string, pass string) {
 
 func assertOkCreatingSession(t *testing.T, email string, pass string) string {
 	resp, err := doPostRequest("session", map[string]string{
-		"email": email,
+		"email":    email,
 		"password": pass,
 	})
 	if err != nil {
@@ -174,14 +174,14 @@ func assertOkCreatingSession(t *testing.T, email string, pass string) string {
 
 func assertFailureWhenRegisteringUserWithMessage(t *testing.T, email string, pass string, msg string) {
 	resp, err := doPostRequest("user", map[string]string{
-		"email": email,
+		"email":    email,
 		"password": pass,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err, valid := resp["error"].(bool); !err || !valid  {
+	if err, valid := resp["error"].(bool); !err || !valid {
 		t.Fatal("unexpected response")
 	}
 	if resp["message"] != msg {
@@ -209,7 +209,7 @@ func doRequest(resource string, token string, method string, body interface{}) (
 	}
 
 	requestBody := bytes.NewBuffer(postBody)
-	req, err := http.NewRequest(method, "http://" + testAddr + "/api/" + resource, requestBody)
+	req, err := http.NewRequest(method, "http://"+testAddr+"/api/"+resource, requestBody)
 	if err != nil {
 		return nil, err
 	}

@@ -8,10 +8,10 @@ import "../repos"
 import "../models"
 
 func TestValidPassword(t *testing.T) {
-	if validPassword("1234") || validPassword("1234567") || validPassword("")  {
+	if validPassword("1234") || validPassword("1234567") || validPassword("") {
 		t.Error("Invalid password was marked as valid")
 	}
-	if !(validPassword("12345678") && validPassword("12345678890") ) {
+	if !(validPassword("12345678") && validPassword("12345678890")) {
 		t.Error("Valid password was marked as invalid")
 	}
 }

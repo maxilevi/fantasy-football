@@ -1,12 +1,12 @@
 package handlers
 
 import (
+	"../middleware"
+	"../models"
+	"../repos"
 	"fmt"
 	"github.com/golang-jwt/jwt"
 	"testing"
-	"../repos"
-	"../models"
-	"../middleware"
 )
 
 func TestGetUser(t *testing.T) {

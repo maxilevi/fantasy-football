@@ -23,8 +23,8 @@ type RepositorySQL struct {
 
 func (u RepositorySQL) CreateUser(email string, hash []byte, permission int) {
 	user := models.User{
-		Email: email,
-		PasswordHash: hash,
+		Email:           email,
+		PasswordHash:    hash,
 		PermissionLevel: permission,
 	}
 	u.Db.Create(&user)
@@ -75,23 +75,23 @@ func (u RepositorySQL) GetUserTeam(user models.User) (models.Team, error) {
 }
 
 type RepositoryMemory struct {
-	Users []models.User
-	Teams map[string]models.Team
+	Users   []models.User
+	Teams   map[string]models.Team
 	Players map[string]models.Player
 }
 
 func CreateRepositoryMemory() *RepositoryMemory {
 	return &RepositoryMemory{
-		Users: make([]models.User, 0),
-		Teams: make(map[string]models.Team),
+		Users:   make([]models.User, 0),
+		Teams:   make(map[string]models.Team),
 		Players: make(map[string]models.Player),
 	}
 }
 
 func (u *RepositoryMemory) CreateUser(email string, hash []byte, permission int) {
 	u.Users = append(u.Users, models.User{
-		Email: email,
-		PasswordHash: hash,
+		Email:           email,
+		PasswordHash:    hash,
 		PermissionLevel: permission,
 	})
 	team, players := models.RandomTeam()
