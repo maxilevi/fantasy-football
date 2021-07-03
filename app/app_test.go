@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -24,116 +23,6 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 	app.Close()
 	os.Exit(code)
-}
-
-/* Auth tests */
-
-func TestRegisteringUserAndCreatingNewSession(t *testing.T) {
-	assertOkRegisteringUser(t, "test@gmail.com", "test1234")
-	token := assertOkCreatingSession(t, "test@gmail.com", "test1234")
-	if token == "" {
-		t.Fatal("invalid token")
-	}
-	t.Cleanup(func() { truncateDb() })
-}
-
-func TestCantLoginWithWrongPassword(t *testing.T) {
-	assertOkRegisteringUser(t, "test@gmail.com", "test1234")
-	resp, err := doPostRequest("session", map[string]string{
-		"email":    "test@gmail.com",
-		"password": "asd12345",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	val, ok := resp["error"].(bool)
-	if !ok || !val {
-		t.Fatal("was able to login with incorrect password")
-	}
-	_, ok = resp["token"].(string)
-	if ok {
-		t.Fatal("returned a valid token")
-	}
-	t.Cleanup(func() { truncateDb() })
-}
-
-func TestFailRegisteringUser(t *testing.T) {
-	assertFailureWhenRegisteringUserWithMessage(t, "test@gmail.com", "12", "Password needs a minimum of at least 8 characters")
-	assertFailureWhenRegisteringUserWithMessage(t, "test", "12345678", "Invalid email")
-	t.Cleanup(func() { truncateDb() })
-}
-
-func TestCantCreateUserTwice(t *testing.T) {
-	assertOkRegisteringUser(t, "test@gmail.com", "12345678")
-	assertFailureWhenRegisteringUserWithMessage(t, "test@gmail.com", "dasasdasd2", "Provided email is already registered")
-	t.Cleanup(func() { truncateDb() })
-}
-
-func TestCantQueryUserIfNotLoggedIn(t *testing.T) {
-	resp, err := doGetRequest("user", "")
-	if err != nil || !resp["error"].(bool) {
-		t.Fatal(err)
-	}
-
-	t.Cleanup(func() { truncateDb() })
-}
-
-/* Team tests */
-
-func TestQueryUserAndTeamInformation(t *testing.T) {
-	token := getUserToken(t, "test@gmail.com")
-	resp, err := doGetRequest("user", token)
-
-	if err != nil || resp["email"].(string) != "test@gmail.com" {
-		t.Fatal(err)
-	}
-
-	teamId := strconv.Itoa(int(resp["team"].(float64)))
-	resp, err = doGetRequest("team/"+teamId, token)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Cleanup(func() { truncateDb() })
-}
-
-func TestPatchingTeamInformation(t *testing.T) {
-	token := getUserToken(t, "test@gmail.com")
-	resp, _ := doGetRequest("user", token)
-	res := "team/" + strconv.Itoa(int(resp["team"].(float64)))
-	resp, err := doPatchRequest(res, token, map[string]string{
-		"name":    "New name",
-		"country": "New country",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	resp, err = doGetRequest(res, token)
-	if err != nil || resp["name"] != "New name" || resp["country"] != "New country" {
-		t.Fatal(err, resp["name"], resp["country"])
-	}
-
-	t.Cleanup(func() { truncateDb() })
-}
-
-/* Player tests */
-
-func TestGetPlayerInformation(t *testing.T) {
-	token := getUserToken(t, "test@gmail.com")
-	resp, err := doGetRequest("player", token)
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	teamId := strconv.Itoa(int(resp["team"].(float64)))
-	resp, err = doGetRequest("team/"+teamId, token)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Cleanup(func() { truncateDb() })
 }
 
 func getUserToken(t *testing.T, email string) string {
