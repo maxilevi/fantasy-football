@@ -33,7 +33,7 @@ func Auth(repo repos.Repository) func(next http.Handler) http.Handler {
 			authHeader := r.Header.Get("Authorization")
 			splitToken := strings.Split(authHeader, "Bearer ")
 			if len(splitToken) != 2 {
-				failedAuth(w, http.StatusBadRequest, "Bad request")
+				failedAuth(w, http.StatusUnauthorized, "Unauthorized")
 				return
 			}
 			tokenString := splitToken[1]
