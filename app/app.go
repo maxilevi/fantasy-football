@@ -3,7 +3,7 @@ package app
 import (
 	"./handlers"
 	"./middleware"
-	"./models"
+	"./migrations"
 	"./repos"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -32,22 +32,6 @@ func Configure(db *gorm.DB) *mux.Router {
 	return r
 }
 
-func Migrate(db *gorm.DB) error {
-	err := db.AutoMigrate(&models.User{})
-	if err != nil {
-		return err
-	}
-	err = db.AutoMigrate(&models.Team{})
-	if err != nil {
-		return err
-	}
-	err = db.AutoMigrate(&models.Player{})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func CreateApp(address, host, user, password, dbname, port string) (*App, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s",
 		host, user, password, dbname, port)
@@ -58,7 +42,7 @@ func CreateApp(address, host, user, password, dbname, port string) (*App, error)
 		return nil, err
 	}
 
-	err = Migrate(db)
+	err = migrations.Run(db)
 	if err != nil {
 		log.Fatal("Failed to migrate db")
 		return nil, err
