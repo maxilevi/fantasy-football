@@ -5,11 +5,8 @@ import (
 	"../models"
 	"../repos"
 	"encoding/json"
-	"fmt"
-	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"net/http"
-	"strconv"
 )
 
 func AddTeamRoutes(r *mux.Router, repo repos.Repository) {
@@ -25,6 +22,7 @@ func AddTeamRoutes(r *mux.Router, repo repos.Repository) {
 	rAdmin.HandleFunc("/{id}", wrap(handleDeleteTeam, repo)).Methods("DELETE")
 }
 
+// Handles a GET request to a team resource
 func handleGetTeam(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
 	team, err := getTeamFromRequest(w, req, repo)
 	if err != nil {
@@ -40,32 +38,7 @@ func handleGetTeam(w http.ResponseWriter, req *http.Request, repo repos.Reposito
 	writeResponse(w, http.StatusOK, data)
 }
 
-func makeTeamJson(team models.Team, repo repos.Repository) ([]byte, error) {
-	type TeamJson struct {
-		Id      uint   `json:"id"`
-		Name    string `json:"name"`
-		Country string `json:"country"`
-		Value   int    `json:"value"`
-		Budget  int    `json:"budget"`
-	}
-	t := TeamJson{
-		Id:      team.ID,
-		Name:    team.Name,
-		Country: team.Country,
-		Value:   int(teamMarketValue(team, repo)),
-		Budget:  team.Budget,
-	}
-	return json.Marshal(t)
-}
-
-func teamMarketValue(team models.Team, repo repos.Repository) int32 {
-	var sum int32
-	for _, player := range repo.GetPlayers(team.ID) {
-		sum += player.MarketValue
-	}
-	return sum
-}
-
+// Handles a PATCH request to a team resource
 func handlePatchTeam(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
 	user, err := getUserFromRequest(w, req)
 	team, err := getTeamFromRequest(w, req, repo)
@@ -100,18 +73,38 @@ func handlePatchTeam(w http.ResponseWriter, req *http.Request, repo repos.Reposi
 	writeResponse(w, http.StatusOK, []byte(`{"error": false}`))
 }
 
-func getUserFromRequest(w http.ResponseWriter, req *http.Request) (models.User, error) {
-	val, ok := context.GetOk(req, "user")
-	if !ok {
-		writeError(w, http.StatusInternalServerError, "Internal server error")
-		return models.User{}, fmt.Errorf("internal server error")
+
+func makeTeamJson(team models.Team, repo repos.Repository) ([]byte, error) {
+	type TeamJson struct {
+		Id      uint   `json:"id"`
+		Name    string `json:"name"`
+		Country string `json:"country"`
+		Value   int    `json:"value"`
+		Budget  int    `json:"budget"`
+		Players  []int    `json:"players"`
 	}
-	user, ok := val.(models.User)
-	if !ok {
-		writeError(w, http.StatusInternalServerError, "Internal server error")
-		return models.User{}, fmt.Errorf("internal server error")
+	players := make([]int, 0)
+	for _, p := range repo.GetPlayers(team.ID) {
+		players = append(players, int(p.ID))
 	}
-	return user, nil
+
+	t := TeamJson{
+		Id:      team.ID,
+		Name:    team.Name,
+		Country: team.Country,
+		Value:   int(teamMarketValue(team, repo)),
+		Budget:  team.Budget,
+		Players: players,
+	}
+	return json.Marshal(t)
+}
+
+func teamMarketValue(team models.Team, repo repos.Repository) int32 {
+	var sum int32
+	for _, player := range repo.GetPlayers(team.ID) {
+		sum += player.MarketValue
+	}
+	return sum
 }
 
 func getTeamFromRequest(w http.ResponseWriter, req *http.Request, repo repos.Repository) (models.Team, error) {
@@ -130,14 +123,4 @@ func validateTeamOwner(w http.ResponseWriter, user models.User, team models.Team
 		return false
 	}
 	return true
-}
-
-func parseIdFromRequest(w http.ResponseWriter, req *http.Request) (uint, error) {
-	vars := mux.Vars(req)
-	id, ok := strconv.ParseInt(vars["id"], 10, 32)
-	if ok != nil {
-		writeError(w, http.StatusBadRequest, "Invalid id")
-		return 0, fmt.Errorf("invalid id")
-	}
-	return uint(id), nil
 }
