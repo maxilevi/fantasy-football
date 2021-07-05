@@ -8,7 +8,7 @@ import (
 
 func Admin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		v, ok := context.GetOk(r,"user")
+		v, ok := context.GetOk(r, "user")
 		if !ok {
 			failedAuth(w, http.StatusUnauthorized, "Unauthorized")
 		}
@@ -19,4 +19,3 @@ func Admin(next http.Handler) http.Handler {
 		}
 	})
 }
-

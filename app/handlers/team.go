@@ -21,8 +21,8 @@ func AddTeamRoutes(r *mux.Router, repo repos.Repository) {
 	rAdmin := r.PathPrefix("/team").Subrouter()
 	rAdmin.Use(middleware.Auth(repo))
 	rAdmin.Use(middleware.Admin)
-	rAdmin.HandleFunc("/{id}", wrap(handlePostTeam, repo)).Methods( "POST")
-	rAdmin.HandleFunc("/{id}", wrap(handleDeleteTeam, repo)).Methods( "DELETE")
+	rAdmin.HandleFunc("/{id}", wrap(handlePostTeam, repo)).Methods("POST")
+	rAdmin.HandleFunc("/{id}", wrap(handleDeleteTeam, repo)).Methods("DELETE")
 }
 
 func handleGetTeam(w http.ResponseWriter, req *http.Request, repo repos.Repository) {

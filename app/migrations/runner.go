@@ -1,22 +1,22 @@
 package migrations
 
 import (
-	"gorm.io/gorm"
 	"../models"
 	"github.com/go-gormigrate/gormigrate/v2"
+	"gorm.io/gorm"
 )
 
 func Run(db *gorm.DB) error {
 	return db.AutoMigrate(&models.User{}, &models.Player{}, &models.Team{})
 	/*
-	m := gormigrate.New(db, gormigrate.DefaultOptions, getMigrations())
+		m := gormigrate.New(db, gormigrate.DefaultOptions, getMigrations())
 
-	if err := m.Migrate(); err != nil {
-		log.Fatalf("Could not migrate: %v", err)
-		return err
-	}
-	log.Printf("Migration did run successfully")
-	return nil
+		if err := m.Migrate(); err != nil {
+			log.Fatalf("Could not migrate: %v", err)
+			return err
+		}
+		log.Printf("Migration did run successfully")
+		return nil
 	*/
 }
 

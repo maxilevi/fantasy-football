@@ -110,22 +110,22 @@ func getPlayerFromRequest(w http.ResponseWriter, req *http.Request, repo repos.R
 }
 
 type playerPayload struct {
-	FirstName string `json:"first_name"`
-	LastName string `json:"last_name"`
-	Country string `json:"country"`
-	Age int `json:"age"`
-	MarketValue int `json:"market_value"`
-	Team int `json:"team"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Country     string `json:"country"`
+	Age         int    `json:"age"`
+	MarketValue int    `json:"market_value"`
+	Team        int    `json:"team"`
 }
 
 func makePlayerJson(p models.Player) ([]byte, error) {
 	return json.Marshal(playerPayload{
-		FirstName: p.FirstName,
-		LastName: p.LastName,
-		Country: p.Country,
-		Age: p.Age,
+		FirstName:   p.FirstName,
+		LastName:    p.LastName,
+		Country:     p.Country,
+		Age:         p.Age,
 		MarketValue: int(p.MarketValue),
-		Team: int(p.TeamID),
+		Team:        int(p.TeamID),
 	})
 }
 

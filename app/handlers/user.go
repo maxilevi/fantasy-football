@@ -19,9 +19,9 @@ func AddUserRoutes(r *mux.Router, repo repos.Repository) {
 	rAdmin := r.PathPrefix("/user").Subrouter()
 	rAdmin.Use(middleware.Auth(repo))
 	rAdmin.Use(middleware.Admin)
-	rAdmin.HandleFunc("/{id}", wrap(handleGetUser, repo)).Methods( "GET")
-	rAdmin.HandleFunc("/{id}", wrap(handleDeleteUser, repo)).Methods( "DELETE")
-	rAdmin.HandleFunc("/{id}", wrap(handlePatchUser, repo)).Methods( "PATCH")
+	rAdmin.HandleFunc("/{id}", wrap(handleGetUser, repo)).Methods("GET")
+	rAdmin.HandleFunc("/{id}", wrap(handleDeleteUser, repo)).Methods("DELETE")
+	rAdmin.HandleFunc("/{id}", wrap(handlePatchUser, repo)).Methods("PATCH")
 
 	rAuth := r.PathPrefix("/user").Subrouter()
 	rAuth.Use(middleware.Auth(repo))

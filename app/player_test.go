@@ -45,7 +45,6 @@ func TestPatchPlayer(t *testing.T) {
 		tests.AssertEqual(t, value, payload[key])
 	}
 
-
 	t.Cleanup(func() { truncateDb() })
 }
 
@@ -82,7 +81,7 @@ func getTokenAndPlayerIds(t *testing.T) (string, []int) {
 }
 
 func getPlayer(t *testing.T, token string, player int) map[string]interface{} {
-	resp, err := doGetRequest("player/" + strconv.Itoa(player), token, http.StatusOK)
+	resp, err := doGetRequest("player/"+strconv.Itoa(player), token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +90,7 @@ func getPlayer(t *testing.T, token string, player int) map[string]interface{} {
 
 func deletePlayer(t *testing.T, token string, player int) {
 	playerId := strconv.Itoa(player)
-	resp, err := doDeleteRequest("player/" + playerId, token, http.StatusOK)
+	resp, err := doDeleteRequest("player/"+playerId, token, http.StatusOK)
 	if err != nil || resp["error"].(bool) {
 		t.Fatal(err)
 	}
@@ -104,7 +103,7 @@ func patchPlayer(t *testing.T, token string, player int, payload map[string]inte
 		t.Fatal(err)
 	}
 
-	resp, err := doPatchRequest("player/" + playerId, token, body, http.StatusOK)
+	resp, err := doPatchRequest("player/"+playerId, token, body, http.StatusOK)
 	if err != nil || resp["error"].(bool) {
 		t.Fatal(err)
 	}
@@ -125,10 +124,10 @@ func postPlayer(t *testing.T, token string, payload map[string]interface{}) map[
 
 func getPlayerPayload() map[string]interface{} {
 	return map[string]interface{}{
-		"first_name": "test",
-		"last_name": "surname",
-		"age": 123,
-		"country": "united states",
+		"first_name":   "test",
+		"last_name":    "surname",
+		"age":          123,
+		"country":      "united states",
 		"market_value": 10203012,
 	}
 }
