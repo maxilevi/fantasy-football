@@ -5,6 +5,7 @@ import (
 	"../models"
 	"../repos"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -47,7 +48,7 @@ func handlePostPlayer(w http.ResponseWriter, req *http.Request, repo repos.Repos
 	}
 
 	player := models.Player{}
-	fillPlayerData(&player, payload)
+	fillPlayerData(&player, payload, true)
 
 	err = repo.UpdatePlayer(player)
 	if err != nil {
@@ -61,15 +62,22 @@ func handlePostPlayer(w http.ResponseWriter, req *http.Request, repo repos.Repos
 func handlePatchPlayer(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
 	payload, err1 := getPlayerJsonFromRequest(w, req)
 	player, err2 := getPlayerFromRequest(w, req, repo)
-	if err1 != nil || err2 != nil {
+	user, err3 := getUserFromRequest(w, req)
+	if err1 != nil || err2 != nil || err3 != nil {
+		return
+	}
+	isTeamOwner, isAdmin := player.Team.Owner.ID == user.ID, user.IsAdmin()
+	if !isAdmin && !isTeamOwner {
+		writeError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	fillPlayerData(&player, payload)
+	fillPlayerData(&player, payload, isAdmin)
 
 	err := repo.UpdatePlayer(player)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
+		return
 	}
 
 	writeResponse(w, http.StatusOK, []byte(`{"error": false}`))
@@ -132,11 +140,13 @@ func getPlayerJsonFromRequest(w http.ResponseWriter, req *http.Request) (playerP
 	return t, nil
 }
 
-func fillPlayerData(player *models.Player, payload playerPayload) {
+func fillPlayerData(player *models.Player, payload playerPayload, isAdmin bool) {
 	player.FirstName = payload.FirstName
 	player.LastName = payload.LastName
 	player.Country = payload.Country
-	player.TeamID = uint(payload.Team)
-	player.MarketValue = int32(payload.MarketValue)
-	player.Age = payload.Age
+	if isAdmin {
+		player.TeamID = uint(payload.Team)
+		player.MarketValue = int32(payload.MarketValue)
+		player.Age = payload.Age
+	}
 }
