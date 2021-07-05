@@ -2,7 +2,7 @@ package migrations
 
 import (
 	"../models"
-	"github.com/go-gormigrate/gormigrate/v2"
+	"github.com/go-gormigrate/gormigrate"
 	"gorm.io/gorm"
 )
 
