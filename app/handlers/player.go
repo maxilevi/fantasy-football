@@ -54,7 +54,7 @@ func handlePostPlayer(w http.ResponseWriter, req *http.Request, repo repos.Repos
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 	}
 
-	writeResponse(w, http.StatusOK, []byte(`{"error": false}`))
+	writeResponse(w, http.StatusOK, []byte(fmt.Sprintf(`{"error": false, "id": %v}`, player.ID)))
 }
 
 // Handles a PATCH request to the player resource
