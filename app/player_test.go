@@ -9,15 +9,15 @@ import (
 )
 
 func TestGetPlayersFromTeam(t *testing.T) {
+	setupTest()
 	token, players := getTokenAndPlayerIds(t)
 	for _, player := range players {
 		getPlayer(t, token, player)
 	}
-
-	t.Cleanup(func() { truncateDb() })
 }
 
 func TestDeletePlayer(t *testing.T) {
+	setupTest()
 	token, players := getTokenAndPlayerIds(t)
 
 	for _, player := range players {
@@ -26,10 +26,10 @@ func TestDeletePlayer(t *testing.T) {
 
 	_, players = getTokenAndPlayerIds(t)
 	tests.AssertEqual(t, players, make([]int, 0))
-	t.Cleanup(func() { truncateDb() })
 }
 
 func TestPatchPlayer(t *testing.T) {
+	setupTest()
 	token, players := getTokenAndPlayerIds(t)
 
 	player := players[0]
@@ -44,11 +44,10 @@ func TestPatchPlayer(t *testing.T) {
 		}
 		tests.AssertEqual(t, value, payload[key])
 	}
-
-	t.Cleanup(func() { truncateDb() })
 }
 
 func TestPostPlayer(t *testing.T) {
+	setupTest()
 	token := getUserToken(t, "test@gmail.com")
 
 	payload := getPlayerPayload()
@@ -60,8 +59,6 @@ func TestPostPlayer(t *testing.T) {
 		}
 		tests.AssertEqual(t, value, payload[key])
 	}
-
-	t.Cleanup(func() { truncateDb() })
 }
 
 func getTokenAndPlayerIds(t *testing.T) (string, []int) {
@@ -77,7 +74,13 @@ func getTokenAndPlayerIds(t *testing.T) (string, []int) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return token, resp["players"].([]int)
+
+	var ids []int
+	for _, p := range resp["players"].([]interface {}) {
+		ids = append(ids, int(p.(float64)))
+	}
+
+	return token, ids
 }
 
 func getPlayer(t *testing.T, token string, player int) map[string]interface{} {

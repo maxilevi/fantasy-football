@@ -36,6 +36,10 @@ func truncateDb() {
 	app.db.Where("1 = 1").Delete(&models.User{})
 }
 
+func setupTest() {
+	truncateDb()
+}
+
 func setupTestApp() *App {
 	err := godotenv.Load("../.env")
 	if err != nil {
@@ -139,7 +143,7 @@ func doRequest(resource string, token string, method string, body interface{}, e
 		return nil, err
 	}
 	if resp.StatusCode != expectedStatusCode {
-		return nil, fmt.Errorf("unexpected status code")
+		return nil, fmt.Errorf("unexpected status code %v", resp.StatusCode)
 	}
 
 	bodystr, err := ioutil.ReadAll(resp.Body)

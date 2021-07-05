@@ -6,17 +6,18 @@ import (
 )
 
 func TestRegisteringUserAndCreatingNewSession(t *testing.T) {
+	setupTest()
 	assertOkRegisteringUser(t, "test@gmail.com", "test1234")
 	token := assertOkCreatingSession(t, "test@gmail.com", "test1234")
 	if token == "" {
 		t.Fatal("invalid token")
 	}
-	t.Cleanup(func() { truncateDb() })
 }
 
 func TestCantLoginWithWrongPassword(t *testing.T) {
+	setupTest()
 	assertOkRegisteringUser(t, "test@gmail.com", "test1234")
-	resp, err := doPostRequest("session", map[string]string{
+	resp, err := doPostRequest("session", "", map[string]string{
 		"email":    "test@gmail.com",
 		"password": "asd12345",
 	}, http.StatusUnauthorized)
@@ -31,26 +32,24 @@ func TestCantLoginWithWrongPassword(t *testing.T) {
 	if ok {
 		t.Fatal("returned a valid token")
 	}
-	t.Cleanup(func() { truncateDb() })
 }
 
 func TestFailRegisteringUser(t *testing.T) {
+	setupTest()
 	assertFailureWhenRegisteringUserWithMessage(t, "test@gmail.com", "12", "Password needs a minimum of at least 8 characters", http.StatusBadRequest)
 	assertFailureWhenRegisteringUserWithMessage(t, "test", "12345678", "Invalid email", http.StatusBadRequest)
-	t.Cleanup(func() { truncateDb() })
 }
 
 func TestCantCreateUserTwice(t *testing.T) {
+	setupTest()
 	assertOkRegisteringUser(t, "test@gmail.com", "12345678")
 	assertFailureWhenRegisteringUserWithMessage(t, "test@gmail.com", "dasasdasd2", "Provided email is already registered", http.StatusBadRequest)
-	t.Cleanup(func() { truncateDb() })
 }
 
 func TestCantQueryUserIfNotLoggedIn(t *testing.T) {
+	setupTest()
 	resp, err := doGetRequest("user", "", http.StatusUnauthorized)
 	if err != nil || !resp["error"].(bool) {
 		t.Fatal(err)
 	}
-
-	t.Cleanup(func() { truncateDb() })
 }
