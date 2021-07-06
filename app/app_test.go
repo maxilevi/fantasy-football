@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -19,7 +20,7 @@ var app *App
 
 func TestMain(m *testing.M) {
 	app = setupTestApp()
-	truncateDb()
+	log.SetOutput(ioutil.Discard)
 	code := m.Run()
 	app.Close()
 	os.Exit(code)
