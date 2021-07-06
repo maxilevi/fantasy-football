@@ -63,6 +63,7 @@ func Auth(repo repos.Repository) func(next http.Handler) http.Handler {
 					return
 				}
 				context.Set(r, "user", user)
+				log.Println(fmt.Sprintf("user %v succesfully authenticated for request %v", claims.Email, r.RequestURI))
 				next.ServeHTTP(w, r)
 			} else {
 				failedAuth(w, http.StatusUnauthorized, "Unauthorized")

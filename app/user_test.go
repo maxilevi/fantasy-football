@@ -34,7 +34,10 @@ func TestCantGetUserNotAdmin(t *testing.T) {
 	userId := assertOkRegisteringUser(t, "test@gmail.com", "12345678")
 	token := getUserToken(t, "admin@gmail.com")
 
-	_, _ = doGetRequest("user/" + strconv.Itoa(userId), token, http.StatusUnauthorized)
+	_, err := doGetRequest("user/" + strconv.Itoa(userId), token, http.StatusUnauthorized)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestDeleteUser(t *testing.T) {
@@ -42,8 +45,15 @@ func TestDeleteUser(t *testing.T) {
 	userId := assertOkRegisteringUser(t, "test@gmail.com", "12345678")
 	token := getAdminUserToken(t, "admin@gmail.com")
 
-	_, _ = doDeleteRequest("user/"+strconv.Itoa(userId), token, http.StatusOK)
-	_, _ = doGetRequest("user/"+strconv.Itoa(userId), token, http.StatusNotFound)
+	_, err := doDeleteRequest("user/"+strconv.Itoa(userId), token, http.StatusOK)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = doGetRequest("user/"+strconv.Itoa(userId), token, http.StatusNotFound)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestPatchUser(t *testing.T) {

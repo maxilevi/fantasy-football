@@ -1,7 +1,6 @@
 package app
 
 import (
-	"encoding/json"
 	"gorm.io/gorm/utils/tests"
 	"net/http"
 	"strconv"
@@ -39,7 +38,7 @@ func TestPatchPlayer(t *testing.T) {
 	getResp := getPlayer(t, token, player)
 
 	for key, value := range getResp {
-		if key == "error" {
+		if key == "error" || key == "team" || key == "id" {
 			continue
 		}
 		tests.AssertEqual(t, value, payload[key])
@@ -111,24 +110,14 @@ func deletePlayer(t *testing.T, token string, player int) {
 
 func patchPlayer(t *testing.T, token string, player int, payload map[string]interface{}) {
 	playerId := strconv.Itoa(player)
-	body, err := json.Marshal(payload)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	resp, err := doPatchRequest("player/"+playerId, token, body, http.StatusOK)
+	resp, err := doPatchRequest("player/"+playerId, token, payload, http.StatusOK)
 	if err != nil || resp["error"].(bool) {
 		t.Fatal(err)
 	}
 }
 
 func postPlayer(t *testing.T, token string, payload map[string]interface{}) map[string]interface{} {
-	body, err := json.Marshal(payload)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	resp, err := doPostRequest("player", token, body, http.StatusOK)
+	resp, err := doPostRequest("player", token, payload, http.StatusOK)
 	if err != nil || resp["error"].(bool) {
 		t.Fatal(err)
 	}

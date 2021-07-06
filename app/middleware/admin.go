@@ -2,7 +2,9 @@ package middleware
 
 import (
 	"../models"
+	"fmt"
 	"github.com/gorilla/context"
+	"log"
 	"net/http"
 )
 
@@ -13,6 +15,7 @@ func Admin(next http.Handler) http.Handler {
 			failedAuth(w, http.StatusUnauthorized, "Unauthorized")
 		}
 		if u, ok := v.(models.User); ok && u.IsAdmin() {
+			log.Println(fmt.Sprintf("administrator role succesfully validated for request %v", r.RequestURI))
 			next.ServeHTTP(w, r)
 		} else {
 			failedAuth(w, http.StatusUnauthorized, "Unauthorized")

@@ -32,7 +32,7 @@ func getUserToken(t *testing.T, email string) string {
 
 func getAdminUserToken(t *testing.T, email string) string {
 	token := getUserToken(t, email)
-	res := app.db.Table("users").Update("permissionLevel", 1).Where("email = ?", email)
+	res := app.db.Table("users").Where("email = ?", email).Update("permission_level", 1)
 	if res.Error != nil {
 		t.Fatal(res.Error)
 	}
@@ -72,7 +72,7 @@ func setupTestApp() *App {
 }
 
 func assertOkRegisteringUser(t *testing.T, email string, pass string) (int) {
-	resp, err := doPostRequest("user", "", map[string]string{
+	resp, err := doPostRequest("user", "", map[string]interface{}{
 		"email":    email,
 		"password": pass,
 	}, http.StatusOK)
@@ -86,7 +86,7 @@ func assertOkRegisteringUser(t *testing.T, email string, pass string) (int) {
 }
 
 func assertOkCreatingSession(t *testing.T, email string, pass string) string {
-	resp, err := doPostRequest("session", "", map[string]string{
+	resp, err := doPostRequest("session", "", map[string]interface{}{
 		"email":    email,
 		"password": pass,
 	}, http.StatusOK)
@@ -100,7 +100,7 @@ func assertOkCreatingSession(t *testing.T, email string, pass string) string {
 }
 
 func assertFailureWhenRegisteringUserWithMessage(t *testing.T, email string, pass string, msg string, statusCode int) {
-	resp, err := doPostRequest("user", "", map[string]string{
+	resp, err := doPostRequest("user", "", map[string]interface{}{
 		"email":    email,
 		"password": pass,
 	}, statusCode)
@@ -116,23 +116,23 @@ func assertFailureWhenRegisteringUserWithMessage(t *testing.T, email string, pas
 	}
 }
 
-func doPostRequest(resource string, token string, body interface{}, expectedStatusCode int) (map[string]interface{}, error) {
+func doPostRequest(resource string, token string, body map[string]interface{}, expectedStatusCode int) (map[string]interface{}, error) {
 	return doRequest(resource, token, "POST", body, expectedStatusCode)
 }
 
 func doGetRequest(resource string, token string, expectedStatusCode int) (map[string]interface{}, error) {
-	return doRequest(resource, token, "GET", map[string]string{}, expectedStatusCode)
+	return doRequest(resource, token, "GET", map[string]interface{}{}, expectedStatusCode)
 }
 
-func doPatchRequest(resource string, token string, body interface{}, expectedStatusCode int) (map[string]interface{}, error) {
+func doPatchRequest(resource string, token string, body map[string]interface{}, expectedStatusCode int) (map[string]interface{}, error) {
 	return doRequest(resource, token, "PATCH", body, expectedStatusCode)
 }
 
 func doDeleteRequest(resource string, token string, expectedStatusCode int) (map[string]interface{}, error) {
-	return doRequest(resource, token, "DELETE", map[string]string{}, expectedStatusCode)
+	return doRequest(resource, token, "DELETE", map[string]interface{}{}, expectedStatusCode)
 }
 
-func doRequest(resource string, token string, method string, body interface{}, expectedStatusCode int) (map[string]interface{}, error) {
+func doRequest(resource string, token string, method string, body map[string]interface{}, expectedStatusCode int) (map[string]interface{}, error) {
 
 	postBody, err := json.Marshal(body)
 	if err != nil {

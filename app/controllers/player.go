@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 )
 
@@ -54,9 +55,11 @@ func (c *PlayerController) handlePostPlayer(w http.ResponseWriter, req *http.Req
 	player := models.Player{}
 	c.fillPlayerData(&player, payload, true)
 
-	err = c.Repo.Update(player)
+	err = c.Repo.Update(&player)
 	if err != nil {
+		log.Println(err)
 		writeError(w, http.StatusInternalServerError, "Internal server error")
+		return
 	}
 
 	writeResponse(w, http.StatusOK, []byte(fmt.Sprintf(`{"error": false, "id": %v}`, player.ID)))
@@ -78,8 +81,9 @@ func (c *PlayerController) handlePatchPlayer(w http.ResponseWriter, req *http.Re
 
 	c.fillPlayerData(&player, payload, isAdmin)
 
-	err := c.Repo.Update(player)
+	err := c.Repo.Update(&player)
 	if err != nil {
+		log.Println(err)
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -138,8 +142,10 @@ func (c *PlayerController) makePlayerJson(p models.Player) ([]byte, error) {
 func (c *PlayerController) getPlayerJsonFromRequest(w http.ResponseWriter, req *http.Request) (playerPayload, error) {
 	decoder := json.NewDecoder(req.Body)
 	var t playerPayload
+	t.Team = -1
 	err := decoder.Decode(&t)
 	if err != nil {
+		log.Println(err)
 		writeError(w, http.StatusBadRequest, "Incorrect body parameters")
 		return t, err
 	}
@@ -152,7 +158,9 @@ func (c *PlayerController) fillPlayerData(player *models.Player, payload playerP
 	player.LastName = payload.LastName
 	player.Country = payload.Country
 	if isAdmin {
-		player.TeamID = uint(payload.Team)
+		if payload.Team >= 0 {
+			player.TeamID = uint(payload.Team)
+		}
 		player.MarketValue = int32(payload.MarketValue)
 		player.Age = payload.Age
 	}

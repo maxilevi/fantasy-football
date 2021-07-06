@@ -17,7 +17,7 @@ func TestRegisteringUserAndCreatingNewSession(t *testing.T) {
 func TestCantLoginWithWrongPassword(t *testing.T) {
 	setupTest()
 	assertOkRegisteringUser(t, "test@gmail.com", "test1234")
-	resp, err := doPostRequest("session", "", map[string]string{
+	resp, err := doPostRequest("session", "", map[string]interface{}{
 		"email":    "test@gmail.com",
 		"password": "asd12345",
 	}, http.StatusUnauthorized)

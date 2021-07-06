@@ -14,8 +14,9 @@ type Repository interface {
 	GetPlayer(playerId uint) (models.Player, error)
 	GetPlayers(teamId uint) []models.Player
 	GetUserTeam(user models.User) (models.Team, error)
-	Update(player interface{}) error
-	Delete(player interface{}) error
+	Create(model interface{}) error
+	Update(model interface{}) error
+	Delete(model interface{}) error
 }
 
 type RepositorySQL struct {
@@ -67,6 +68,11 @@ func (u RepositorySQL) GetPlayer(playerId uint) (models.Player, error) {
 	var player models.Player
 	res := u.Db.Find(&player, playerId)
 	return player, res.Error
+}
+
+func (u RepositorySQL) Create(model interface{}) error {
+	res := u.Db.Save(model)
+	return res.Error
 }
 
 func (u RepositorySQL) Update(model interface{}) error {

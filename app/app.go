@@ -32,6 +32,7 @@ func (a *App) Configure() {
 	a.user = &controllers.UserController{Repo: repo}
 	a.session = &controllers.SessionController{Repo: repo}
 	a.player = &controllers.PlayerController{Repo: repo}
+	a.team = &controllers.TeamController{Repo: repo}
 	a.transfer = &controllers.TransferController{Repo: repo}
 
 	r := mux.NewRouter().PathPrefix("/api").Subrouter()

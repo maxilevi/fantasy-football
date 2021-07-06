@@ -5,7 +5,9 @@ import (
 	"../models"
 	"../repos"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
+	"log"
 	"net/http"
 )
 
@@ -22,7 +24,7 @@ func (c *TeamController) AddRoutes(r *mux.Router) {
 	rAdmin := r.PathPrefix("/team").Subrouter()
 	rAdmin.Use(middleware.Auth(c.Repo))
 	rAdmin.Use(middleware.Admin)
-	rAdmin.HandleFunc("/{id}", c.handlePostTeam).Methods("POST")
+	rAdmin.HandleFunc("", c.handlePostTeam).Methods("POST")
 	rAdmin.HandleFunc("/{id}", c.handleDeleteTeam).Methods("DELETE")
 }
 
@@ -42,51 +44,93 @@ func (c *TeamController) handleGetTeam(w http.ResponseWriter, req *http.Request)
 	writeResponse(w, http.StatusOK, data)
 }
 
+// Handles a POST request to a team resource
+func (c *TeamController) handlePostTeam(w http.ResponseWriter, req *http.Request) {
+	teamData, err := c.getTeamJson(w, req)
+	if err != nil {
+		return
+	}
+
+	team := models.Team{}
+	c.fillTeamData(&team, teamData)
+	team.Budget = teamData.Budget
+
+	err = c.Repo.Create(&team)
+	if err != nil {
+		log.Println(err)
+		writeError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	writeResponse(w, http.StatusOK, []byte(fmt.Sprintf(`{"error": false, "id": %v}`, team.ID)))
+}
+
+// Handles a DELETE request to a team resource
+func (c *TeamController) handleDeleteTeam(w http.ResponseWriter, req *http.Request) {
+	team, err := c.getTeamFromRequest(w, req)
+	if err != nil {
+		return
+	}
+
+	players := c.Repo.GetPlayers(team.ID)
+	if len(players) > 0 {
+		writeError(w, http.StatusBadRequest, "Cannot delete a team while it still has players")
+		return
+	}
+
+	err = c.Repo.Delete(team)
+	if err != nil {
+		log.Println(err)
+		writeError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	writeResponse(w, http.StatusOK, noError())
+}
+
 // Handles a PATCH request to a team resource
 func (c *TeamController) handlePatchTeam(w http.ResponseWriter, req *http.Request) {
 	user, err := getAuthenticatedUserFromRequest(w, req)
 	team, err := c.getTeamFromRequest(w, req)
-	if err != nil || !c.validateTeamOwner(w, user, team) {
+	if err != nil || (!user.IsAdmin() && !c.validateTeamOwner(w, user, team)) {
 		return
 	}
 
-	type patchTeamData struct {
-		Country string `json:"country"`
-		Name    string `json:"name"`
-		Budget  int    `json:"budget"`
-	}
-
-	decoder := json.NewDecoder(req.Body)
-	var t patchTeamData
-	err = decoder.Decode(&t)
+	t, err := c.getTeamJson(w, req)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Incorrect body parameters")
 		return
 	}
 
-	team.Country = t.Country
-	team.Name = t.Name
+	c.fillTeamData(&team, t)
 	if user.IsAdmin() {
 		team.Budget = t.Budget
 	}
-	err = c.Repo.Update(team)
+
+	err = c.Repo.Update(&team)
 	if err != nil {
+		log.Println(err)
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	writeResponse(w, http.StatusOK, noError())
 }
 
+type teamJson struct {
+	Id      uint   `json:"id"`
+	Name    string `json:"name"`
+	Country string `json:"country"`
+	MarketValue   int    `json:"market_value"`
+	Budget  int    `json:"budget"`
+	Players  []int    `json:"players"`
+}
 
+// Fill a team with data from a json structure
+func (c *TeamController) fillTeamData(team *models.Team, t teamJson) {
+	team.Country = t.Country
+	team.Name = t.Name
+}
+
+// Generate a json from a team model
 func (c *TeamController) makeTeamJson(team models.Team) ([]byte, error) {
-	type TeamJson struct {
-		Id      uint   `json:"id"`
-		Name    string `json:"name"`
-		Country string `json:"country"`
-		Value   int    `json:"value"`
-		Budget  int    `json:"budget"`
-		Players  []int    `json:"players"`
-	}
 	players := make([]int, 0)
 	marketValue := 0
 	for _, p := range c.Repo.GetPlayers(team.ID) {
@@ -94,15 +138,27 @@ func (c *TeamController) makeTeamJson(team models.Team) ([]byte, error) {
 		marketValue += int(p.MarketValue)
 	}
 
-	t := TeamJson{
+	t := teamJson{
 		Id:      team.ID,
 		Name:    team.Name,
 		Country: team.Country,
-		Value:   marketValue,
+		MarketValue:   marketValue,
 		Budget:  team.Budget,
 		Players: players,
 	}
 	return json.Marshal(t)
+}
+
+func (c *TeamController) getTeamJson(w http.ResponseWriter, req *http.Request) (teamJson, error) {
+
+	decoder := json.NewDecoder(req.Body)
+	var t teamJson
+	err := decoder.Decode(&t)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Incorrect body parameters")
+		return t, err
+	}
+	return t, nil
 }
 
 func (c *TeamController) getTeamFromRequest(w http.ResponseWriter, req *http.Request) (models.Team, error) {
