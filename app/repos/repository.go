@@ -17,6 +17,8 @@ type Repository interface {
 	Create(model interface{}) error
 	Update(model interface{}) error
 	Delete(model interface{}) error
+	GetTransfers() []models.Transfer
+	GetTransfer(id uint) (models.Transfer, error)
 }
 
 type RepositorySQL struct {
@@ -89,6 +91,18 @@ func (u RepositorySQL) GetUserTeam(user models.User) (models.Team, error) {
 	var team models.Team
 	res := u.Db.Where(&models.Team{OwnerID: user.ID}).Find(&team)
 	return team, res.Error
+}
+
+func (u RepositorySQL) GetTransfers() []models.Transfer {
+	var transfers []models.Transfer
+	u.Db.Where("1 = 1").Find(&transfers)
+	return transfers
+}
+
+func (u RepositorySQL) GetTransfer(id uint) (models.Transfer, error) {
+	var transfer models.Transfer
+	res := u.Db.Find(&transfer, id)
+	return transfer, res.Error
 }
 
 type RepositoryMemory struct {

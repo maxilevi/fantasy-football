@@ -43,6 +43,7 @@ func truncateDb() {
 	app.db.Where("1 = 1").Delete(&models.Player{})
 	app.db.Where("1 = 1").Delete(&models.Team{})
 	app.db.Where("1 = 1").Delete(&models.User{})
+	app.db.Where("1 = 1").Delete(&models.Transfer{})
 }
 
 func setupTest() {

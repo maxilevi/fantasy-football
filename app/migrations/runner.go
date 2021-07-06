@@ -7,7 +7,7 @@ import (
 )
 
 func Run(db *gorm.DB) error {
-	return db.AutoMigrate(&models.User{}, &models.Player{}, &models.Team{})
+	return db.AutoMigrate(&models.User{}, &models.Player{}, &models.Team{}, &models.Transfer{})
 	/*
 		m := gormigrate.New(db, gormigrate.DefaultOptions, getMigrations())
 
