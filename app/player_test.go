@@ -10,7 +10,7 @@ import (
 
 func TestGetPlayersFromTeam(t *testing.T) {
 	setupTest()
-	token, players := getTokenAndPlayerIds(t)
+	token, players := getTokenAndPlayerIds(t, false)
 	for _, player := range players {
 		getPlayer(t, token, player)
 	}
@@ -18,19 +18,19 @@ func TestGetPlayersFromTeam(t *testing.T) {
 
 func TestDeletePlayer(t *testing.T) {
 	setupTest()
-	token, players := getTokenAndPlayerIds(t)
+	token, players := getTokenAndPlayerIds(t, true)
 
 	for _, player := range players {
 		deletePlayer(t, token, player)
 	}
 
-	_, players = getTokenAndPlayerIds(t)
+	players = getPlayersFromToken(t, token)
 	tests.AssertEqual(t, players, make([]int, 0))
 }
 
 func TestPatchPlayer(t *testing.T) {
 	setupTest()
-	token, players := getTokenAndPlayerIds(t)
+	token, players := getTokenAndPlayerIds(t, true)
 
 	player := players[0]
 	payload := getPlayerPayload()
@@ -48,7 +48,7 @@ func TestPatchPlayer(t *testing.T) {
 
 func TestPostPlayer(t *testing.T) {
 	setupTest()
-	token := getUserToken(t, "test@gmail.com")
+	token := getAdminUserToken(t, "test@gmail.com")
 
 	payload := getPlayerPayload()
 	postResp := postPlayer(t, token, payload)
@@ -61,8 +61,19 @@ func TestPostPlayer(t *testing.T) {
 	}
 }
 
-func getTokenAndPlayerIds(t *testing.T) (string, []int) {
-	token := getUserToken(t, "test@gmail.com")
+func getTokenAndPlayerIds(t *testing.T, admin bool) (string, []int) {
+	var token string
+	if admin {
+		token = getAdminUserToken(t, "test@gmail.com")
+	} else {
+		token = getUserToken(t, "test@gmail.com")
+	}
+	ids := getPlayersFromToken(t, token)
+
+	return token, ids
+}
+
+func getPlayersFromToken(t *testing.T, token string) []int {
 	resp, err := doGetRequest("user", token, http.StatusOK)
 
 	if err != nil {
@@ -79,8 +90,7 @@ func getTokenAndPlayerIds(t *testing.T) (string, []int) {
 	for _, p := range resp["players"].([]interface {}) {
 		ids = append(ids, int(p.(float64)))
 	}
-
-	return token, ids
+	return ids
 }
 
 func getPlayer(t *testing.T, token string, player int) map[string]interface{} {

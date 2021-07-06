@@ -7,22 +7,22 @@ import (
 import "../models"
 
 type Repository interface {
-	CreateUser(email string, hash []byte, permission int)
-	GetUser(email string, user *models.User) error
+	CreateUser(email string, hash []byte, permission int) (models.User, error)
+	GetUserByEmail(email string) (models.User, error)
+	GetUserById(id uint) (models.User, error)
 	GetTeam(id uint) (models.Team, error)
 	GetPlayer(playerId uint) (models.Player, error)
 	GetPlayers(teamId uint) []models.Player
-	UpdateTeam(team models.Team) error
-	UpdatePlayer(player models.Player) error
-	DeletePlayer(player models.Player) error
 	GetUserTeam(user models.User) (models.Team, error)
+	Update(player interface{}) error
+	Delete(player interface{}) error
 }
 
 type RepositorySQL struct {
 	Db *gorm.DB
 }
 
-func (u RepositorySQL) CreateUser(email string, hash []byte, permission int) {
+func (u RepositorySQL) CreateUser(email string, hash []byte, permission int) (models.User, error) {
 	user := models.User{
 		Email:           email,
 		PasswordHash:    hash,
@@ -36,11 +36,19 @@ func (u RepositorySQL) CreateUser(email string, hash []byte, permission int) {
 		players[i].TeamID = team.ID
 		u.Db.Create(&players[i])
 	}
+	return user, nil
 }
 
-func (u RepositorySQL) GetUser(email string, user *models.User) error {
+func (u RepositorySQL) GetUserByEmail(email string) (models.User, error) {
+	var user models.User
 	res := u.Db.Where(models.User{Email: email}).First(&user)
-	return res.Error
+	return user, res.Error
+}
+
+func (u RepositorySQL) GetUserById(id uint) (models.User, error) {
+	var user models.User
+	res := u.Db.First(&user, id)
+	return user, res.Error
 }
 
 func (u RepositorySQL) GetTeam(id uint) (models.Team, error) {
@@ -61,18 +69,13 @@ func (u RepositorySQL) GetPlayer(playerId uint) (models.Player, error) {
 	return player, res.Error
 }
 
-func (u RepositorySQL) UpdateTeam(team models.Team) error {
-	res := u.Db.Save(team)
+func (u RepositorySQL) Update(model interface{}) error {
+	res := u.Db.Save(model)
 	return res.Error
 }
 
-func (u RepositorySQL) UpdatePlayer(player models.Player) error {
-	res := u.Db.Save(player)
-	return res.Error
-}
-
-func (u RepositorySQL) DeletePlayer(player models.Player) error {
-	res := u.Db.Delete(player)
+func (u RepositorySQL) Delete(model interface{}) error {
+	res := u.Db.Delete(model)
 	return res.Error
 }
 
@@ -131,11 +134,7 @@ func (u *RepositoryMemory) GetPlayers(teamId uint) []models.Player {
 	panic("implement me")
 }
 
-func (u *RepositoryMemory) UpdateTeam(team models.Team) error {
-	panic("implement me")
-}
-
-func (u *RepositoryMemory) UpdatePlayer(player models.Player) error {
+func (u *RepositoryMemory) Update(model interface{}) error {
 	panic("implement me")
 }
 

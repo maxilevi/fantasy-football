@@ -30,6 +30,15 @@ func getUserToken(t *testing.T, email string) string {
 	return assertOkCreatingSession(t, email, "test1234")
 }
 
+func getAdminUserToken(t *testing.T, email string) string {
+	token := getUserToken(t, email)
+	res := app.db.Table("users").Update("permissionLevel", 1).Where("email = ?", email)
+	if res.Error != nil {
+		t.Fatal(res.Error)
+	}
+	return token
+}
+
 func truncateDb() {
 	app.db.Where("1 = 1").Delete(&models.Player{})
 	app.db.Where("1 = 1").Delete(&models.Team{})
@@ -62,7 +71,7 @@ func setupTestApp() *App {
 	return app
 }
 
-func assertOkRegisteringUser(t *testing.T, email string, pass string) {
+func assertOkRegisteringUser(t *testing.T, email string, pass string) (int) {
 	resp, err := doPostRequest("user", "", map[string]string{
 		"email":    email,
 		"password": pass,
@@ -73,6 +82,7 @@ func assertOkRegisteringUser(t *testing.T, email string, pass string) {
 	if err, valid := resp["error"].(bool); err || !valid {
 		t.Fatalf("unexpected response %v", resp["message"])
 	}
+	return int(resp["id"].(float64))
 }
 
 func assertOkCreatingSession(t *testing.T, email string, pass string) string {
