@@ -44,6 +44,23 @@ func handleGetMe(w http.ResponseWriter, req *http.Request, repo repos.Repository
 }
 
 func handleGetUser(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
+	id, err := parseIdFromRequest(w, req)
+	if err != nil {
+		return
+	}
+
+	user, err := repo.GetUserById(id)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "Not found")
+		return
+	}
+}
+
+func handleDeleteUser(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
+
+}
+
+func handlePatchUser(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
 	/*user, err := getUserFromRequest(w, req, repo)
 
 	payload, err := getUserJson(user, repo)
@@ -51,35 +68,6 @@ func handleGetUser(w http.ResponseWriter, req *http.Request, repo repos.Reposito
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}*/
-}
-
-func getUserJson(user models.User, repo repos.Repository) ([]byte, error) {
-	team, err := repo.GetUserTeam(user)
-	if err != nil {
-		return nil, err
-	}
-
-	type userJson struct {
-		Email string `json:"email"`
-		Team  uint   `json:"team"`
-	}
-
-	data := userJson{
-		Email: user.Email,
-		Team:  team.ID,
-	}
-
-	payload, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return payload, nil
-}
-
-type userRegistration struct {
-	Email    string
-	Password string
 }
 
 func handlePostUser(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
@@ -112,6 +100,35 @@ func handlePostUser(w http.ResponseWriter, req *http.Request, repo repos.Reposit
 	}
 
 	writeResponse(w, 200, []byte(`{"error": false}`))
+}
+
+type userRegistration struct {
+	Email    string
+	Password string
+}
+
+func getUserJson(user models.User, repo repos.Repository) ([]byte, error) {
+	team, err := repo.GetUserTeam(user)
+	if err != nil {
+		return nil, err
+	}
+
+	type userJson struct {
+		Email string `json:"email"`
+		Team  uint   `json:"team"`
+	}
+
+	data := userJson{
+		Email: user.Email,
+		Team:  team.ID,
+	}
+
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return payload, nil
 }
 
 func validPassword(password string) bool {
