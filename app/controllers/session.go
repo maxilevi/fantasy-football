@@ -32,17 +32,17 @@ func (c *SessionController) handlePostSession(w http.ResponseWriter, req *http.R
 	var t sessionCreation
 	err := decoder.Decode(&t)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Incorrect body parameters")
+		writeErrorResponse(w, http.StatusBadRequest, "Incorrect body parameters")
 		return
 	}
 	user, err := c.loginAndGetUser(t.Email, t.Password)
 	if err != nil {
-		writeError(w, http.StatusUnauthorized, "Invalid email or password")
+		writeErrorResponse(w, http.StatusUnauthorized, "Invalid email or password")
 		return
 	}
 	token, err := c.createToken(user)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	writeResponse(w, http.StatusOK, []byte(`{"error": false, "token": "`+token+`"}`))

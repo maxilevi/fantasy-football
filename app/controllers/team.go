@@ -37,7 +37,7 @@ func (c *TeamController) handleGetTeam(w http.ResponseWriter, req *http.Request)
 
 	data, err := c.makeTeamJson(team)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -58,7 +58,7 @@ func (c *TeamController) handlePostTeam(w http.ResponseWriter, req *http.Request
 	err = c.Repo.Create(&team)
 	if err != nil {
 		log.Println(err)
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	writeResponse(w, http.StatusOK, []byte(fmt.Sprintf(`{"error": false, "id": %v}`, team.ID)))
@@ -73,14 +73,14 @@ func (c *TeamController) handleDeleteTeam(w http.ResponseWriter, req *http.Reque
 
 	players := c.Repo.GetPlayers(team.ID)
 	if len(players) > 0 {
-		writeError(w, http.StatusBadRequest, "Cannot delete a team while it still has players")
+		writeErrorResponse(w, http.StatusBadRequest, "Cannot delete a team while it still has players")
 		return
 	}
 
 	err = c.Repo.Delete(team)
 	if err != nil {
 		log.Println(err)
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -108,7 +108,7 @@ func (c *TeamController) handlePatchTeam(w http.ResponseWriter, req *http.Reques
 	err = c.Repo.Update(&team)
 	if err != nil {
 		log.Println(err)
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	writeResponse(w, http.StatusOK, noError())
@@ -155,7 +155,7 @@ func (c *TeamController) getTeamJson(w http.ResponseWriter, req *http.Request) (
 	var t teamJson
 	err := decoder.Decode(&t)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Incorrect body parameters")
+		writeErrorResponse(w, http.StatusBadRequest, "Incorrect body parameters")
 		return t, err
 	}
 	return t, nil
@@ -165,7 +165,7 @@ func (c *TeamController) getTeamFromRequest(w http.ResponseWriter, req *http.Req
 	id, err := parseIdFromRequest(w, req)
 	team, err := c.Repo.GetTeam(id)
 	if err != nil {
-		writeError(w, http.StatusNotFound, "Not found")
+		writeErrorResponse(w, http.StatusNotFound, "Not found")
 		return models.Team{}, err
 	}
 	return team, nil
@@ -173,7 +173,7 @@ func (c *TeamController) getTeamFromRequest(w http.ResponseWriter, req *http.Req
 
 func (c *TeamController) validateTeamOwner(w http.ResponseWriter, user models.User, team models.Team) bool {
 	if user.ID != team.OwnerID {
-		writeError(w, http.StatusUnauthorized, "unauthorized")
+		writeErrorResponse(w, http.StatusUnauthorized, "unauthorized")
 		return false
 	}
 	return true

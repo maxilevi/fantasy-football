@@ -42,7 +42,7 @@ func (c *UserController) handleGetMe(w http.ResponseWriter, req *http.Request) {
 
 	payload, err := c.makeUserJson(user)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -58,7 +58,7 @@ func (c *UserController) handleGetUser(w http.ResponseWriter, req *http.Request)
 
 	resp, err := c.makeUserJson(user)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	writeResponse(w, http.StatusOK, resp)
@@ -73,7 +73,7 @@ func (c *UserController) handleDeleteUser(w http.ResponseWriter, req *http.Reque
 
 	err = c.Repo.Delete(user)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 	writeResponse(w, http.StatusOK, noError())
@@ -88,7 +88,7 @@ func (c *UserController) handlePatchUser(w http.ResponseWriter, req *http.Reques
 
 	payload, err := getUserJson(user, Repo)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}*/
 }
@@ -103,19 +103,19 @@ func (c *UserController) handlePostUser(w http.ResponseWriter, req *http.Request
 	var t userRegistration
 	err := decoder.Decode(&t)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "Incorrect body parameters")
+		writeErrorResponse(w, http.StatusBadRequest, "Incorrect body parameters")
 		return
 	}
 	if !c.validEmail(t.Email) {
-		writeError(w, http.StatusBadRequest, "Invalid email")
+		writeErrorResponse(w, http.StatusBadRequest, "Invalid email")
 		return
 	}
 	if c.emailExists(t.Email) {
-		writeError(w, http.StatusBadRequest, "Provided email is already registered")
+		writeErrorResponse(w, http.StatusBadRequest, "Provided email is already registered")
 		return
 	}
 	if !c.validPassword(t.Password) {
-		writeError(w, http.StatusBadRequest, "Password needs a minimum of at least 8 characters")
+		writeErrorResponse(w, http.StatusBadRequest, "Password needs a minimum of at least 8 characters")
 		return
 	}
 
@@ -123,7 +123,7 @@ func (c *UserController) handlePostUser(w http.ResponseWriter, req *http.Request
 
 	user, err := c.registerUser(t.Email, t.Password)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -191,7 +191,7 @@ func (c *UserController) getUserFromRequest(w http.ResponseWriter, req *http.Req
 
 	user, err := c.Repo.GetUserById(id)
 	if err != nil {
-		writeError(w, http.StatusNotFound, "Not found")
+		writeErrorResponse(w, http.StatusNotFound, "Not found")
 		return models.User{}, err
 	}
 	return user, err

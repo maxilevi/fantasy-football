@@ -38,7 +38,7 @@ func (c *PlayerController) handleGetPlayer(w http.ResponseWriter, req *http.Requ
 	/// Add check if it's the team owner
 	data, err := c.makePlayerJson(player)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -58,7 +58,7 @@ func (c *PlayerController) handlePostPlayer(w http.ResponseWriter, req *http.Req
 	err = c.Repo.Update(&player)
 	if err != nil {
 		log.Println(err)
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -75,7 +75,7 @@ func (c *PlayerController) handlePatchPlayer(w http.ResponseWriter, req *http.Re
 	}
 	isTeamOwner, isAdmin := player.Team.Owner.ID == user.ID, user.IsAdmin()
 	if !isAdmin && !isTeamOwner {
-		writeError(w, http.StatusUnauthorized, "Unauthorized")
+		writeErrorResponse(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -84,7 +84,7 @@ func (c *PlayerController) handlePatchPlayer(w http.ResponseWriter, req *http.Re
 	err := c.Repo.Update(&player)
 	if err != nil {
 		log.Println(err)
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
@@ -100,7 +100,7 @@ func (c *PlayerController) handleDeletePlayer(w http.ResponseWriter, req *http.R
 
 	err = c.Repo.Delete(player)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Internal server error")
+		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 	}
 
 	writeResponse(w, http.StatusOK, noError())
@@ -111,7 +111,7 @@ func (c *PlayerController) getPlayerFromRequest(w http.ResponseWriter, req *http
 	id, err := parseIdFromRequest(w, req)
 	player, err := c.Repo.GetPlayer(id)
 	if err != nil {
-		writeError(w, http.StatusNotFound, "Not found")
+		writeErrorResponse(w, http.StatusNotFound, "Not found")
 		return models.Player{}, err
 	}
 	return player, nil
@@ -146,7 +146,7 @@ func (c *PlayerController) getPlayerJsonFromRequest(w http.ResponseWriter, req *
 	err := decoder.Decode(&t)
 	if err != nil {
 		log.Println(err)
-		writeError(w, http.StatusBadRequest, "Incorrect body parameters")
+		writeErrorResponse(w, http.StatusBadRequest, "Incorrect body parameters")
 		return t, err
 	}
 	return t, nil
