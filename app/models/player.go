@@ -6,6 +6,13 @@ import (
 	"math/rand"
 )
 
+const (
+	goalkeeper = iota
+	defender
+	midfielder
+	attacker
+)
+
 type Player struct {
 	gorm.Model
 	FirstName   string
@@ -13,17 +20,19 @@ type Player struct {
 	Country     string
 	Age         int
 	MarketValue int32
+	Position	int
 	TeamID      uint
 	Team        Team
 }
 
-func RandomPlayer() Player {
+func RandomPlayer(position int) Player {
 	return Player{
 		MarketValue: 1000000,
 		FirstName:   randomdata.FirstName(randomdata.RandomGender),
 		LastName:    randomdata.LastName(),
 		Age:         randomAge(),
 		Country:     randomdata.Country(randomdata.FullCountry),
+		Position:    position,
 	}
 }
 

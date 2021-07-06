@@ -5,7 +5,13 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-const teamSize = 20
+const (
+	teamSize = 20
+	goalKeeperCount = 3
+	defenderCount = 6
+	midfielderCount = 6
+	attackerCount = 5
+)
 
 type Team struct {
 	gorm.Model
@@ -23,8 +29,18 @@ func RandomTeam() (Team, []Player) {
 		Budget:  5000000,
 	}
 	players := make([]Player, teamSize)
-	for i := 0; i < len(players); i++ {
-		players[i] = RandomPlayer()
+	i := 0
+	for ;i < i + goalKeeperCount; i++ {
+		players[i] = RandomPlayer(goalkeeper)
+	}
+	for ;i < i + defenderCount; i++ {
+		players[i] = RandomPlayer(defender)
+	}
+	for ;i < i + midfielderCount; i++ {
+		players[i] = RandomPlayer(midfielder)
+	}
+	for ;i < i + attackerCount; i++ {
+		players[i] = RandomPlayer(attacker)
 	}
 	return team, players
 }
