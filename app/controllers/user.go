@@ -1,10 +1,11 @@
-package handlers
+package controllers
 
 import (
 	"../middleware"
 	"../models"
 	"../repos"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 	"log"
@@ -12,29 +13,34 @@ import (
 	"net/mail"
 )
 
-func AddUserRoutes(r *mux.Router, repo repos.Repository) {
-
-	r.HandleFunc("/user", wrap(handlePostUser, repo)).Methods("POST")
-
-	rAdmin := r.PathPrefix("/user").Subrouter()
-	rAdmin.Use(middleware.Auth(repo))
-	rAdmin.Use(middleware.Admin)
-	rAdmin.HandleFunc("/{id}", wrap(handleGetUser, repo)).Methods("GET")
-	rAdmin.HandleFunc("/{id}", wrap(handleDeleteUser, repo)).Methods("DELETE")
-	rAdmin.HandleFunc("/{id}", wrap(handlePatchUser, repo)).Methods("PATCH")
-
-	rAuth := r.PathPrefix("/user").Subrouter()
-	rAuth.Use(middleware.Auth(repo))
-	rAuth.HandleFunc("", wrap(handleGetMe, repo)).Methods("GET")
+type UserController struct {
+	Repo repos.Repository
 }
 
-func handleGetMe(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
-	user, err := getUserFromRequest(w, req)
+func (c *UserController) AddRoutes(r *mux.Router) {
+
+	r.HandleFunc("/user", c.handlePostUser).Methods("POST")
+
+	rAdmin := r.PathPrefix("/user").Subrouter()
+	rAdmin.Use(middleware.Auth(c.Repo))
+	rAdmin.Use(middleware.Admin)
+	rAdmin.HandleFunc("/{id}", c.handleGetUser).Methods("GET")
+	rAdmin.HandleFunc("/{id}", c.handleDeleteUser).Methods("DELETE")
+	rAdmin.HandleFunc("/{id}", c.handlePatchUser).Methods("PATCH")
+
+	rAuth := r.PathPrefix("/user").Subrouter()
+	rAuth.Use(middleware.Auth(c.Repo))
+	rAuth.HandleFunc("", c.handleGetMe).Methods("GET")
+}
+
+// Handles GET request to the user resource when no ID is provided
+func (c *UserController) handleGetMe(w http.ResponseWriter, req *http.Request) {
+	user, err := getAuthenticatedUserFromRequest(w, req)
 	if err != nil {
 		return
 	}
 
-	payload, err := getUserJson(user, repo)
+	payload, err := c.makeUserJson(user)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
@@ -43,72 +49,90 @@ func handleGetMe(w http.ResponseWriter, req *http.Request, repo repos.Repository
 	writeResponse(w, http.StatusOK, payload)
 }
 
-func handleGetUser(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
-	id, err := parseIdFromRequest(w, req)
+// Handles GET request to the user resource
+func (c *UserController) handleGetUser(w http.ResponseWriter, req *http.Request) {
+	user, err := c.getUserFromRequest(w, req)
 	if err != nil {
 		return
 	}
 
-	user, err := repo.GetUserById(id)
+	resp, err := c.makeUserJson(user)
 	if err != nil {
-		writeError(w, http.StatusNotFound, "Not found")
+		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
+	writeResponse(w, http.StatusOK, resp)
 }
 
-func handleDeleteUser(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
+// Handles DELETE requests to the user's resource
+func (c *UserController) handleDeleteUser(w http.ResponseWriter, req *http.Request) {
+	user, err := c.getUserFromRequest(w, req)
+	if err != nil {
+		return
+	}
 
+	err = c.Repo.Delete(user)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	writeResponse(w, http.StatusOK, noError())
 }
 
-func handlePatchUser(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
-	/*user, err := getUserFromRequest(w, req, repo)
+// Handles PATCH requests to the user's resource
+func (c *UserController) handlePatchUser(w http.ResponseWriter, req *http.Request) {
+	/*user, err := c.getAuthenticatedUserFromRequest(w, req)
+	if err != nil {
+		return
+	}
 
-	payload, err := getUserJson(user, repo)
+	payload, err := getUserJson(user, Repo)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}*/
 }
 
-func handlePostUser(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
+// Handles POST request to the user resource
+func (c *UserController) handlePostUser(w http.ResponseWriter, req *http.Request) {
 	decoder := json.NewDecoder(req.Body)
+	type userRegistration struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
 	var t userRegistration
 	err := decoder.Decode(&t)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "Incorrect body parameters")
 		return
 	}
-	if !validEmail(t.Email) {
+	if !c.validEmail(t.Email) {
 		writeError(w, http.StatusBadRequest, "Invalid email")
 		return
 	}
-	if emailExists(t.Email, repo) {
+	if c.emailExists(t.Email) {
 		writeError(w, http.StatusBadRequest, "Provided email is already registered")
 		return
 	}
-	if !validPassword(t.Password) {
+	if !c.validPassword(t.Password) {
 		writeError(w, http.StatusBadRequest, "Password needs a minimum of at least 8 characters")
 		return
 	}
 
 	log.Println("Registering a new user...")
 
-	err = registerUser(t, repo)
+	user, err := c.registerUser(t.Email, t.Password)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	writeResponse(w, 200, []byte(`{"error": false}`))
+	writeResponse(w, http.StatusOK, []byte(fmt.Sprintf(`{"error": false, "id": %v}`, user.ID)))
 }
 
-type userRegistration struct {
-	Email    string
-	Password string
-}
-
-func getUserJson(user models.User, repo repos.Repository) ([]byte, error) {
-	team, err := repo.GetUserTeam(user)
+// Return a json representation from a given user
+func (c *UserController) makeUserJson(user models.User) ([]byte, error) {
+	team, err := c.Repo.GetUserTeam(user)
 	if err != nil {
 		return nil, err
 	}
@@ -131,27 +155,44 @@ func getUserJson(user models.User, repo repos.Repository) ([]byte, error) {
 	return payload, nil
 }
 
-func validPassword(password string) bool {
+// Returns a bool to check if the password is valid
+func (c *UserController) validPassword(password string) bool {
 	return len(password) >= 8
 }
 
-func validEmail(email string) bool {
+// Returns a bool to check if the email is valid
+func (c *UserController) validEmail(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil
 }
 
-func emailExists(email string, repo repos.Repository) bool {
-	var user models.User
-	err := repo.GetUser(email, &user)
+// Return a bool to see if the email is already registered
+func (c *UserController) emailExists(email string) bool {
+	_, err := c.Repo.GetUserByEmail(email)
 	return err == nil
 }
 
-func registerUser(reg userRegistration, repo repos.Repository) error {
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(reg.Password), bcrypt.DefaultCost)
+// Registers a new user with the given credentials
+func (c *UserController) registerUser(email, password string) (models.User, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return models.User{}, err
 	}
 
-	repo.CreateUser(reg.Email, hashedPassword, 0)
-	return nil
+	return c.Repo.CreateUser(email, hashedPassword, 0)
+}
+
+// Parse a user from the request parameters or return an error if not found
+func (c *UserController) getUserFromRequest(w http.ResponseWriter, req *http.Request) (models.User, error) {
+	id, err := parseIdFromRequest(w, req)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	user, err := c.Repo.GetUserById(id)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "Not found")
+		return models.User{}, err
+	}
+	return user, err
 }

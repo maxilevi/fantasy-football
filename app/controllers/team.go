@@ -1,4 +1,4 @@
-package handlers
+package controllers
 
 import (
 	"../middleware"
@@ -9,27 +9,31 @@ import (
 	"net/http"
 )
 
-func AddTeamRoutes(r *mux.Router, repo repos.Repository) {
+type TeamController struct {
+	Repo repos.Repository
+}
+
+func (c *TeamController) AddRoutes(r *mux.Router) {
 	rAuth := r.PathPrefix("/team").Subrouter()
-	rAuth.Use(middleware.Auth(repo))
-	rAuth.HandleFunc("/{id}", wrap(handleGetTeam, repo)).Methods("GET")
-	rAuth.HandleFunc("/{id}", wrap(handlePatchTeam, repo)).Methods("PATCH")
+	rAuth.Use(middleware.Auth(c.Repo))
+	rAuth.HandleFunc("/{id}", c.handleGetTeam).Methods("GET")
+	rAuth.HandleFunc("/{id}", c.handlePatchTeam).Methods("PATCH")
 
 	rAdmin := r.PathPrefix("/team").Subrouter()
-	rAdmin.Use(middleware.Auth(repo))
+	rAdmin.Use(middleware.Auth(c.Repo))
 	rAdmin.Use(middleware.Admin)
-	rAdmin.HandleFunc("/{id}", wrap(handlePostTeam, repo)).Methods("POST")
-	rAdmin.HandleFunc("/{id}", wrap(handleDeleteTeam, repo)).Methods("DELETE")
+	rAdmin.HandleFunc("/{id}", c.handlePostTeam).Methods("POST")
+	rAdmin.HandleFunc("/{id}", c.handleDeleteTeam).Methods("DELETE")
 }
 
 // Handles a GET request to a team resource
-func handleGetTeam(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
-	team, err := getTeamFromRequest(w, req, repo)
+func (c *TeamController) handleGetTeam(w http.ResponseWriter, req *http.Request) {
+	team, err := c.getTeamFromRequest(w, req)
 	if err != nil {
 		return
 	}
 
-	data, err := makeTeamJson(team, repo)
+	data, err := c.makeTeamJson(team)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
@@ -39,10 +43,10 @@ func handleGetTeam(w http.ResponseWriter, req *http.Request, repo repos.Reposito
 }
 
 // Handles a PATCH request to a team resource
-func handlePatchTeam(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
-	user, err := getUserFromRequest(w, req)
-	team, err := getTeamFromRequest(w, req, repo)
-	if err != nil || !validateTeamOwner(w, user, team) {
+func (c *TeamController) handlePatchTeam(w http.ResponseWriter, req *http.Request) {
+	user, err := getAuthenticatedUserFromRequest(w, req)
+	team, err := c.getTeamFromRequest(w, req)
+	if err != nil || !c.validateTeamOwner(w, user, team) {
 		return
 	}
 
@@ -65,16 +69,16 @@ func handlePatchTeam(w http.ResponseWriter, req *http.Request, repo repos.Reposi
 	if user.IsAdmin() {
 		team.Budget = t.Budget
 	}
-	err = repo.UpdateTeam(team)
+	err = c.Repo.Update(team)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	writeResponse(w, http.StatusOK, []byte(`{"error": false}`))
+	writeResponse(w, http.StatusOK, noError())
 }
 
 
-func makeTeamJson(team models.Team, repo repos.Repository) ([]byte, error) {
+func (c *TeamController) makeTeamJson(team models.Team) ([]byte, error) {
 	type TeamJson struct {
 		Id      uint   `json:"id"`
 		Name    string `json:"name"`
@@ -84,32 +88,26 @@ func makeTeamJson(team models.Team, repo repos.Repository) ([]byte, error) {
 		Players  []int    `json:"players"`
 	}
 	players := make([]int, 0)
-	for _, p := range repo.GetPlayers(team.ID) {
+	marketValue := 0
+	for _, p := range c.Repo.GetPlayers(team.ID) {
 		players = append(players, int(p.ID))
+		marketValue += int(p.MarketValue)
 	}
 
 	t := TeamJson{
 		Id:      team.ID,
 		Name:    team.Name,
 		Country: team.Country,
-		Value:   int(teamMarketValue(team, repo)),
+		Value:   marketValue,
 		Budget:  team.Budget,
 		Players: players,
 	}
 	return json.Marshal(t)
 }
 
-func teamMarketValue(team models.Team, repo repos.Repository) int32 {
-	var sum int32
-	for _, player := range repo.GetPlayers(team.ID) {
-		sum += player.MarketValue
-	}
-	return sum
-}
-
-func getTeamFromRequest(w http.ResponseWriter, req *http.Request, repo repos.Repository) (models.Team, error) {
+func (c *TeamController) getTeamFromRequest(w http.ResponseWriter, req *http.Request) (models.Team, error) {
 	id, err := parseIdFromRequest(w, req)
-	team, err := repo.GetTeam(id)
+	team, err := c.Repo.GetTeam(id)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Not found")
 		return models.Team{}, err
@@ -117,7 +115,7 @@ func getTeamFromRequest(w http.ResponseWriter, req *http.Request, repo repos.Rep
 	return team, nil
 }
 
-func validateTeamOwner(w http.ResponseWriter, user models.User, team models.Team) bool {
+func (c *TeamController) validateTeamOwner(w http.ResponseWriter, user models.User, team models.Team) bool {
 	if user.ID != team.OwnerID {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return false

@@ -1,4 +1,4 @@
-package handlers
+package controllers
 
 import (
 	"../middleware"
@@ -12,50 +12,59 @@ import (
 	"time"
 )
 
-func AddSessionRoutes(r *mux.Router, repo repos.Repository) {
-	r.HandleFunc("/session", wrap(handlePostSession, repo)).Methods("POST")
+type SessionController struct {
+	Repo repos.Repository
 }
 
-type sessionCreation struct {
-	Email    string
-	Password string
+func (c *SessionController) AddRoutes(r *mux.Router) {
+	r.HandleFunc("/session", c.handlePostSession).Methods("POST")
 }
 
-func handlePostSession(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
+// Handles creating a new session
+func (c *SessionController) handlePostSession(w http.ResponseWriter, req *http.Request) {
 	decoder := json.NewDecoder(req.Body)
+
+	type sessionCreation struct {
+		Email    string
+		Password string
+	}
+
 	var t sessionCreation
 	err := decoder.Decode(&t)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "Incorrect body parameters")
 		return
 	}
-	user, err := getUser(t, repo)
+	user, err := c.loginAndGetUser(t.Email, t.Password)
 	if err != nil {
 		writeError(w, http.StatusUnauthorized, "Invalid email or password")
 		return
 	}
-	token, err := createToken(user)
+	token, err := c.createToken(user)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	writeResponse(w, 200, []byte(`{"error": false, "token": "`+token+`"}`))
+	writeResponse(w, http.StatusOK, []byte(`{"error": false, "token": "`+token+`"}`))
 }
 
-func getUser(params sessionCreation, repo repos.Repository) (*models.User, error) {
-	var user models.User
-	err := repo.GetUser(params.Email, &user)
+// Tries to login the user and returns it if successful
+func (c *SessionController) loginAndGetUser(email, password string) (*models.User, error) {
+	user, err := c.Repo.GetUserByEmail(email)
 	if err != nil {
 		return &user, err
 	}
-	err = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(params.Password))
+
+	err = bcrypt.CompareHashAndPassword(user.PasswordHash, []byte(password))
 	if err != nil {
 		return &user, err
 	}
+
 	return &user, nil
 }
 
-func createToken(user *models.User) (string, error) {
+// Creates a JWT token for a specific user
+func (c *SessionController) createToken(user *models.User) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &middleware.AuthClaims{
 		Email: user.Email,

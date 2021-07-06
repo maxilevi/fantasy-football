@@ -1,7 +1,7 @@
 package app
 
 import (
-	"./handlers"
+	"./controllers"
 	"./middleware"
 	"./migrations"
 	"./repos"
@@ -20,17 +20,30 @@ type App struct {
 	router    *mux.Router
 	db        *gorm.DB
 	IsRunning bool
+	user *controllers.UserController
+	session *controllers.SessionController
+	player *controllers.PlayerController
+	team *controllers.TeamController
+	transfer *controllers.TransferController
 }
 
-func Configure(db *gorm.DB) *mux.Router {
+func (a *App) Configure() {
+	repo := repos.RepositorySQL{Db: a.db}
+	a.user = &controllers.UserController{Repo: repo}
+	a.session = &controllers.SessionController{Repo: repo}
+	a.player = &controllers.PlayerController{Repo: repo}
+	a.transfer = &controllers.TransferController{Repo: repo}
+
 	r := mux.NewRouter().PathPrefix("/api").Subrouter()
 	r.Use(middleware.Common)
-	repo := repos.RepositorySQL{Db: db}
-	handlers.AddUserRoutes(r, repo)
-	handlers.AddSessionRoutes(r, repo)
-	handlers.AddTeamRoutes(r, repo)
-	handlers.AddPlayerRoutes(r, repo)
-	return r
+
+	a.user.AddRoutes(r)
+	a.session.AddRoutes(r)
+	a.team.AddRoutes(r)
+	a.player.AddRoutes(r)
+	a.transfer.AddRoutes(r)
+
+	a.router = r
 }
 
 func CreateApp(address, host, user, password, dbname, port string) (*App, error) {
@@ -54,7 +67,7 @@ func CreateApp(address, host, user, password, dbname, port string) (*App, error)
 	app := App{}
 	app.address = address
 	app.db = db
-	app.router = Configure(db)
+	app.Configure()
 	return &app, nil
 }
 

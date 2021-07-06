@@ -1,4 +1,4 @@
-package handlers
+package controllers
 
 import (
 	"../middleware"
@@ -10,28 +10,32 @@ import (
 	"net/http"
 )
 
+type PlayerController struct {
+	Repo repos.Repository
+}
+
 // Add player resource routes
-func AddPlayerRoutes(r *mux.Router, repo repos.Repository) {
+func (c *PlayerController) AddRoutes(r *mux.Router) {
 	rAdminPlayer := r.PathPrefix("/player").Subrouter()
-	rAdminPlayer.Use(middleware.Auth(repo))
+	rAdminPlayer.Use(middleware.Auth(c.Repo))
 	rAdminPlayer.Use(middleware.Admin)
-	rAdminPlayer.HandleFunc("", wrap(handlePostPlayer, repo)).Methods("POST")
-	rAdminPlayer.HandleFunc("/{id}", wrap(handleDeletePlayer, repo)).Methods("DELETE")
+	rAdminPlayer.HandleFunc("", c.handlePostPlayer).Methods("POST")
+	rAdminPlayer.HandleFunc("/{id}", c.handleDeletePlayer).Methods("DELETE")
 
 	rAuthPlayer := r.PathPrefix("/player").Subrouter()
-	rAuthPlayer.Use(middleware.Auth(repo))
-	rAuthPlayer.HandleFunc("/{id}", wrap(handleGetPlayer, repo)).Methods("GET")
-	rAuthPlayer.HandleFunc("/{id}", wrap(handlePatchPlayer, repo)).Methods("PATCH")
+	rAuthPlayer.Use(middleware.Auth(c.Repo))
+	rAuthPlayer.HandleFunc("/{id}", c.handleGetPlayer).Methods("GET")
+	rAuthPlayer.HandleFunc("/{id}", c.handlePatchPlayer).Methods("PATCH")
 }
 
 // Handles a GET request to the player resource
-func handleGetPlayer(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
-	player, err := getPlayerFromRequest(w, req, repo)
+func (c *PlayerController) handleGetPlayer(w http.ResponseWriter, req *http.Request) {
+	player, err := c.getPlayerFromRequest(w, req)
 	if err != nil {
 		return
 	}
 	/// Add check if it's the team owner
-	data, err := makePlayerJson(player)
+	data, err := c.makePlayerJson(player)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
@@ -41,16 +45,16 @@ func handleGetPlayer(w http.ResponseWriter, req *http.Request, repo repos.Reposi
 }
 
 // Handles a POST request to the player resource
-func handlePostPlayer(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
-	payload, err := getPlayerJsonFromRequest(w, req)
+func (c *PlayerController) handlePostPlayer(w http.ResponseWriter, req *http.Request) {
+	payload, err := c.getPlayerJsonFromRequest(w, req)
 	if err != nil {
 		return
 	}
 
 	player := models.Player{}
-	fillPlayerData(&player, payload, true)
+	c.fillPlayerData(&player, payload, true)
 
-	err = repo.UpdatePlayer(player)
+	err = c.Repo.Update(player)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 	}
@@ -59,10 +63,10 @@ func handlePostPlayer(w http.ResponseWriter, req *http.Request, repo repos.Repos
 }
 
 // Handles a PATCH request to the player resource
-func handlePatchPlayer(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
-	payload, err1 := getPlayerJsonFromRequest(w, req)
-	player, err2 := getPlayerFromRequest(w, req, repo)
-	user, err3 := getUserFromRequest(w, req)
+func (c *PlayerController) handlePatchPlayer(w http.ResponseWriter, req *http.Request) {
+	payload, err1 := c.getPlayerJsonFromRequest(w, req)
+	player, err2 := c.getPlayerFromRequest(w, req)
+	user, err3 := getAuthenticatedUserFromRequest(w, req)
 	if err1 != nil || err2 != nil || err3 != nil {
 		return
 	}
@@ -72,36 +76,36 @@ func handlePatchPlayer(w http.ResponseWriter, req *http.Request, repo repos.Repo
 		return
 	}
 
-	fillPlayerData(&player, payload, isAdmin)
+	c.fillPlayerData(&player, payload, isAdmin)
 
-	err := repo.UpdatePlayer(player)
+	err := c.Repo.Update(player)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	writeResponse(w, http.StatusOK, []byte(`{"error": false}`))
+	writeResponse(w, http.StatusOK, noError())
 }
 
 // Handles a DELETE request to the player resource
-func handleDeletePlayer(w http.ResponseWriter, req *http.Request, repo repos.Repository) {
-	player, err := getPlayerFromRequest(w, req, repo)
+func (c *PlayerController) handleDeletePlayer(w http.ResponseWriter, req *http.Request) {
+	player, err := c.getPlayerFromRequest(w, req)
 	if err != nil {
 		return
 	}
 
-	err = repo.DeletePlayer(player)
+	err = c.Repo.Delete(player)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 	}
 
-	writeResponse(w, http.StatusOK, []byte(`{"error": false}`))
+	writeResponse(w, http.StatusOK, noError())
 }
 
 // Gets a Player model from the id in the request
-func getPlayerFromRequest(w http.ResponseWriter, req *http.Request, repo repos.Repository) (models.Player, error) {
+func (c *PlayerController) getPlayerFromRequest(w http.ResponseWriter, req *http.Request) (models.Player, error) {
 	id, err := parseIdFromRequest(w, req)
-	player, err := repo.GetPlayer(id)
+	player, err := c.Repo.GetPlayer(id)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Not found")
 		return models.Player{}, err
@@ -118,7 +122,8 @@ type playerPayload struct {
 	Team        int    `json:"team"`
 }
 
-func makePlayerJson(p models.Player) ([]byte, error) {
+// Returns a json from a player object
+func (c *PlayerController) makePlayerJson(p models.Player) ([]byte, error) {
 	return json.Marshal(playerPayload{
 		FirstName:   p.FirstName,
 		LastName:    p.LastName,
@@ -129,7 +134,8 @@ func makePlayerJson(p models.Player) ([]byte, error) {
 	})
 }
 
-func getPlayerJsonFromRequest(w http.ResponseWriter, req *http.Request) (playerPayload, error) {
+// Returns the player json from a request
+func (c *PlayerController) getPlayerJsonFromRequest(w http.ResponseWriter, req *http.Request) (playerPayload, error) {
 	decoder := json.NewDecoder(req.Body)
 	var t playerPayload
 	err := decoder.Decode(&t)
@@ -140,7 +146,8 @@ func getPlayerJsonFromRequest(w http.ResponseWriter, req *http.Request) (playerP
 	return t, nil
 }
 
-func fillPlayerData(player *models.Player, payload playerPayload, isAdmin bool) {
+// Fill player data from a json payload into a model
+func (c *PlayerController) fillPlayerData(player *models.Player, payload playerPayload, isAdmin bool) {
 	player.FirstName = payload.FirstName
 	player.LastName = payload.LastName
 	player.Country = payload.Country

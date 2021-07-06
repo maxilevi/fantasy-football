@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"../models"
 	"../repos"
 	"fmt"
 	"github.com/golang-jwt/jwt"
@@ -58,8 +57,7 @@ func Auth(repo repos.Repository) func(next http.Handler) http.Handler {
 			if token.Valid {
 				context.Set(r, "token", token)
 				context.Set(r, "email", claims.Email)
-				var user models.User
-				err = repo.GetUser(claims.Email, &user)
+				user, err := repo.GetUserByEmail(claims.Email)
 				if err != nil {
 					failedAuth(w, http.StatusUnauthorized, "Unauthorized")
 					return

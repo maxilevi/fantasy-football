@@ -1,8 +1,7 @@
-package handlers
+package controllers
 
 import (
 	"../models"
-	"../repos"
 	"fmt"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -11,13 +10,8 @@ import (
 	"strconv"
 )
 
-type HandlerFunc func(w http.ResponseWriter, req *http.Request)
-type HandlerFuncWithDb func(w http.ResponseWriter, req *http.Request, repo repos.Repository)
-
-func wrap(f HandlerFuncWithDb, repo repos.Repository) HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		f(w, req, repo)
-	}
+func noError() []byte {
+	return []byte(`{"error": false}`)
 }
 
 func writeResponse(w http.ResponseWriter, code int, message []byte) {
@@ -36,7 +30,7 @@ func writeError(w http.ResponseWriter, code int, message string) {
 	}
 }
 
-func getUserFromRequest(w http.ResponseWriter, req *http.Request) (models.User, error) {
+func getAuthenticatedUserFromRequest(w http.ResponseWriter, req *http.Request) (models.User, error) {
 	val, ok := context.GetOk(req, "user")
 	if !ok {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
