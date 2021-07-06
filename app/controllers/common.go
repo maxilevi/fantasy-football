@@ -10,6 +10,10 @@ import (
 	"strconv"
 )
 
+type Controller interface {
+	AddRoutes(r *mux.Router)
+}
+
 func noError() []byte {
 	return []byte(`{"error": false}`)
 }

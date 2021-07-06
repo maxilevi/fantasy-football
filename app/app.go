@@ -20,29 +20,25 @@ type App struct {
 	router    *mux.Router
 	db        *gorm.DB
 	IsRunning bool
-	user *controllers.UserController
-	session *controllers.SessionController
-	player *controllers.PlayerController
-	team *controllers.TeamController
-	transfer *controllers.TransferController
+	controllers []controllers.Controller
 }
 
 func (a *App) Configure() {
 	repo := repos.RepositorySQL{Db: a.db}
-	a.user = &controllers.UserController{Repo: repo}
-	a.session = &controllers.SessionController{Repo: repo}
-	a.player = &controllers.PlayerController{Repo: repo}
-	a.team = &controllers.TeamController{Repo: repo}
-	a.transfer = &controllers.TransferController{Repo: repo}
+	a.controllers = []controllers.Controller{
+		&controllers.UserController{Repo: repo},
+		&controllers.SessionController{Repo: repo},
+		&controllers.PlayerController{Repo: repo},
+		&controllers.TeamController{Repo: repo},
+		&controllers.TransferController{Repo: repo},
+	}
 
 	r := mux.NewRouter().PathPrefix("/api").Subrouter()
 	r.Use(middleware.Common)
 
-	a.user.AddRoutes(r)
-	a.session.AddRoutes(r)
-	a.team.AddRoutes(r)
-	a.player.AddRoutes(r)
-	a.transfer.AddRoutes(r)
+	for _, c := range a.controllers {
+		c.AddRoutes(r)
+	}
 
 	a.router = r
 }
