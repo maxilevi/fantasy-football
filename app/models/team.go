@@ -30,16 +30,16 @@ func RandomTeam() (Team, []Player) {
 	}
 	players := make([]Player, teamSize)
 	i := 0
-	for ;i < i + goalKeeperCount; i++ {
+	for j := i; i < j + goalKeeperCount; i++ {
 		players[i] = RandomPlayer(goalkeeper)
 	}
-	for ;i < i + defenderCount; i++ {
+	for j := i; i < j + defenderCount; i++ {
 		players[i] = RandomPlayer(defender)
 	}
-	for ;i < i + midfielderCount; i++ {
+	for j := i; i < j + midfielderCount; i++ {
 		players[i] = RandomPlayer(midfielder)
 	}
-	for ;i < i + attackerCount; i++ {
+	for j := i; i < j + attackerCount; i++ {
 		players[i] = RandomPlayer(attacker)
 	}
 	return team, players
