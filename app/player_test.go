@@ -49,15 +49,27 @@ func TestPostPlayer(t *testing.T) {
 	setupTest()
 	token := getAdminUserToken(t, "test@gmail.com")
 
+
 	payload := getPlayerPayload()
+	payload["team"] = getTeamIdFromUser(t, token)
 	postResp := postPlayer(t, token, payload)
-	getResp := getPlayer(t, token, postResp["id"].(int))
+	getResp := getPlayer(t, token, int(postResp["id"].(float64)))
 	for key, value := range getResp {
-		if key == "error" {
+		if key == "error" || key == "id" {
 			continue
 		}
 		tests.AssertEqual(t, value, payload[key])
 	}
+}
+
+func getTeamIdFromUser(t *testing.T, token string) int {
+	resp, err := doGetRequest("user", token, http.StatusOK)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return int(resp["team"].(float64))
 }
 
 func getTokenAndPlayerIds(t *testing.T, admin bool) (string, []int) {
