@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"../repos"
 	"../middleware"
+	"math/rand"
 	"net/http"
 	"../models"
 )
@@ -25,7 +26,7 @@ func (c *TransferController) AddRoutes(r *mux.Router) {
 }
 
 func (c *TransferController) handleGETAll(w http.ResponseWriter, req *http.Request) {
-	panic("filter by params")
+
 	transfers := c.Repo.GetTransfers()
 
 	arr := make([]transferJson, 0)
@@ -93,6 +94,24 @@ func (c *TransferController) handlePOST(w http.ResponseWriter, req *http.Request
 
 }
 
+func (c *TransferController) executeTransfer(transfer models.Transfer, seller, buyer models.Team) err {
+	// Randomly update the player value
+	player := transfer.Player
+	player.MarketValue = int32(float64(player.MarketValue) * (1.1 + rand.Float64() * 0.9))
+
+	// Actually do the transfer
+	player.TeamID = buyer.ID
+
+	seller.Budget += transfer.Ask
+	buyer.Budget -= transfer.Ask
+
+
+	err := c.Repo.Update(&player)
+	if err != nil {
+		return err
+	}
+}
+
 // Gets transfers from the request
 func (c *TransferController) getTransferFromRequest(w http.ResponseWriter, req *http.Request) (models.Transfer, error) {
 	id, err := parseIdFromRequest(w, req)
@@ -106,5 +125,7 @@ func (c *TransferController) getTransferFromRequest(w http.ResponseWriter, req *
 
 // Make json from a transfer model
 func (c *TransferController) makeJson(transfer *models.Transfer) transferJson {
+	return transferJson{
 
+	}
 }
