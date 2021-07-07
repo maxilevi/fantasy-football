@@ -141,6 +141,7 @@ func getPlayerPayload() map[string]interface{} {
 		"first_name":   "test",
 		"last_name":    "surname",
 		"age":          123,
+		"position": 	1,
 		"country":      "united states",
 		"market_value": 10203012,
 	}

@@ -123,6 +123,7 @@ type playerPayload struct {
 	Country     string `json:"country"`
 	Age         int    `json:"age"`
 	MarketValue int    `json:"market_value"`
+	Position    int    `json:"position"`
 	Team        int    `json:"team"`
 }
 
@@ -135,6 +136,7 @@ func (c *PlayerController) makePlayerJson(p models.Player) ([]byte, error) {
 		Age:         p.Age,
 		MarketValue: int(p.MarketValue),
 		Team:        int(p.TeamID),
+		Position:    p.Position,
 	})
 }
 
@@ -163,5 +165,6 @@ func (c *PlayerController) fillPlayerData(player *models.Player, payload playerP
 		}
 		player.MarketValue = int32(payload.MarketValue)
 		player.Age = payload.Age
+		player.Position = payload.Position
 	}
 }

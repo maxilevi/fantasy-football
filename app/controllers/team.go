@@ -121,12 +121,16 @@ type teamJson struct {
 	MarketValue   int    `json:"market_value"`
 	Budget  int    `json:"budget"`
 	Players  []int    `json:"players"`
+	Owner  int    `json:"owner"`
 }
 
 // Fill a team with data from a json structure
 func (c *TeamController) fillTeamData(team *models.Team, t teamJson) {
 	team.Country = t.Country
 	team.Name = t.Name
+	//if admin {
+	//	team.OwnerID = t.Id
+	//}
 }
 
 // Generate a json from a team model
@@ -145,6 +149,7 @@ func (c *TeamController) makeTeamJson(team models.Team) ([]byte, error) {
 		MarketValue:   marketValue,
 		Budget:  team.Budget,
 		Players: players,
+		Owner: int(team.OwnerID),
 	}
 	return json.Marshal(t)
 }
