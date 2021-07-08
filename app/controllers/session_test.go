@@ -10,15 +10,17 @@ import (
 )
 
 func TestGetUser(t *testing.T) {
+	db := repos.CreateRepositoryMemory()
+	c1 := UserController{Repo: db}
+	c2 := SessionController{Repo: db}
 	email := "test@gmail.com"
 	pass := "hello123"
-	repo := repos.CreateRepositoryMemory()
-	err := registerUser(userRegistration{Email: email, Password: pass}, repo)
+	_, err := c1.registerUser(email, pass)
 	if err != nil {
 		t.Error()
 		return
 	}
-	user, err := getUser(sessionCreation{Email: email, Password: pass}, repo)
+	user, err := c2.loginAndGetUser(email, pass)
 	if err != nil {
 		t.Error()
 		return
@@ -30,8 +32,9 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestCreateToken(t *testing.T) {
+	c := SessionController{Repo: repos.CreateRepositoryMemory()}
 	email := "test@gmail.com"
-	tokenString, err := createToken(&models.User{Email: email})
+	tokenString, err := c.createToken(&models.User{Email: email})
 	if err != nil {
 		t.Error("failed to create token")
 	}

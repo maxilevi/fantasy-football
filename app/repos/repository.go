@@ -3,6 +3,7 @@ package repos
 import (
 	"fmt"
 	"gorm.io/gorm"
+	"reflect"
 )
 import "../models"
 
@@ -19,6 +20,37 @@ type Repository interface {
 	Delete(model interface{}) error
 	GetTransfers() []models.Transfer
 	GetTransfer(id uint) (models.Transfer, error)
+	RunInTransaction(code func () error) error
+}
+
+func doCreateUser(u Repository, email string, hash []byte, permission int) (models.User, error) {
+	user := models.User{
+		Email:           email,
+		PasswordHash:    hash,
+		PermissionLevel: permission,
+	}
+	return user, u.RunInTransaction(func () error {
+		err := u.Create(&user)
+		if err != nil {
+			return err
+		}
+
+		team, players := models.RandomTeam()
+		team.OwnerID = user.ID
+		err = u.Create(&team)
+		if err != nil {
+			return err
+		}
+
+		for i := range players {
+			players[i].TeamID = team.ID
+			res := u.Create(&players[i])
+			if res.Error != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 type RepositorySQL struct {
@@ -26,20 +58,7 @@ type RepositorySQL struct {
 }
 
 func (u RepositorySQL) CreateUser(email string, hash []byte, permission int) (models.User, error) {
-	user := models.User{
-		Email:           email,
-		PasswordHash:    hash,
-		PermissionLevel: permission,
-	}
-	u.Db.Create(&user)
-	team, players := models.RandomTeam()
-	team.OwnerID = user.ID
-	u.Db.Create(&team)
-	for i := range players {
-		players[i].TeamID = team.ID
-		u.Db.Create(&players[i])
-	}
-	return user, nil
+	return doCreateUser(u, email, hash, permission)
 }
 
 func (u RepositorySQL) GetUserByEmail(email string) (models.User, error) {
@@ -105,59 +124,129 @@ func (u RepositorySQL) GetTransfer(id uint) (models.Transfer, error) {
 	return transfer, res.Error
 }
 
+func (u RepositorySQL) RunInTransaction(code func () error) error {
+	tx := u.Db.Begin()
+	err := code()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+
 type RepositoryMemory struct {
-	Users   []models.User
-	Teams   map[string]models.Team
-	Players map[string]models.Player
+	Models   []gorm.Model
 }
 
 func CreateRepositoryMemory() *RepositoryMemory {
 	return &RepositoryMemory{
-		Users:   make([]models.User, 0),
-		Teams:   make(map[string]models.Team),
-		Players: make(map[string]models.Player),
+		Models:   make([]gorm.Model, 0),
 	}
 }
 
-func (u *RepositoryMemory) CreateUser(email string, hash []byte, permission int) {
-	u.Users = append(u.Users, models.User{
-		Email:           email,
-		PasswordHash:    hash,
-		PermissionLevel: permission,
-	})
-	team, players := models.RandomTeam()
-	u.Teams[email] = team
-	for i := range players {
-		u.Players[email] = players[i]
-	}
+func (u *RepositoryMemory) CreateUser(email string, hash []byte, permission int) (models.User, error) {
+	return doCreateUser(u, email, hash, permission)
 }
 
-func (u *RepositoryMemory) GetUser(email string, user *models.User) error {
-	for i := range u.Users {
-		if u.Users[i].Email == email {
-			*user = u.Users[i]
-			return nil
-		}
-	}
-	return fmt.Errorf("user not found")
+func (u *RepositoryMemory) GetUserByEmail(email string) (models.User, error) {
+	var t models.User
+	err := u.getByFuncOfType(func(m interface{}) bool {
+		p := m.(models.User)
+		return p.Email == email
+	}, t)
+	return t, err
+}
+
+func (u *RepositoryMemory) GetUserById(id uint) (models.User, error) {
+	var m models.User
+	err := u.getByIdOfType(id, &m)
+	return m, err
 }
 
 func (u *RepositoryMemory) GetTeam(id uint) (models.Team, error) {
-	panic("implement me")
+	var m models.Team
+	err := u.getByIdOfType(id, &m)
+	return m, err
 }
 
 func (u *RepositoryMemory) GetPlayer(playerId uint) (models.Player, error) {
-	panic("implement me")
+	var m models.Player
+	err := u.getByIdOfType(playerId, &m)
+	return m, err
 }
 
 func (u *RepositoryMemory) GetPlayers(teamId uint) []models.Player {
-	panic("implement me")
-}
-
-func (u *RepositoryMemory) Update(model interface{}) error {
-	panic("implement me")
+	ps := make([]models.Player, 0)
+	u.getAllByFuncOfType(func(m interface{}) bool {
+		p := m.(models.Player)
+		return p.TeamID == teamId
+	}, ps)
+	return ps
 }
 
 func (u *RepositoryMemory) GetUserTeam(user models.User) (models.Team, error) {
-	panic("implement me")
+	var t models.Team
+	err := u.getByFuncOfType(func(m interface{}) bool {
+		p := m.(models.Team)
+		return p.OwnerID == user.ID
+	}, t)
+	return t, err
+}
+
+func (u *RepositoryMemory) Create(model interface{}) error {
+	u.Models = append(u.Models, model.(gorm.Model))
+	return nil
+}
+
+func (u *RepositoryMemory) Update(model interface{}) error {
+	panic("delete not implemented")
+}
+
+func (u *RepositoryMemory) Delete(model interface{}) error {
+	panic("delete not implemented")
+}
+
+func (u *RepositoryMemory) GetTransfers() []models.Transfer {
+	a := make([]models.Transfer, 0)
+	u.getAllByFuncOfType(func(m interface{}) bool {return true}, a)
+	return a
+}
+
+func (u *RepositoryMemory) GetTransfer(id uint) (models.Transfer, error) {
+	var m models.Transfer
+	err := u.getByIdOfType(id, &m)
+	return m, err
+}
+
+func (u *RepositoryMemory) RunInTransaction(code func() error) error {
+	return code()
+}
+
+func (u *RepositoryMemory) getByIdOfType(id uint, t interface{}) error {
+	return u.getByFuncOfType(func (m interface{}) bool {
+		mo := m.(gorm.Model)
+		return mo.ID == id
+	}, t)
+}
+
+func (u *RepositoryMemory) getByFuncOfType(f func(m interface{}) bool, t interface{}) error {
+	a := []interface{}{}
+	u.getAllByFuncOfType(f, a)
+	if len(a) == 0 {
+		return fmt.Errorf("not found")
+	}
+	t = a[0]
+	return nil
+}
+
+func (u *RepositoryMemory) getAllByFuncOfType(f func(m interface{}) bool, result interface{}) {
+	slice := reflect.ValueOf(result).Elem()
+	elementType := slice.Type().Elem()
+	for _, m := range u.Models {
+		rv := reflect.ValueOf(m)
+		if rv.Type().AssignableTo(elementType) && f(m) {
+			slice.Set(reflect.Append(slice, rv))
+		}
+	}
 }

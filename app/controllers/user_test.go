@@ -5,49 +5,46 @@ import (
 	"testing"
 )
 import "../repos"
-import "../models"
 
 func TestValidPassword(t *testing.T) {
-	if validPassword("1234") || validPassword("1234567") || validPassword("") {
+	c := UserController{Repo: repos.CreateRepositoryMemory()}
+	if c.validPassword("1234") || c.validPassword("1234567") || c.validPassword("") {
 		t.Error("Invalid password was marked as valid")
 	}
-	if !(validPassword("12345678") && validPassword("12345678890")) {
+	if !(c.validPassword("12345678") && c.validPassword("12345678890")) {
 		t.Error("Valid password was marked as invalid")
 	}
 }
 
 func TestEmail(t *testing.T) {
-	if validEmail("test") || validEmail("test@") || validEmail("@gmail") || validEmail("") {
+	c := UserController{Repo: repos.CreateRepositoryMemory()}
+	if c.validEmail("test") || c.validEmail("test@") || c.validEmail("@gmail") || c.validEmail("") {
 		t.Error("Invalid email was marked as valid")
 	}
-	if !(validEmail("test@gmail.com") && validEmail("a.a@a.a") && validEmail("test@something.com")) {
+	if !(c.validEmail("test@gmail.com") && c.validEmail("a.a@a.a") && c.validEmail("test@something.com")) {
 		t.Error("Valid email was marked as invalid")
 	}
 }
 
 func TestHasEmail(t *testing.T) {
+	c := UserController{Repo: repos.CreateRepositoryMemory()}
 	email := "test@gmail.com"
 	repo := repos.CreateRepositoryMemory()
 	repo.CreateUser(email, []byte{}, 0)
 
-	if !emailExists(email, repo) {
+	if !c.emailExists(email) {
 		t.Error()
 	}
-	if emailExists("nosuchemail", repo) {
+	if c.emailExists("nosuchemail") {
 		t.Error()
 	}
 }
 
 func TestRegisterUser(t *testing.T) {
+	c := UserController{Repo: repos.CreateRepositoryMemory()}
 	email := "test@gmail.com"
 	pass := "hello123"
-	repo := repos.CreateRepositoryMemory()
-	err := registerUser(userRegistration{Email: email, Password: pass}, repo)
-	if err != nil {
-		t.Error()
-	}
-	var user models.User
-	err = repo.GetUser("test@gmail.com", &user)
+	user, err := c.registerUser(email, pass)
 	if err != nil {
 		t.Error(err)
 	}

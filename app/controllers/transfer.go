@@ -94,7 +94,7 @@ func (c *TransferController) handlePOST(w http.ResponseWriter, req *http.Request
 
 }
 
-func (c *TransferController) executeTransfer(transfer models.Transfer, seller, buyer models.Team) err {
+func (c *TransferController) executeTransfer(transfer models.Transfer, seller, buyer models.Team) error {
 	// Randomly update the player value
 	player := transfer.Player
 	player.MarketValue = int32(float64(player.MarketValue) * (1.1 + rand.Float64() * 0.9))
@@ -105,11 +105,15 @@ func (c *TransferController) executeTransfer(transfer models.Transfer, seller, b
 	seller.Budget += transfer.Ask
 	buyer.Budget -= transfer.Ask
 
-
-	err := c.Repo.Update(&player)
-	if err != nil {
-		return err
-	}
+	return c.Repo.RunInTransaction(func () error {
+		err1 := c.Repo.Update(&player)
+		err2 := c.Repo.Update(&buyer)
+		err3 := c.Repo.Update(&seller)
+		if err1 != nil || err2 != nil || err3 != nil {
+			return fmt.Errorf("failed to save models")
+		}
+		return nil
+	})
 }
 
 // Gets transfers from the request
