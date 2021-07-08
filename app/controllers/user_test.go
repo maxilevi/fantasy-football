@@ -27,13 +27,16 @@ func TestEmail(t *testing.T) {
 }
 
 func TestHasEmail(t *testing.T) {
-	c := UserController{Repo: repos.CreateRepositoryMemory()}
+	db := repos.CreateRepositoryMemory()
+	c := UserController{Repo: db}
 	email := "test@gmail.com"
-	repo := repos.CreateRepositoryMemory()
-	repo.CreateUser(email, []byte{}, 0)
+	_, err := db.CreateUser(email, []byte{}, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if !c.emailExists(email) {
-		t.Error()
+		t.Error("email not found")
 	}
 	if c.emailExists("nosuchemail") {
 		t.Error()

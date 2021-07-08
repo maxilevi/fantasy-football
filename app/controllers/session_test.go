@@ -17,15 +17,16 @@ func TestGetUser(t *testing.T) {
 	pass := "hello123"
 	_, err := c1.registerUser(email, pass)
 	if err != nil {
-		t.Error()
+		t.Error(err)
 		return
 	}
-	user, err := c2.loginAndGetUser(email, pass)
+
+	user2, err := c2.loginAndGetUser(email, pass)
 	if err != nil {
-		t.Error()
+		t.Error(err)
 		return
 	}
-	if user.Email != email {
+	if user2.Email != email {
 		t.Error("wrong user")
 	}
 

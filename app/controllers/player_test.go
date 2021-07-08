@@ -60,10 +60,10 @@ func TestFillPlayerDataChangesIfAdmin(t *testing.T) {
 		Team: 100,
 	}, true)
 
-	tests.AssertEqual(t, player.TeamID, 10)
-	tests.AssertEqual(t, player.MarketValue, 123)
-	tests.AssertEqual(t, player.Position, 101000)
-	tests.AssertEqual(t, player.Age, 100)
+	tests.AssertEqual(t, player.Age, 10)
+	tests.AssertEqual(t, player.Position, 123)
+	tests.AssertEqual(t, player.MarketValue, 101000)
+	tests.AssertEqual(t, player.TeamID, 100)
 }
 
 func TestFillPlayerFillsData(t *testing.T) {

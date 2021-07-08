@@ -44,8 +44,8 @@ func doCreateUser(u Repository, email string, hash []byte, permission int) (mode
 
 		for i := range players {
 			players[i].TeamID = team.ID
-			res := u.Create(&players[i])
-			if res.Error != nil {
+			err = u.Create(&players[i])
+			if err != nil {
 				return err
 			}
 		}
@@ -136,12 +136,12 @@ func (u RepositorySQL) RunInTransaction(code func () error) error {
 }
 
 type RepositoryMemory struct {
-	Models   []gorm.Model
+	Models   []interface{}
 }
 
 func CreateRepositoryMemory() *RepositoryMemory {
 	return &RepositoryMemory{
-		Models:   make([]gorm.Model, 0),
+		Models:   make([]interface{}, 0),
 	}
 }
 
@@ -154,7 +154,7 @@ func (u *RepositoryMemory) GetUserByEmail(email string) (models.User, error) {
 	err := u.getByFuncOfType(func(m interface{}) bool {
 		p := m.(models.User)
 		return p.Email == email
-	}, t)
+	}, &t)
 	return t, err
 }
 
@@ -190,12 +190,18 @@ func (u *RepositoryMemory) GetUserTeam(user models.User) (models.Team, error) {
 	err := u.getByFuncOfType(func(m interface{}) bool {
 		p := m.(models.Team)
 		return p.OwnerID == user.ID
-	}, t)
+	}, &t)
 	return t, err
 }
 
 func (u *RepositoryMemory) Create(model interface{}) error {
-	u.Models = append(u.Models, model.(gorm.Model))
+	var m interface{}
+	if reflect.ValueOf(model).Kind() == reflect.Ptr {
+		m = reflect.ValueOf(model).Elem().Interface()
+	} else {
+		m = model
+	}
+	u.Models = append(u.Models, m)
 	return nil
 }
 
@@ -231,22 +237,43 @@ func (u *RepositoryMemory) getByIdOfType(id uint, t interface{}) error {
 }
 
 func (u *RepositoryMemory) getByFuncOfType(f func(m interface{}) bool, t interface{}) error {
-	a := []interface{}{}
-	u.getAllByFuncOfType(f, a)
-	if len(a) == 0 {
+	r := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(reflect.ValueOf(t).Elem().Interface())), 0, 0)
+	rv := reflect.New(r.Type())
+	rv.Elem().Set(r)
+	slicePtr := reflect.ValueOf(rv.Interface())
+	sliceValuePtr := slicePtr.Elem()
+
+	i := u.getAllByFuncOfTypeValue(f, sliceValuePtr)
+	if i == 0 {
 		return fmt.Errorf("not found")
 	}
-	t = a[0]
+	reflect.ValueOf(t).Elem().Set(sliceValuePtr.Index(0))
 	return nil
 }
 
-func (u *RepositoryMemory) getAllByFuncOfType(f func(m interface{}) bool, result interface{}) {
-	slice := reflect.ValueOf(result).Elem()
+func (u *RepositoryMemory) getAllByFuncOfTypeValue(f func(m interface{}) bool, slice reflect.Value) int {
 	elementType := slice.Type().Elem()
+	i := 0
 	for _, m := range u.Models {
 		rv := reflect.ValueOf(m)
 		if rv.Type().AssignableTo(elementType) && f(m) {
 			slice.Set(reflect.Append(slice, rv))
+			i += 1
 		}
 	}
+	return i
+}
+
+func (u *RepositoryMemory) getAllByFuncOfType(f func(m interface{}) bool, t interface{}) int {
+	slice := reflect.ValueOf(t).Elem()
+	elementType := slice.Type().Elem()
+	i := 0
+	for _, m := range u.Models {
+		rv := reflect.ValueOf(m)
+		if rv.Type().AssignableTo(elementType) && f(m) {
+			slice.Set(reflect.Append(slice, rv))
+			i += 1
+		}
+	}
+	return i
 }
