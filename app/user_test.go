@@ -76,7 +76,7 @@ func TestPatchUser(t *testing.T) {
 	}
 
 	for key, value := range resp {
-		if key == "error" {
+		if key == "code" || key == "team" || key == "id" {
 			continue
 		}
 		tests.AssertEqual(t, value, payload[key])

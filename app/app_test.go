@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -19,7 +20,7 @@ var app *App
 
 func TestMain(m *testing.M) {
 	app = setupTestApp()
-	//log.SetOutput(ioutil.Discard)
+	log.SetOutput(ioutil.Discard)
 	code := m.Run()
 	app.Close()
 	os.Exit(code)
@@ -80,7 +81,7 @@ func assertOkRegisteringUser(t *testing.T, email string, pass string) (int) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if status, valid := resp["status"].(float64); int(status) != 200 || !valid {
+	if status, valid := resp["code"].(float64); int(status) != 200 || !valid {
 		t.Fatalf("unexpected response %v", resp)
 	}
 	return int(resp["id"].(float64))
@@ -94,7 +95,7 @@ func assertOkCreatingSession(t *testing.T, email string, pass string) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if status, valid := resp["status"].(float64); int(status) != 200 || !valid {
+	if status, valid := resp["code"].(float64); int(status) != 200 || !valid {
 		t.Fatal("unexpected response")
 	}
 	return resp["token"].(string)
@@ -109,7 +110,7 @@ func assertFailureWhenRegisteringUserWithMessage(t *testing.T, email string, pas
 		t.Fatal(err)
 	}
 
-	if status, valid := resp["status"].(float64); int(status) == 200 || !valid {
+	if status, valid := resp["code"].(float64); int(status) == 200 || !valid {
 		t.Fatal("unexpected response")
 	}
 	if resp["message"] != msg {

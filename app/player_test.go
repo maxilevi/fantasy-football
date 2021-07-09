@@ -63,13 +63,13 @@ func TestPostPlayer(t *testing.T) {
 }
 
 func getTeamIdFromUser(t *testing.T, token string) int {
-	resp, err := doGetRequest("user", token, http.StatusOK)
+	resp, err := doGetRequest("user/me", token, http.StatusOK)
 
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	return int(resp["team"].(float64))
+	team := resp["team"].(map[string]interface{})
+	return int(team["id"].(float64))
 }
 
 func getTokenAndPlayerIds(t *testing.T, admin bool) (string, []int) {
@@ -85,21 +85,18 @@ func getTokenAndPlayerIds(t *testing.T, admin bool) (string, []int) {
 }
 
 func getPlayersFromToken(t *testing.T, token string) []int {
-	resp, err := doGetRequest("user", token, http.StatusOK)
+	resp, err := doGetRequest("user/me", token, http.StatusOK)
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	teamId := strconv.Itoa(int(resp["team"].(float64)))
-	resp, err = doGetRequest("team/"+teamId, token, http.StatusOK)
-	if err != nil {
-		t.Fatal(err)
-	}
+	team := resp["team"].(map[string]interface{})
 
 	var ids []int
-	for _, p := range resp["players"].([]interface {}) {
-		ids = append(ids, int(p.(float64)))
+	for _, p := range team["players"].([]interface{}) {
+		m := p.(map[string]interface{})
+		ids = append(ids, int(m["id"].(float64)))
 	}
 	return ids
 }
@@ -115,7 +112,7 @@ func getPlayer(t *testing.T, token string, player int) map[string]interface{} {
 func deletePlayer(t *testing.T, token string, player int) {
 	playerId := strconv.Itoa(player)
 	resp, err := doDeleteRequest("player/"+playerId, token, http.StatusOK)
-	if err != nil || int(resp["status"].(float64)) != 200 {
+	if err != nil || int(resp["code"].(float64)) != 200 {
 		t.Fatal(err)
 	}
 }
@@ -123,14 +120,14 @@ func deletePlayer(t *testing.T, token string, player int) {
 func patchPlayer(t *testing.T, token string, player int, payload map[string]interface{}) {
 	playerId := strconv.Itoa(player)
 	resp, err := doPatchRequest("player/"+playerId, token, payload, http.StatusOK)
-	if err != nil || int(resp["status"].(float64)) != 200 {
+	if err != nil || int(resp["code"].(float64)) != 200 {
 		t.Fatal(err)
 	}
 }
 
 func postPlayer(t *testing.T, token string, payload map[string]interface{}) map[string]interface{} {
 	resp, err := doPostRequest("player", token, payload, http.StatusOK)
-	if err != nil || int(resp["status"].(float64)) != 200 {
+	if err != nil || int(resp["code"].(float64)) != 200 {
 		t.Fatal(err)
 	}
 	return resp

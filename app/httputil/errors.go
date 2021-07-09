@@ -20,7 +20,7 @@ func NoErrorEmpty(ctx *gin.Context) {
 
 func NoError(ctx *gin.Context, payload interface{}) {
 	m := map[string]interface{}{
-		"status": http.StatusOK,
+		"code": http.StatusOK,
 	}
 	body, _ := json.Marshal(payload)
 	payload = json.Unmarshal(body, &m)

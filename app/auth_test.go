@@ -24,7 +24,7 @@ func TestCantLoginWithWrongPassword(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	val, ok := resp["status"].(float64)
+	val, ok := resp["code"].(float64)
 	if !ok || int(val) == 200 {
 		t.Fatal("was able to login with incorrect password")
 	}
@@ -48,8 +48,8 @@ func TestCantCreateUserTwice(t *testing.T) {
 
 func TestCantQueryUserIfNotLoggedIn(t *testing.T) {
 	setupTest()
-	resp, err := doGetRequest("user", "", http.StatusUnauthorized)
-	if err != nil || int(resp["status"].(float64)) == 200 {
+	resp, err := doGetRequest("user/me", "", http.StatusUnauthorized)
+	if err != nil || int(resp["code"].(float64)) == 200 {
 		t.Fatal(err)
 	}
 }

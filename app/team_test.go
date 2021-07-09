@@ -10,13 +10,14 @@ import (
 func TestQueryUserAndTeamInformation(t *testing.T) {
 	setupTest()
 	token := getUserToken(t, "test@gmail.com")
-	resp, err := doGetRequest("user", token, http.StatusOK)
+	resp, err := doGetRequest("user/me", token, http.StatusOK)
 
 	if err != nil || resp["email"].(string) != "test@gmail.com" {
 		t.Fatal(err)
 	}
 
-	teamId := strconv.Itoa(int(resp["team"].(float64)))
+	team := resp["team"].(map[string]interface{})
+	teamId := strconv.Itoa(int(team["id"].(float64)))
 	resp, err = doGetRequest("team/"+teamId, token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
@@ -26,12 +27,13 @@ func TestQueryUserAndTeamInformation(t *testing.T) {
 func TestPatchTeam(t *testing.T) {
 	setupTest()
 	token := getUserToken(t, "test@gmail.com")
-	resp, err := doGetRequest("user", token, http.StatusOK)
+	resp, err := doGetRequest("user/me", token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	res := "team/" + strconv.Itoa(int(resp["team"].(float64)))
+	team := resp["team"].(map[string]interface{})
+	res := "team/" + strconv.Itoa(int(team["id"].(float64)))
 	resp, err = doPatchRequest(res, token, map[string]interface{}{
 		"name":    "New name",
 		"country": "New country",
@@ -74,12 +76,13 @@ func TestDeleteTeam(t *testing.T) {
 	setupTest()
 	token := getAdminUserToken(t, "test@gmail.com")
 
-	resp, err := doGetRequest("user", token, http.StatusOK)
+	resp, err := doGetRequest("user/me", token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	teamRes := "team/" + strconv.Itoa(int(resp["team"].(float64)))
+	team := resp["team"].(map[string]interface{})
+	teamRes := "team/" + strconv.Itoa(int(team["id"].(float64)))
 	resp, err = doDeleteRequest(teamRes, token, http.StatusBadRequest)
 	if err != nil {
 		t.Fatal(err)
