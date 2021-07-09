@@ -17,6 +17,21 @@ type UserController struct {
 	Repo repos.Repository
 }
 
+type getUserModel struct {
+	Email string `json:"email"`
+	Team  uint   `json:"team"`
+}
+
+type updateUserModel struct {
+	Email string `json:"email"`
+	Team  uint   `json:"team"`
+}
+
+type createUserModel struct {
+	Email string `json:"email"`
+	Password  string   `json:"password"`
+}
+
 func (c *UserController) AddRoutes(r *mux.Router) {
 
 	r.HandleFunc("/user", c.handlePostUser).Methods("POST")
@@ -28,12 +43,24 @@ func (c *UserController) AddRoutes(r *mux.Router) {
 	rAdmin.HandleFunc("/{id}", c.handleDeleteUser).Methods("DELETE")
 	rAdmin.HandleFunc("/{id}", c.handlePatchUser).Methods("PATCH")
 
-	rAuth := r.PathPrefix("/user").Subrouter()
+	rAuth := r.PathPrefix("/user/me").Subrouter()
 	rAuth.Use(middleware.Auth(c.Repo))
 	rAuth.HandleFunc("", c.handleGetMe).Methods("GET")
 }
 
 // Handles GET request to the user resource when no ID is provided
+// @Summary Get a user
+// @Description get user by ID
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param id path int true "User ID"
+// @Success 200 {object} getUserModel
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /user/me [get]
 func (c *UserController) handleGetMe(w http.ResponseWriter, req *http.Request) {
 	user, err := getAuthenticatedUserFromRequest(w, req)
 	if err != nil {
@@ -50,6 +77,17 @@ func (c *UserController) handleGetMe(w http.ResponseWriter, req *http.Request) {
 }
 
 // Handles GET request to the user resource
+// @Summary Get a user
+// @Description get user by ID
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param id path int true "User ID"
+// @Success 200 {object} getUserModel
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /user/{id} [get]
 func (c *UserController) handleGetUser(w http.ResponseWriter, req *http.Request) {
 	user, err := c.getUserFromRequest(w, req)
 	if err != nil {
@@ -65,6 +103,18 @@ func (c *UserController) handleGetUser(w http.ResponseWriter, req *http.Request)
 }
 
 // Handles DELETE requests to the user's resource
+// @Summary Delete a user
+// @Description delete user by ID
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param id path int true "User ID"
+// @Success 200
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /user/{id} [delete]
 func (c *UserController) handleDeleteUser(w http.ResponseWriter, req *http.Request) {
 	user, err := c.getUserFromRequest(w, req)
 	if err != nil {
@@ -81,6 +131,7 @@ func (c *UserController) handleDeleteUser(w http.ResponseWriter, req *http.Reque
 
 // Handles PATCH requests to the user's resource
 func (c *UserController) handlePatchUser(w http.ResponseWriter, req *http.Request) {
+	//var t updateUserModel;
 	/*user, err := c.getAuthenticatedUserFromRequest(w, req)
 	if err != nil {
 		return
@@ -94,13 +145,21 @@ func (c *UserController) handlePatchUser(w http.ResponseWriter, req *http.Reques
 }
 
 // Handles POST request to the user resource
-func (c *UserController) handlePostUser(w http.ResponseWriter, req *http.Request) {
+// @Summary Create a user
+// @Description register a new user
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param email body string true "Email"
+// @Param password body string true "Password"
+// @Success 200
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /user [post]
+func (c *UserController) handlePOSTUser(w http.ResponseWriter, req *http.Request) {
 	decoder := json.NewDecoder(req.Body)
-	type userRegistration struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-	var t userRegistration
+
+	var t createUserModel
 	err := decoder.Decode(&t)
 	if err != nil {
 		writeErrorResponse(w, http.StatusBadRequest, "Incorrect body parameters")
@@ -137,12 +196,7 @@ func (c *UserController) makeUserJson(user models.User) ([]byte, error) {
 		return nil, err
 	}
 
-	type userJson struct {
-		Email string `json:"email"`
-		Team  uint   `json:"team"`
-	}
-
-	data := userJson{
+	data := getUserModel{
 		Email: user.Email,
 		Team:  team.ID,
 	}

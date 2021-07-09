@@ -29,8 +29,20 @@ func (c *PlayerController) AddRoutes(r *mux.Router) {
 	rAuthPlayer.HandleFunc("/{id}", c.handlePatchPlayer).Methods("PATCH")
 }
 
-// Handles a GET request to the player resource
-func (c *PlayerController) handleGetPlayer(w http.ResponseWriter, req *http.Request) {
+// Handles GET requests to the user's resource
+// @Summary Get a player
+// @Description get a player by ID
+// @Tags players
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Player ID"
+// @Success 200 {object} model.User
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /player/{id} [get]
+func (c *PlayerController) handleGETPlayer(w http.ResponseWriter, req *http.Request) {
 	player, err := c.getPlayerFromRequest(w, req)
 	if err != nil {
 		return
@@ -46,7 +58,18 @@ func (c *PlayerController) handleGetPlayer(w http.ResponseWriter, req *http.Requ
 }
 
 // Handles a POST request to the player resource
-func (c *PlayerController) handlePostPlayer(w http.ResponseWriter, req *http.Request) {
+// @Summary Create a player
+// @Description create a player
+// @Tags players
+// @Accept  json
+// @Produce  json
+// @Param player body model.CreatePlayer true "Create player"
+// @Success 200 {object} model.User
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /player [post]
+func (c *PlayerController) handlePOSTPlayer(w http.ResponseWriter, req *http.Request) {
 	payload, err := c.getPlayerJsonFromRequest(w, req)
 	if err != nil {
 		return
@@ -65,8 +88,20 @@ func (c *PlayerController) handlePostPlayer(w http.ResponseWriter, req *http.Req
 	writeResponse(w, http.StatusOK, []byte(fmt.Sprintf(`{"error": false, "id": %v}`, player.ID)))
 }
 
-// Handles a PATCH request to the player resource
-func (c *PlayerController) handlePatchPlayer(w http.ResponseWriter, req *http.Request) {
+// Handles a PUT request to the player resource
+// @Summary Update a player
+// @Description update a player
+// @Tags players
+// @Accept  json
+// @Produce  json
+// @Param player body model.UpdatePlayer true "Update player"
+// @Param id path int true "Player ID"
+// @Success 200 {object} models.Player
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /player/{id} [put]
+func (c *PlayerController) handlePUTPlayer(w http.ResponseWriter, req *http.Request) {
 	payload, err1 := c.getPlayerJsonFromRequest(w, req)
 	player, err2 := c.getPlayerFromRequest(w, req)
 	user, err3 := getAuthenticatedUserFromRequest(w, req)
@@ -92,7 +127,18 @@ func (c *PlayerController) handlePatchPlayer(w http.ResponseWriter, req *http.Re
 }
 
 // Handles a DELETE request to the player resource
-func (c *PlayerController) handleDeletePlayer(w http.ResponseWriter, req *http.Request) {
+// @Summary Delete a player
+// @Description delete a player
+// @Tags players
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Player ID"
+// @Success 200
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /player/{id} [delete]
+func (c *PlayerController) handleDELETEPlayer(w http.ResponseWriter, req *http.Request) {
 	player, err := c.getPlayerFromRequest(w, req)
 	if err != nil {
 		return
