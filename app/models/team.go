@@ -44,3 +44,23 @@ func RandomTeam() (Team, []Player) {
 	}
 	return team, players
 }
+
+
+type ShowTeam struct {
+	ID uint `json:"id"`
+	Name    string `json:"name"`
+	Country string `json:"country"`
+	Budget  int `json:"budget"`
+	MarketValue  int `json:"market_value"`
+	Players []ShowPlayer `json:"players"`
+}
+
+type CreateTeam struct {
+	Name    string `json:"name"`
+	Country string `json:"country"`
+	Budget  int `json:"budget"`
+}
+
+type UpdateTeam struct {
+	CreateTeam
+}

@@ -1,52 +1,14 @@
-package controllers
+package controller
 
 import (
-	"../middleware"
+	"../httputil"
 	"../models"
-	"../repos"
-	"encoding/json"
-	"fmt"
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"net/mail"
 )
-
-type UserController struct {
-	Repo repos.Repository
-}
-
-type getUserModel struct {
-	Email string `json:"email"`
-	Team  uint   `json:"team"`
-}
-
-type updateUserModel struct {
-	Email string `json:"email"`
-	Team  uint   `json:"team"`
-}
-
-type createUserModel struct {
-	Email string `json:"email"`
-	Password  string   `json:"password"`
-}
-
-func (c *UserController) AddRoutes(r *mux.Router) {
-
-	r.HandleFunc("/user", c.handlePostUser).Methods("POST")
-
-	rAdmin := r.PathPrefix("/user").Subrouter()
-	rAdmin.Use(middleware.Auth(c.Repo))
-	rAdmin.Use(middleware.Admin)
-	rAdmin.HandleFunc("/{id}", c.handleGetUser).Methods("GET")
-	rAdmin.HandleFunc("/{id}", c.handleDeleteUser).Methods("DELETE")
-	rAdmin.HandleFunc("/{id}", c.handlePatchUser).Methods("PATCH")
-
-	rAuth := r.PathPrefix("/user/me").Subrouter()
-	rAuth.Use(middleware.Auth(c.Repo))
-	rAuth.HandleFunc("", c.handleGetMe).Methods("GET")
-}
 
 // Handles GET request to the user resource when no ID is provided
 // @Summary Get a user
@@ -55,25 +17,25 @@ func (c *UserController) AddRoutes(r *mux.Router) {
 // @Accept  json
 // @Produce  json
 // @Param id path int true "User ID"
-// @Success 200 {object} getUserModel
+// @Success 200 {object} models.ShowUser
 // @Failure 401 {object} httputil.HTTPError
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /user/me [get]
-func (c *UserController) handleGetMe(w http.ResponseWriter, req *http.Request) {
-	user, err := getAuthenticatedUserFromRequest(w, req)
+func (c *Controller) ShowMyself(ctx *gin.Context) {
+	user, err := c.getAuthenticatedUserFromRequest(ctx)
 	if err != nil {
 		return
 	}
 
-	payload, err := c.makeUserJson(user)
+	payload, err := c.getShowUserPayload(ctx, user)
 	if err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-
-	writeResponse(w, http.StatusOK, payload)
+	httputil.NoError(ctx, map[string]interface{}{
+		"me": payload,
+	})
 }
 
 // Handles GET request to the user resource
@@ -83,23 +45,25 @@ func (c *UserController) handleGetMe(w http.ResponseWriter, req *http.Request) {
 // @Accept  json
 // @Produce  json
 // @Param id path int true "User ID"
-// @Success 200 {object} getUserModel
+// @Success 200 {object} models.ShowUser
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /user/{id} [get]
-func (c *UserController) handleGetUser(w http.ResponseWriter, req *http.Request) {
-	user, err := c.getUserFromRequest(w, req)
+func (c *Controller) ShowUser(ctx *gin.Context) {
+	user, err := c.getUserFromRequest(ctx)
 	if err != nil {
 		return
 	}
 
-	resp, err := c.makeUserJson(user)
+	payload, err := c.getShowUserPayload(ctx, user)
 	if err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		log.Println(err)
 		return
 	}
-	writeResponse(w, http.StatusOK, resp)
+	httputil.NoError(ctx, map[string]interface{}{
+		"user": payload,
+	})
 }
 
 // Handles DELETE requests to the user's resource
@@ -115,33 +79,57 @@ func (c *UserController) handleGetUser(w http.ResponseWriter, req *http.Request)
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /user/{id} [delete]
-func (c *UserController) handleDeleteUser(w http.ResponseWriter, req *http.Request) {
-	user, err := c.getUserFromRequest(w, req)
+func (c *Controller) DeleteUser(ctx *gin.Context) {
+	user, err := c.getUserFromRequest(ctx)
 	if err != nil {
 		return
 	}
 
 	err = c.Repo.Delete(user)
 	if err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		log.Println(err)
+		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	writeResponse(w, http.StatusOK, noError())
+	httputil.NoErrorEmpty(ctx)
 }
 
 // Handles PATCH requests to the user's resource
-func (c *UserController) handlePatchUser(w http.ResponseWriter, req *http.Request) {
-	//var t updateUserModel;
-	/*user, err := c.getAuthenticatedUserFromRequest(w, req)
+// @Summary Update a user
+// @Description update user by ID
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param id path int true "User ID"
+// @Param email body models.UpdateUser true "UpdateUser data"
+// @Success 200
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /user/{id} [patch]
+func (c *Controller) UpdateUser(ctx *gin.Context) {
+	user, err := c.getUserFromRequest(ctx)
 	if err != nil {
 		return
 	}
 
-	payload, err := getUserJson(user, Repo)
+	var t models.UpdateUser
+	err = ctx.Bind(&t)
 	if err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		log.Println(err)
+		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")
 		return
-	}*/
+	}
+
+	user.Email = t.Email
+	err = c.Repo.Update(user)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")
+		return
+	}
+
+	httputil.NoErrorEmpty(ctx)
 }
 
 // Handles POST request to the user resource
@@ -156,25 +144,24 @@ func (c *UserController) handlePatchUser(w http.ResponseWriter, req *http.Reques
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /user [post]
-func (c *UserController) handlePOSTUser(w http.ResponseWriter, req *http.Request) {
-	decoder := json.NewDecoder(req.Body)
-
-	var t createUserModel
-	err := decoder.Decode(&t)
+func (c *Controller) CreateUser(ctx *gin.Context) {
+	var t models.CreateUser
+	err := ctx.Bind(&t)
 	if err != nil {
-		writeErrorResponse(w, http.StatusBadRequest, "Incorrect body parameters")
+		log.Println(err)
+		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")
 		return
 	}
 	if !c.validEmail(t.Email) {
-		writeErrorResponse(w, http.StatusBadRequest, "Invalid email")
+		httputil.NewError(ctx, http.StatusBadRequest, "Invalid email")
 		return
 	}
 	if c.emailExists(t.Email) {
-		writeErrorResponse(w, http.StatusBadRequest, "Provided email is already registered")
+		httputil.NewError(ctx, http.StatusBadRequest, "Provided email is already registered")
 		return
 	}
 	if !c.validPassword(t.Password) {
-		writeErrorResponse(w, http.StatusBadRequest, "Password needs a minimum of at least 8 characters")
+		httputil.NewError(ctx, http.StatusBadRequest, "Password needs a minimum of at least 8 characters")
 		return
 	}
 
@@ -182,52 +169,34 @@ func (c *UserController) handlePOSTUser(w http.ResponseWriter, req *http.Request
 
 	user, err := c.registerUser(t.Email, t.Password)
 	if err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	writeResponse(w, http.StatusOK, []byte(fmt.Sprintf(`{"error": false, "id": %v}`, user.ID)))
-}
-
-// Return a json representation from a given user
-func (c *UserController) makeUserJson(user models.User) ([]byte, error) {
-	team, err := c.Repo.GetUserTeam(user)
-	if err != nil {
-		return nil, err
-	}
-
-	data := getUserModel{
-		Email: user.Email,
-		Team:  team.ID,
-	}
-
-	payload, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return payload, nil
+	httputil.NoError(ctx, map[string]interface{}{
+		"id": user.ID,
+	})
 }
 
 // Returns a bool to check if the password is valid
-func (c *UserController) validPassword(password string) bool {
+func (c *Controller) validPassword(password string) bool {
 	return len(password) >= 8
 }
 
 // Returns a bool to check if the email is valid
-func (c *UserController) validEmail(email string) bool {
+func (c *Controller) validEmail(email string) bool {
 	_, err := mail.ParseAddress(email)
 	return err == nil
 }
 
 // Return a bool to see if the email is already registered
-func (c *UserController) emailExists(email string) bool {
+func (c *Controller) emailExists(email string) bool {
 	_, err := c.Repo.GetUserByEmail(email)
 	return err == nil
 }
 
 // Registers a new user with the given credentials
-func (c *UserController) registerUser(email, password string) (models.User, error) {
+func (c *Controller) registerUser(email, password string) (models.User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return models.User{}, err
@@ -237,16 +206,30 @@ func (c *UserController) registerUser(email, password string) (models.User, erro
 }
 
 // Parse a user from the request parameters or return an error if not found
-func (c *UserController) getUserFromRequest(w http.ResponseWriter, req *http.Request) (models.User, error) {
-	id, err := parseIdFromRequest(w, req)
+func (c *Controller) getUserFromRequest(ctx *gin.Context) (models.User, error) {
+	id, err := c.parseIdFromRequest(ctx)
 	if err != nil {
 		return models.User{}, err
 	}
 
 	user, err := c.Repo.GetUserById(id)
 	if err != nil {
-		writeErrorResponse(w, http.StatusNotFound, "Not found")
+		httputil.NewError(ctx, http.StatusNotFound, "User not found")
 		return models.User{}, err
 	}
 	return user, err
+}
+
+func (c *Controller) getShowUserPayload(ctx *gin.Context, user models.User) (models.ShowUser, error) {
+	team, err := c.Repo.GetUserTeam(user)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
+		return models.ShowUser{}, err
+	}
+
+	return models.ShowUser{
+		ID: user.ID,
+		Email: user.Email,
+		Team: c.getTeamPayload(team),
+	}, nil
 }

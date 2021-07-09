@@ -1,55 +1,43 @@
-package controllers
+package controller
 
 import (
 	"../middleware"
 	"../models"
-	"../repos"
-	"encoding/json"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	"github.com/gorilla/mux"
+	"../httputil"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"time"
 )
 
-type SessionController struct {
-	Repo repos.Repository
-}
-
-func (c *SessionController) AddRoutes(r *mux.Router) {
-	r.HandleFunc("/session", c.handlePostSession).Methods("POST")
-}
-
 // Handles creating a new session
-func (c *SessionController) handlePostSession(w http.ResponseWriter, req *http.Request) {
-	decoder := json.NewDecoder(req.Body)
+func (c *Controller) CreateSession(ctx *gin.Context) {
+	var t models.CreateSession
+	err := ctx.Bind(&t)
 
-	type sessionCreation struct {
-		Email    string
-		Password string
-	}
-
-	var t sessionCreation
-	err := decoder.Decode(&t)
 	if err != nil {
-		writeErrorResponse(w, http.StatusBadRequest, "Incorrect body parameters")
+		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")
 		return
 	}
+
 	user, err := c.loginAndGetUser(t.Email, t.Password)
 	if err != nil {
-		writeErrorResponse(w, http.StatusUnauthorized, "Invalid email or password")
+		httputil.NewError(ctx, http.StatusUnauthorized, "Invalid email or password")
 		return
 	}
 	token, err := c.createToken(user)
 	if err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	writeResponse(w, http.StatusOK, []byte(`{"error": false, "token": "`+token+`"}`))
+	httputil.NoError(ctx, map[string]interface{}{
+		"token": token,
+	})
 }
 
 // Tries to login the user and returns it if successful
-func (c *SessionController) loginAndGetUser(email, password string) (*models.User, error) {
+func (c *Controller) loginAndGetUser(email, password string) (*models.User, error) {
 	user, err := c.Repo.GetUserByEmail(email)
 	if err != nil {
 		return &user, err
@@ -64,7 +52,7 @@ func (c *SessionController) loginAndGetUser(email, password string) (*models.Use
 }
 
 // Creates a JWT token for a specific user
-func (c *SessionController) createToken(user *models.User) (string, error) {
+func (c *Controller) createToken(user *models.User) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &middleware.AuthClaims{
 		Email: user.Email,

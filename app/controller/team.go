@@ -1,106 +1,139 @@
-package controllers
+package controller
 
 import (
-	"../middleware"
+	"../httputil"
 	"../models"
-	"../repos"
-	"encoding/json"
-	"fmt"
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 )
 
-type TeamController struct {
-	Repo repos.Repository
-}
-
-func (c *TeamController) AddRoutes(r *mux.Router) {
-	rAuth := r.PathPrefix("/team").Subrouter()
-	rAuth.Use(middleware.Auth(c.Repo))
-	rAuth.HandleFunc("/{id}", c.handleGetTeam).Methods("GET")
-	rAuth.HandleFunc("/{id}", c.handlePatchTeam).Methods("PATCH")
-
-	rAdmin := r.PathPrefix("/team").Subrouter()
-	rAdmin.Use(middleware.Auth(c.Repo))
-	rAdmin.Use(middleware.Admin)
-	rAdmin.HandleFunc("", c.handlePostTeam).Methods("POST")
-	rAdmin.HandleFunc("/{id}", c.handleDeleteTeam).Methods("DELETE")
-}
-
 // Handles a GET request to a team resource
-func (c *TeamController) handleGetTeam(w http.ResponseWriter, req *http.Request) {
-	team, err := c.getTeamFromRequest(w, req)
+// @Summary Get a team
+// @Description get team by ID
+// @Tags teams
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Team ID"
+// @Success 200 {object} models.ShowTeam
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /team/{id} [get]
+func (c *Controller) ShowTeam(ctx *gin.Context) {
+	team, err := c.getTeamFromRequest(ctx)
 	if err != nil {
 		return
 	}
 
-	data, err := c.makeTeamJson(team)
-	if err != nil {
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
-		return
-	}
-
-	writeResponse(w, http.StatusOK, data)
+	httputil.NoError(ctx, map[string]interface{}{
+		"team": c.getTeamPayload(team),
+	})
 }
 
 // Handles a POST request to a team resource
-func (c *TeamController) handlePostTeam(w http.ResponseWriter, req *http.Request) {
-	teamData, err := c.getTeamJson(w, req)
+// @Summary Post a team
+// @Description create a new team
+// @Tags teams
+// @Accept  json
+// @Produce  json
+// @Success 200
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /team [post]
+func (c *Controller) CreateTeam(ctx *gin.Context) {
+	var t models.CreateTeam
+	err := ctx.Bind(&t)
 	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, "Bad request")
 		return
 	}
 
-	team := models.Team{}
-	c.fillTeamData(&team, teamData)
-	team.Budget = teamData.Budget
+	team := models.Team{
+		Name:    t.Name,
+		Country: t.Country,
+		Budget:  t.Budget,
+	}
 
 	err = c.Repo.Create(&team)
 	if err != nil {
 		log.Println(err)
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	writeResponse(w, http.StatusOK, []byte(fmt.Sprintf(`{"error": false, "id": %v}`, team.ID)))
+
+	httputil.NoError(ctx, map[string]interface{}{
+		"id": team.ID,
+	})
 }
 
+
 // Handles a DELETE request to a team resource
-func (c *TeamController) handleDeleteTeam(w http.ResponseWriter, req *http.Request) {
-	team, err := c.getTeamFromRequest(w, req)
+// @Summary Delete a team
+// @Description Delete a team and all of it's players
+// @Tags teams
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Team ID"
+// @Success 200
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /team/{id} [delete]
+func (c *Controller) DeleteTeam(ctx *gin.Context) {
+	team, err := c.getTeamFromRequest(ctx)
 	if err != nil {
 		return
 	}
 
-	players := c.Repo.GetPlayers(team.ID)
-	if len(players) > 0 {
-		writeErrorResponse(w, http.StatusBadRequest, "Cannot delete a team while it still has players")
-		return
-	}
-
-	err = c.Repo.Delete(team)
+	err = c.Repo.RunInTransaction(func () error {
+		players := c.Repo.GetPlayers(team.ID)
+		for _, p := range players {
+			err = c.Repo.Delete(&p)
+			if err != nil {
+				return err
+			}
+		}
+		return c.Repo.Delete(team)
+	})
 	if err != nil {
-		log.Println(err)
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	writeResponse(w, http.StatusOK, noError())
+	httputil.NoErrorEmpty(ctx)
 }
 
 // Handles a PATCH request to a team resource
-func (c *TeamController) handlePatchTeam(w http.ResponseWriter, req *http.Request) {
-	user, err := getAuthenticatedUserFromRequest(w, req)
-	team, err := c.getTeamFromRequest(w, req)
-	if err != nil || (!user.IsAdmin() && !c.validateTeamOwner(w, user, team)) {
+// @Summary Update a team
+// @Description Update a team
+// @Tags teams
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Team ID"
+// @Success 200
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /team/{id} [patch]
+func (c *Controller) UpdateTeam(ctx *gin.Context) {
+	user, err := c.getAuthenticatedUserFromRequest(ctx)
+	team, err := c.getTeamFromRequest(ctx)
+	if err != nil || (!user.IsAdmin() && !c.validateTeamOwner(ctx, user, team)) {
 		return
 	}
 
-	t, err := c.getTeamJson(w, req)
+	var t models.UpdateTeam
+	err = ctx.Bind(&t)
 	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, "Bad request")
 		return
 	}
 
-	c.fillTeamData(&team, t)
+	team.Country = t.Country
+	team.Name = t.Name
 	if user.IsAdmin() {
 		team.Budget = t.Budget
 	}
@@ -108,77 +141,53 @@ func (c *TeamController) handlePatchTeam(w http.ResponseWriter, req *http.Reques
 	err = c.Repo.Update(&team)
 	if err != nil {
 		log.Println(err)
-		writeErrorResponse(w, http.StatusInternalServerError, "Internal server error")
+		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
-	writeResponse(w, http.StatusOK, noError())
+
+	httputil.NoErrorEmpty(ctx)
 }
 
-type teamJson struct {
-	Id      uint   `json:"id"`
-	Name    string `json:"name"`
-	Country string `json:"country"`
-	MarketValue   int    `json:"market_value"`
-	Budget  int    `json:"budget"`
-	Players  []int    `json:"players"`
-	Owner  int    `json:"owner"`
-}
-
-// Fill a team with data from a json structure
-func (c *TeamController) fillTeamData(team *models.Team, t teamJson) {
-	team.Country = t.Country
-	team.Name = t.Name
-	//if admin {
-	//	team.OwnerID = t.Id
-	//}
-}
 
 // Generate a json from a team model
-func (c *TeamController) makeTeamJson(team models.Team) ([]byte, error) {
-	players := make([]int, 0)
+func (c *Controller) getTeamPayload(team models.Team) models.ShowTeam {
 	marketValue := 0
-	for _, p := range c.Repo.GetPlayers(team.ID) {
-		players = append(players, int(p.ID))
+	players := c.Repo.GetPlayers(team.ID)
+
+	playerModels := make([]models.ShowPlayer, 0)
+	for _, p := range players {
+		playerModels = append(playerModels, c.getPlayerPayload(p))
 		marketValue += int(p.MarketValue)
 	}
-
-	t := teamJson{
-		Id:      team.ID,
-		Name:    team.Name,
+	return models.ShowTeam{
+		ID: team.ID,
+		Name: team.Name,
 		Country: team.Country,
-		MarketValue:   marketValue,
-		Budget:  team.Budget,
-		Players: players,
-		Owner: int(team.OwnerID),
+		Budget: team.Budget,
+		Players: playerModels,
+		MarketValue: marketValue,
 	}
-	return json.Marshal(t)
 }
 
-func (c *TeamController) getTeamJson(w http.ResponseWriter, req *http.Request) (teamJson, error) {
-
-	decoder := json.NewDecoder(req.Body)
-	var t teamJson
-	err := decoder.Decode(&t)
+// Get team from request
+func (c *Controller) getTeamFromRequest(ctx *gin.Context) (models.Team, error) {
+	id, err := c.parseIdFromRequest(ctx)
 	if err != nil {
-		writeErrorResponse(w, http.StatusBadRequest, "Incorrect body parameters")
-		return t, err
+		return models.Team{}, err
 	}
-	return t, nil
-}
 
-func (c *TeamController) getTeamFromRequest(w http.ResponseWriter, req *http.Request) (models.Team, error) {
-	id, err := parseIdFromRequest(w, req)
 	team, err := c.Repo.GetTeam(id)
 	if err != nil {
-		writeErrorResponse(w, http.StatusNotFound, "Not found")
+		httputil.NewError(ctx, http.StatusNotFound, "Not found")
 		return models.Team{}, err
 	}
 	return team, nil
 }
 
-func (c *TeamController) validateTeamOwner(w http.ResponseWriter, user models.User, team models.Team) bool {
+// Validate a team owner
+func (c *Controller) validateTeamOwner(ctx *gin.Context, user models.User, team models.Team) bool {
 	if user.ID != team.OwnerID {
-		writeErrorResponse(w, http.StatusUnauthorized, "unauthorized")
+		httputil.NewError(ctx, http.StatusUnauthorized, "unauthorized")
 		return false
 	}
 	return true

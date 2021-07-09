@@ -1,12 +1,15 @@
 package app
 
 import (
-	"./controllers"
+	_ "../docs"
+	"./controller"
 	"./middleware"
 	"./migrations"
 	"./repos"
 	"fmt"
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -17,31 +20,57 @@ import (
 
 type App struct {
 	address   string
-	router    *mux.Router
 	db        *gorm.DB
+	router *gin.Engine
 	IsRunning bool
-	controllers []controllers.Controller
 }
 
 func (a *App) Configure() {
 	repo := repos.RepositorySQL{Db: a.db}
-	a.controllers = []controllers.Controller{
-		&controllers.UserController{Repo: repo},
-		&controllers.SessionController{Repo: repo},
-		&controllers.PlayerController{Repo: repo},
-		&controllers.TeamController{Repo: repo},
-		&controllers.TransferController{Repo: repo},
+	r := gin.Default()
+
+	c := controller.NewController(repo)
+
+	api := r.Group("/api")
+	{
+		users := api.Group("/user")
+		{
+			users.GET("/{id}", c.ShowUser)
+			users.POST("", c.CreateUser)
+			users.Use(middleware.Auth(repo))
+			users.GET("/me", c.ShowMyself)
+			users.Use(middleware.Admin())
+			users.DELETE("/{id}", c.DeleteUser)
+			users.PATCH("/{id}", c.UpdateUser)
+		}
+		session := api.Group("/session")
+		{
+			session.POST("", c.CreateSession)
+		}
+		team := api.Group("/team")
+		{
+			team.GET("/{id}", c.ShowTeam)
+			team.Use(middleware.Auth(repo))
+			team.PATCH("/{id}", c.UpdateTeam)
+			team.Use(middleware.Admin())
+			team.POST("", c.CreateTeam)
+			team.DELETE("/{id}", c.DeleteTeam)
+		}
+		players := api.Group("/player")
+		{
+			players.GET("/{id}", c.ShowPlayer)
+			players.Use(middleware.Auth(repo))
+			players.PATCH("/{id}", c.UpdatePlayer)
+			players.Use(middleware.Admin())
+			players.POST("", c.CreatePlayer)
+			players.DELETE("/{id}", c.DeletePlayer)
+		}
 	}
-
-	r := mux.NewRouter().PathPrefix("/api").Subrouter()
-	r.Use(middleware.Common)
-
-	for _, c := range a.controllers {
-		c.AddRoutes(r)
-	}
-
+	url := ginSwagger.URL("http://" + a.address + "/swagger/doc.json")
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 	a.router = r
 }
+
 
 func CreateApp(address, host, user, password, dbname, port string) (*App, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s",

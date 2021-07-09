@@ -1,4 +1,4 @@
-package controllers
+package controller
 
 import (
 	"golang.org/x/crypto/bcrypt"
@@ -7,7 +7,7 @@ import (
 import "../repos"
 
 func TestValidPassword(t *testing.T) {
-	c := UserController{Repo: repos.CreateRepositoryMemory()}
+	c := Controller{Repo: repos.CreateRepositoryMemory()}
 	if c.validPassword("1234") || c.validPassword("1234567") || c.validPassword("") {
 		t.Error("Invalid password was marked as valid")
 	}
@@ -17,7 +17,7 @@ func TestValidPassword(t *testing.T) {
 }
 
 func TestEmail(t *testing.T) {
-	c := UserController{Repo: repos.CreateRepositoryMemory()}
+	c := Controller{Repo: repos.CreateRepositoryMemory()}
 	if c.validEmail("test") || c.validEmail("test@") || c.validEmail("@gmail") || c.validEmail("") {
 		t.Error("Invalid email was marked as valid")
 	}
@@ -28,7 +28,7 @@ func TestEmail(t *testing.T) {
 
 func TestHasEmail(t *testing.T) {
 	db := repos.CreateRepositoryMemory()
-	c := UserController{Repo: db}
+	c := Controller{Repo: db}
 	email := "test@gmail.com"
 	_, err := db.CreateUser(email, []byte{}, 0)
 	if err != nil {
@@ -44,7 +44,7 @@ func TestHasEmail(t *testing.T) {
 }
 
 func TestRegisterUser(t *testing.T) {
-	c := UserController{Repo: repos.CreateRepositoryMemory()}
+	c := Controller{Repo: repos.CreateRepositoryMemory()}
 	email := "test@gmail.com"
 	pass := "hello123"
 	user, err := c.registerUser(email, pass)

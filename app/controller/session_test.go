@@ -1,4 +1,4 @@
-package controllers
+package controller
 
 import (
 	"../middleware"
@@ -11,17 +11,16 @@ import (
 
 func TestGetUser(t *testing.T) {
 	db := repos.CreateRepositoryMemory()
-	c1 := UserController{Repo: db}
-	c2 := SessionController{Repo: db}
+	c := Controller{Repo: db}
 	email := "test@gmail.com"
 	pass := "hello123"
-	_, err := c1.registerUser(email, pass)
+	_, err := c.registerUser(email, pass)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	user2, err := c2.loginAndGetUser(email, pass)
+	user2, err := c.loginAndGetUser(email, pass)
 	if err != nil {
 		t.Error(err)
 		return
@@ -33,7 +32,7 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestCreateToken(t *testing.T) {
-	c := SessionController{Repo: repos.CreateRepositoryMemory()}
+	c := Controller{Repo: repos.CreateRepositoryMemory()}
 	email := "test@gmail.com"
 	tokenString, err := c.createToken(&models.User{Email: email})
 	if err != nil {
@@ -47,9 +46,11 @@ func TestCreateToken(t *testing.T) {
 		}
 		return middleware.JWTKey, nil
 	})
+
 	if err != nil || !token.Valid {
 		t.Error("invalid token")
 	}
+
 	if claims.Email != email {
 		t.Error("token has invalid email")
 	}

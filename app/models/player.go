@@ -39,3 +39,34 @@ func RandomPlayer(position int) Player {
 func randomAge() int {
 	return rand.Intn(40-18) + 18
 }
+
+
+type ShowPlayer struct {
+	ID 			uint    `json:"id"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Country     string `json:"country"`
+	Age         int    `json:"age"`
+	MarketValue int    `json:"market_value"`
+	Position    int    `json:"position"`
+}
+
+type CreatePlayer struct {
+	FirstName   string
+	LastName    string
+	Country     string
+	Age         int
+	MarketValue int32
+	Position	int
+	TeamID      uint
+}
+
+type UpdatePlayer struct {
+	Team 		int    `json:"team"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Country     string `json:"country"`
+	Age         int    `json:"age"`
+	MarketValue int    `json:"market_value"`
+	Position    int    `json:"position"`
+}

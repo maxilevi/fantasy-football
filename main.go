@@ -7,6 +7,15 @@ import (
 	"os"
 )
 
+
+// @title Fantasy football manager API
+// @version 1.0
+// @description Fantasy football manager microservice.
+
+// @host localhost:8080
+// @BasePath /api/
+
+// @securityDefinitions.bearer BearerAuth
 func main() {
 	err := godotenv.Load()
 	if err != nil {

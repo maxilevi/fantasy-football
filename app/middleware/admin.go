@@ -3,22 +3,25 @@ package middleware
 import (
 	"../models"
 	"fmt"
-	"github.com/gorilla/context"
+	"github.com/gin-gonic/gin"
+	"../httputil"
 	"log"
 	"net/http"
 )
 
-func Admin(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		v, ok := context.GetOk(r, "user")
+func Admin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		v, ok := c.Get("user")
 		if !ok {
-			failedAuth(w, http.StatusUnauthorized, "Unauthorized")
+			httputil.NewError(c, http.StatusUnauthorized, "Invalid authentication")
+			c.Abort()
 		}
 		if u, ok := v.(models.User); ok && u.IsAdmin() {
-			log.Println(fmt.Sprintf("administrator role succesfully validated for request %v", r.RequestURI))
-			next.ServeHTTP(w, r)
+			log.Println(fmt.Sprintf("administrator role succesfully validated for request %v", c.Request.RequestURI))
+			c.Next()
 		} else {
-			failedAuth(w, http.StatusUnauthorized, "Unauthorized")
+			httputil.NewError(c, http.StatusUnauthorized, "User does not have administrator rights")
+			c.Abort()
 		}
-	})
+	}
 }

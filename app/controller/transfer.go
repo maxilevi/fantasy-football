@@ -1,100 +1,77 @@
-package controllers
+package controller
 
 import (
-	"encoding/json"
+	"../httputil"
+	"../models"
 	"fmt"
-	"github.com/gorilla/mux"
-	"../repos"
-	"../middleware"
+	"github.com/gin-gonic/gin"
 	"math/rand"
 	"net/http"
-	"../models"
 )
 
-type TransferController struct {
-	Repo repos.Repository
-}
 
-func (c *TransferController) AddRoutes(r *mux.Router) {
-	rAuthPlayer := r.PathPrefix("/transfer").Subrouter()
-	rAuthPlayer.Use(middleware.Auth(c.Repo))
-	rAuthPlayer.HandleFunc("/all", c.handleGETAll).Methods("GET")
-	rAuthPlayer.HandleFunc("/{id}", c.handleGET).Methods("GET")
-	rAuthPlayer.HandleFunc("/{id}", c.handlePATCH).Methods("PATCH")
-	rAuthPlayer.HandleFunc("/{id}", c.handleDELETE).Methods("DELETE")
-	rAuthPlayer.HandleFunc("", c.handlePOST).Methods("POST")
-}
-
-func (c *TransferController) handleGETAll(w http.ResponseWriter, req *http.Request) {
-
+func (c *Controller) ShowAllTransfer(ctx *gin.Context) {
 	transfers := c.Repo.GetTransfers()
 
-	arr := make([]transferJson, 0)
+	arr := make([]models.ShowTransfer, 0)
 	for _, transfer := range transfers {
-		arr = append(arr, c.makeJson(&transfer))
+		arr = append(arr, models.ShowTransfer{
+			ID:     transfer.ID,
+			Player: c.getPlayerPayload(transfer.Player),
+			Ask:    transfer.Ask,
+		})
 	}
 
-	resp, err := json.Marshal(arr)
-	if err != nil {
-		writeInternalServerError(w, err)
-		return
-	}
-
-	writeResponse(w, http.StatusOK, resp)
+	httputil.NoError(ctx, map[string]interface{}{
+		"transfers": transfers,
+	})
 }
 
-func (c *TransferController) handleGET(w http.ResponseWriter, req *http.Request) {
-	transfer, err := c.getTransferFromRequest(w, req)
+func (c *Controller) ShowTransfer(ctx *gin.Context) {
+	transfer, err := c.getTransferFromRequest(ctx)
 	if err != nil {
 		return
 	}
 
-	resp, err := json.Marshal(c.makeJson(&transfer))
-	if err != nil {
-		writeInternalServerError(w, err)
-		return
-	}
+	httputil.NoError(ctx, map[string]interface{}{
+		"transfer": transfer,
+	})
+}
 
-	writeResponse(w, http.StatusOK, resp)
+// Handle creating a transfer
+func (c *Controller) CreateTransfer(w http.ResponseWriter, req *http.Request) {
+
 }
 
 // Handle editing a transfer
-func (c *TransferController) handlePATCH(w http.ResponseWriter, req *http.Request) {
+func (c *Controller) UpdateTransfer(ctx *gin.Context) {
 
 }
 
 // Handle deleting a transfer
-func (c *TransferController) handleDELETE(w http.ResponseWriter, req *http.Request) {
-	transfer, err1 := c.getTransferFromRequest(w, req)
-	user, err2 := getAuthenticatedUserFromRequest(w, req)
+func (c *Controller) DeleteTransfer(ctx *gin.Context) {
+	transfer, err1 := c.getTransferFromRequest(ctx)
+	user, err2 := c.getAuthenticatedUserFromRequest(ctx)
 	if err1 != nil || err2 != nil {
 		return
 	}
 
 	if !user.IsAdmin() && user.ID != transfer.Player.Team.OwnerID {
-		writeUnauthorizedError(w, fmt.Errorf("trying to delete a not owned transfer"))
+		httputil.NewError(ctx, http.StatusUnauthorized, "Trying to delete a not owned transfer")
 		return
 	}
 
 	err := c.Repo.Delete(transfer)
 	if err != nil {
-		writeInternalServerError(w, err)
+		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	writeOkResponse(w)
+	httputil.NoErrorEmpty(ctx)
 }
 
-type transferJson struct {
-
-}
-
-// Handle creating a transfer
-func (c *TransferController) handlePOST(w http.ResponseWriter, req *http.Request) {
-
-}
-
-func (c *TransferController) executeTransfer(transfer models.Transfer, seller, buyer models.Team) error {
+// Execute a transfer and update the records if successful
+func (c *Controller) executeTransfer(transfer models.Transfer, seller, buyer models.Team) error {
 	// Randomly update the player value
 	player := transfer.Player
 	player.MarketValue = int32(float64(player.MarketValue) * (1.1 + rand.Float64() * 0.9))
@@ -117,19 +94,12 @@ func (c *TransferController) executeTransfer(transfer models.Transfer, seller, b
 }
 
 // Gets transfers from the request
-func (c *TransferController) getTransferFromRequest(w http.ResponseWriter, req *http.Request) (models.Transfer, error) {
-	id, err := parseIdFromRequest(w, req)
+func (c *Controller) getTransferFromRequest(ctx *gin.Context) (models.Transfer, error) {
+	id, err := c.parseIdFromRequest(ctx)
 	transfer, err := c.Repo.GetTransfer(id)
 	if err != nil {
-		writeErrorResponse(w, http.StatusNotFound, "Not found")
+		httputil.NewError(ctx, http.StatusNotFound, "Not found")
 		return models.Transfer{}, err
 	}
 	return transfer, nil
-}
-
-// Make json from a transfer model
-func (c *TransferController) makeJson(transfer *models.Transfer) transferJson {
-	return transferJson{
-
-	}
 }
