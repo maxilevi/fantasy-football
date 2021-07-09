@@ -20,7 +20,7 @@ type Repository interface {
 	Delete(model interface{}) error
 	GetTransfers() []models.Transfer
 	GetTransfer(id uint) (models.Transfer, error)
-	RunInTransaction(code func () error) error
+	RunInTransaction(code func() error) error
 }
 
 func doCreateUser(u Repository, email string, hash []byte, permission int) (models.User, error) {
@@ -29,7 +29,7 @@ func doCreateUser(u Repository, email string, hash []byte, permission int) (mode
 		PasswordHash:    hash,
 		PermissionLevel: permission,
 	}
-	return user, u.RunInTransaction(func () error {
+	return user, u.RunInTransaction(func() error {
 		err := u.Create(&user)
 		if err != nil {
 			return err
@@ -124,7 +124,7 @@ func (u RepositorySQL) GetTransfer(id uint) (models.Transfer, error) {
 	return transfer, res.Error
 }
 
-func (u RepositorySQL) RunInTransaction(code func () error) error {
+func (u RepositorySQL) RunInTransaction(code func() error) error {
 	tx := u.Db.Begin()
 	err := code()
 	if err != nil {
@@ -136,12 +136,12 @@ func (u RepositorySQL) RunInTransaction(code func () error) error {
 }
 
 type RepositoryMemory struct {
-	Models   []interface{}
+	Models []interface{}
 }
 
 func CreateRepositoryMemory() *RepositoryMemory {
 	return &RepositoryMemory{
-		Models:   make([]interface{}, 0),
+		Models: make([]interface{}, 0),
 	}
 }
 
@@ -215,7 +215,7 @@ func (u *RepositoryMemory) Delete(model interface{}) error {
 
 func (u *RepositoryMemory) GetTransfers() []models.Transfer {
 	a := make([]models.Transfer, 0)
-	u.getAllByFuncOfType(func(m interface{}) bool {return true}, a)
+	u.getAllByFuncOfType(func(m interface{}) bool { return true }, a)
 	return a
 }
 
@@ -230,7 +230,7 @@ func (u *RepositoryMemory) RunInTransaction(code func() error) error {
 }
 
 func (u *RepositoryMemory) getByIdOfType(id uint, t interface{}) error {
-	return u.getByFuncOfType(func (m interface{}) bool {
+	return u.getByFuncOfType(func(m interface{}) bool {
 		mo := m.(gorm.Model)
 		return mo.ID == id
 	}, t)

@@ -20,7 +20,7 @@ type Player struct {
 	Country     string
 	Age         int
 	MarketValue int32
-	Position	int
+	Position    int
 	TeamID      uint
 	Team        Team
 }
@@ -44,22 +44,22 @@ type BasePlayer struct {
 	FirstName   string `json:"first_name" example:"Audrey"`
 	LastName    string `json:"last_name" example:"Hepburn"`
 	Country     string `json:"country" example:"Germany"`
-	Age         int `json:"age" example:"25"`
-	MarketValue int32 `json:"market_value" example:"25000"`
-	Position	int `json:"position" example:"1"`
+	Age         int    `json:"age" example:"25"`
+	MarketValue int32  `json:"market_value" example:"25000"`
+	Position    int    `json:"position" example:"1"`
 }
 
 type ShowPlayer struct {
 	BasePlayer
-	ID 			uint    `json:"id"`
+	ID uint `json:"id"`
 }
 
 type CreatePlayer struct {
 	BasePlayer
-	Team      uint `json:"team"`
+	Team uint `json:"team"`
 }
 
 type UpdatePlayer struct {
 	BasePlayer
-	Team 		int    `json:"team"`
+	Team int `json:"team"`
 }

@@ -1,20 +1,19 @@
 package controller
 
 import (
+	"../httputil"
 	"../models"
+	"../repos"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"../httputil"
 	"net/http"
 	"strconv"
-	"../repos"
 )
 
 // Controller example
 type Controller struct {
 	Repo repos.Repository
 }
-
 
 func NewController(repo repos.Repository) *Controller {
 	return &Controller{Repo: repo}

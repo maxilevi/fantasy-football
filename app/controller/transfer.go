@@ -9,7 +9,6 @@ import (
 	"net/http"
 )
 
-
 func (c *Controller) ShowAllTransfer(ctx *gin.Context) {
 	transfers := c.Repo.GetTransfers()
 
@@ -72,7 +71,7 @@ func (c *Controller) DeleteTransfer(ctx *gin.Context) {
 func (c *Controller) executeTransfer(transfer models.Transfer, seller, buyer models.Team) error {
 	// Randomly update the player value
 	player := transfer.Player
-	player.MarketValue = int32(float64(player.MarketValue) * (1.1 + rand.Float64() * 0.9))
+	player.MarketValue = int32(float64(player.MarketValue) * (1.1 + rand.Float64()*0.9))
 
 	// Actually do the transfer
 	player.TeamID = buyer.ID
@@ -80,7 +79,7 @@ func (c *Controller) executeTransfer(transfer models.Transfer, seller, buyer mod
 	seller.Budget += transfer.Ask
 	buyer.Budget -= transfer.Ask
 
-	return c.Repo.RunInTransaction(func () error {
+	return c.Repo.RunInTransaction(func() error {
 		err1 := c.Repo.Update(&player)
 		err2 := c.Repo.Update(&buyer)
 		err3 := c.Repo.Update(&seller)

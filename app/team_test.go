@@ -56,8 +56,8 @@ func TestPostTeam(t *testing.T) {
 
 	payload := map[string]interface{}{
 		"country": "argentina",
-		"name": "los pumas",
-		"budget": 100000,
+		"name":    "los pumas",
+		"budget":  100000,
 	}
 
 	resp, err := doPostRequest("team", token, payload, http.StatusOK)

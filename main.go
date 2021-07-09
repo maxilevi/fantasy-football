@@ -7,7 +7,6 @@ import (
 	"os"
 )
 
-
 // @title Fantasy football manager API
 // @version 1.0
 // @description Fantasy football manager microservice.

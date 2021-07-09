@@ -21,7 +21,7 @@ import (
 type App struct {
 	address   string
 	db        *gorm.DB
-	router *gin.Engine
+	router    *gin.Engine
 	IsRunning bool
 }
 
@@ -70,7 +70,6 @@ func (a *App) Configure() {
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 	a.router = r
 }
-
 
 func CreateApp(address, host, user, password, dbname, port string) (*App, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s",

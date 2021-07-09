@@ -228,8 +228,8 @@ func (c *Controller) getShowUserPayload(ctx *gin.Context, user models.User) (mod
 	}
 
 	return models.ShowUser{
-		ID: user.ID,
+		ID:    user.ID,
 		Email: user.Email,
-		Team: c.getTeamPayload(team),
+		Team:  c.getTeamPayload(team),
 	}, nil
 }

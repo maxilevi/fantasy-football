@@ -1,11 +1,11 @@
 package controller
 
 import (
+	"../httputil"
 	"../middleware"
 	"../models"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
-	"../httputil"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"time"

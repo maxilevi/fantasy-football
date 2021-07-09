@@ -28,12 +28,12 @@ func (c *Controller) ShowPlayer(ctx *gin.Context) {
 
 	payload := models.ShowPlayer{
 		BasePlayer: models.BasePlayer{
-			FirstName: player.FirstName,
-			LastName: player.LastName,
+			FirstName:   player.FirstName,
+			LastName:    player.LastName,
 			MarketValue: player.MarketValue,
-			Age: player.Age,
-			Country: player.Country,
-			Position: player.Position,
+			Age:         player.Age,
+			Country:     player.Country,
+			Position:    player.Position,
 		},
 	}
 
@@ -62,13 +62,13 @@ func (c *Controller) CreatePlayer(ctx *gin.Context) {
 	}
 
 	player := models.Player{
-		FirstName: payload.FirstName,
-		LastName: payload.LastName,
-		Country: payload.Country,
-		Age: payload.Age,
+		FirstName:   payload.FirstName,
+		LastName:    payload.LastName,
+		Country:     payload.Country,
+		Age:         payload.Age,
 		MarketValue: payload.MarketValue,
-		Position: payload.Position,
-		TeamID: payload.Team,
+		Position:    payload.Position,
+		TeamID:      payload.Team,
 	}
 
 	if _, err = c.Repo.GetTeam(payload.Team); err != nil {

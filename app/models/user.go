@@ -15,10 +15,10 @@ func (u User) IsAdmin() bool {
 	return u.PermissionLevel > 0
 }
 
-type ShowUser  struct {
-	ID uint `json:"id"`
-	Email string `json:"email"`
-	Team  ShowTeam   `json:"team"`
+type ShowUser struct {
+	ID    uint     `json:"id"`
+	Email string   `json:"email"`
+	Team  ShowTeam `json:"team"`
 }
 
 type UpdateUser struct {
@@ -27,6 +27,6 @@ type UpdateUser struct {
 }
 
 type CreateUser struct {
-	Email string `json:"email"`
-	Password  string   `json:"password"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }

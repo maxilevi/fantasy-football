@@ -73,7 +73,7 @@ func setupTestApp() *App {
 	return app
 }
 
-func assertOkRegisteringUser(t *testing.T, email string, pass string) (int) {
+func assertOkRegisteringUser(t *testing.T, email string, pass string) int {
 	resp, err := doPostRequest("user", "", map[string]interface{}{
 		"email":    email,
 		"password": pass,

@@ -22,7 +22,7 @@ func TestGetUser(t *testing.T) {
 	setupTest()
 	userId := assertOkRegisteringUser(t, "test@gmail.com", "12345678")
 	token := getAdminUserToken(t, "admin@gmail.com")
-	resp, err := doGetRequest("user/" + strconv.Itoa(userId), token, http.StatusOK)
+	resp, err := doGetRequest("user/"+strconv.Itoa(userId), token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func TestCantGetUserNotAdmin(t *testing.T) {
 	userId := assertOkRegisteringUser(t, "test@gmail.com", "12345678")
 	token := getUserToken(t, "admin@gmail.com")
 
-	_, err := doGetRequest("user/" + strconv.Itoa(userId), token, http.StatusUnauthorized)
+	_, err := doGetRequest("user/"+strconv.Itoa(userId), token, http.StatusUnauthorized)
 	if err != nil {
 		t.Fatal(err)
 	}

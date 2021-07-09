@@ -66,7 +66,6 @@ func (c *Controller) CreateTeam(ctx *gin.Context) {
 	})
 }
 
-
 // Handles a DELETE request to a team resource
 // @Summary Delete a team
 // @Description Delete a team and all of it's players
@@ -87,7 +86,7 @@ func (c *Controller) DeleteTeam(ctx *gin.Context) {
 		return
 	}
 
-	err = c.Repo.RunInTransaction(func () error {
+	err = c.Repo.RunInTransaction(func() error {
 		players := c.Repo.GetPlayers(team.ID)
 		for _, p := range players {
 			err = c.Repo.Delete(&p)
@@ -149,7 +148,6 @@ func (c *Controller) UpdateTeam(ctx *gin.Context) {
 	httputil.NoErrorEmpty(ctx)
 }
 
-
 // Generate a json from a team model
 func (c *Controller) getTeamPayload(team models.Team) models.ShowTeam {
 	marketValue := 0
@@ -161,11 +159,11 @@ func (c *Controller) getTeamPayload(team models.Team) models.ShowTeam {
 		marketValue += int(p.MarketValue)
 	}
 	return models.ShowTeam{
-		ID: team.ID,
-		Name: team.Name,
-		Country: team.Country,
-		Budget: team.Budget,
-		Players: playerModels,
+		ID:          team.ID,
+		Name:        team.Name,
+		Country:     team.Country,
+		Budget:      team.Budget,
+		Players:     playerModels,
 		MarketValue: marketValue,
 	}
 }

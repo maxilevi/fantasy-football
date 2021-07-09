@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	teamSize = 20
+	teamSize        = 20
 	goalKeeperCount = 3
-	defenderCount = 6
+	defenderCount   = 6
 	midfielderCount = 6
-	attackerCount = 5
+	attackerCount   = 5
 )
 
 type Team struct {
@@ -30,35 +30,34 @@ func RandomTeam() (Team, []Player) {
 	}
 	players := make([]Player, teamSize)
 	i := 0
-	for j := i; i < j + goalKeeperCount; i++ {
+	for j := i; i < j+goalKeeperCount; i++ {
 		players[i] = RandomPlayer(goalkeeper)
 	}
-	for j := i; i < j + defenderCount; i++ {
+	for j := i; i < j+defenderCount; i++ {
 		players[i] = RandomPlayer(defender)
 	}
-	for j := i; i < j + midfielderCount; i++ {
+	for j := i; i < j+midfielderCount; i++ {
 		players[i] = RandomPlayer(midfielder)
 	}
-	for j := i; i < j + attackerCount; i++ {
+	for j := i; i < j+attackerCount; i++ {
 		players[i] = RandomPlayer(attacker)
 	}
 	return team, players
 }
 
-
 type ShowTeam struct {
-	ID uint `json:"id"`
-	Name    string `json:"name"`
-	Country string `json:"country"`
-	Budget  int `json:"budget"`
-	MarketValue  int `json:"market_value"`
-	Players []ShowPlayer `json:"players"`
+	ID          uint         `json:"id"`
+	Name        string       `json:"name"`
+	Country     string       `json:"country"`
+	Budget      int          `json:"budget"`
+	MarketValue int          `json:"market_value"`
+	Players     []ShowPlayer `json:"players"`
 }
 
 type CreateTeam struct {
 	Name    string `json:"name"`
 	Country string `json:"country"`
-	Budget  int `json:"budget"`
+	Budget  int    `json:"budget"`
 }
 
 type UpdateTeam struct {

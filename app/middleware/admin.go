@@ -1,10 +1,10 @@
 package middleware
 
 import (
+	"../httputil"
 	"../models"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"../httputil"
 	"log"
 	"net/http"
 )

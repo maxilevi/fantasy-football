@@ -49,7 +49,6 @@ func TestPostPlayer(t *testing.T) {
 	setupTest()
 	token := getAdminUserToken(t, "test@gmail.com")
 
-
 	payload := getPlayerPayload()
 	payload["team"] = getTeamIdFromUser(t, token)
 	postResp := postPlayer(t, token, payload)
@@ -138,7 +137,7 @@ func getPlayerPayload() map[string]interface{} {
 		"first_name":   "test",
 		"last_name":    "surname",
 		"age":          123,
-		"position": 	1,
+		"position":     1,
 		"country":      "united states",
 		"market_value": 10203012,
 	}
