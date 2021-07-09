@@ -10,8 +10,8 @@ import (
 
 // Handles a GET request to a team resource
 // @Summary Get a team
-// @Description get team by ID
-// @Tags teams
+// @Description Get team by ID
+// @Tags Teams
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Team ID"
@@ -26,24 +26,23 @@ func (c *Controller) ShowTeam(ctx *gin.Context) {
 		return
 	}
 
-	httputil.NoError(ctx, map[string]interface{}{
-		"team": c.getTeamPayload(team),
-	})
+	httputil.NoError(ctx, c.getTeamPayload(team))
 }
 
 // Handles a POST request to a team resource
 // @Summary Post a team
-// @Description create a new team
-// @Tags teams
+// @Description Create a new team
+// @Tags Teams
 // @Accept  json
 // @Produce  json
 // @Success 200
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /team [post]
+// @Security BearerAuth
 func (c *Controller) CreateTeam(ctx *gin.Context) {
 	var t models.CreateTeam
-	err := ctx.Bind(&t)
+	err := ctx.BindJSON(&t)
 	if err != nil {
 		httputil.NewError(ctx, http.StatusBadRequest, "Bad request")
 		return
@@ -71,7 +70,7 @@ func (c *Controller) CreateTeam(ctx *gin.Context) {
 // Handles a DELETE request to a team resource
 // @Summary Delete a team
 // @Description Delete a team and all of it's players
-// @Tags teams
+// @Tags Teams
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Team ID"
@@ -81,6 +80,7 @@ func (c *Controller) CreateTeam(ctx *gin.Context) {
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /team/{id} [delete]
+// @Security BearerAuth
 func (c *Controller) DeleteTeam(ctx *gin.Context) {
 	team, err := c.getTeamFromRequest(ctx)
 	if err != nil {
@@ -108,7 +108,7 @@ func (c *Controller) DeleteTeam(ctx *gin.Context) {
 // Handles a PATCH request to a team resource
 // @Summary Update a team
 // @Description Update a team
-// @Tags teams
+// @Tags Teams
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Team ID"
@@ -118,6 +118,7 @@ func (c *Controller) DeleteTeam(ctx *gin.Context) {
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /team/{id} [patch]
+// @Security BearerAuth
 func (c *Controller) UpdateTeam(ctx *gin.Context) {
 	user, err := c.getAuthenticatedUserFromRequest(ctx)
 	team, err := c.getTeamFromRequest(ctx)
@@ -126,7 +127,7 @@ func (c *Controller) UpdateTeam(ctx *gin.Context) {
 	}
 
 	var t models.UpdateTeam
-	err = ctx.Bind(&t)
+	err = ctx.BindJSON(&t)
 	if err != nil {
 		httputil.NewError(ctx, http.StatusBadRequest, "Bad request")
 		return

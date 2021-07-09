@@ -10,8 +10,8 @@ import (
 
 // Handles GET requests to the user's resource
 // @Summary Show a player
-// @Description get a player by ID
-// @Tags players
+// @Description Get a player by ID
+// @Tags Players
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Player ID"
@@ -27,23 +27,23 @@ func (c *Controller) ShowPlayer(ctx *gin.Context) {
 	}
 
 	payload := models.ShowPlayer{
-		FirstName: player.FirstName,
-		LastName: player.LastName,
-		MarketValue: int(player.MarketValue),
-		Age: player.Age,
-		Country: player.Country,
-		Position: player.Position,
+		BasePlayer: models.BasePlayer{
+			FirstName: player.FirstName,
+			LastName: player.LastName,
+			MarketValue: player.MarketValue,
+			Age: player.Age,
+			Country: player.Country,
+			Position: player.Position,
+		},
 	}
 
-	httputil.NoError(ctx, map[string]interface{}{
-		"player": payload,
-	})
+	httputil.NoError(ctx, payload)
 }
 
 // Handles a POST request to the player resource
 // @Summary Create a player
-// @Description create a player
-// @Tags players
+// @Description Create a player
+// @Tags Players
 // @Accept  json
 // @Produce  json
 // @Param player body models.CreatePlayer true "Create player"
@@ -52,9 +52,10 @@ func (c *Controller) ShowPlayer(ctx *gin.Context) {
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /player [post]
+// @Security BearerAuth
 func (c *Controller) CreatePlayer(ctx *gin.Context) {
 	var payload models.CreatePlayer
-	err := ctx.Bind(&payload)
+	err := ctx.BindJSON(&payload)
 	if err != nil {
 		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")
 		return
@@ -67,10 +68,10 @@ func (c *Controller) CreatePlayer(ctx *gin.Context) {
 		Age: payload.Age,
 		MarketValue: payload.MarketValue,
 		Position: payload.Position,
-		TeamID: payload.TeamID,
+		TeamID: payload.Team,
 	}
 
-	if _, err = c.Repo.GetTeam(payload.TeamID); err != nil {
+	if _, err = c.Repo.GetTeam(payload.Team); err != nil {
 		httputil.NewError(ctx, http.StatusBadRequest, "An invalid team id was provided")
 		return
 	}
@@ -89,8 +90,8 @@ func (c *Controller) CreatePlayer(ctx *gin.Context) {
 
 // Handles a PUT request to the player resource
 // @Summary Update a player
-// @Description update a player
-// @Tags players
+// @Description Update a player
+// @Tags Players
 // @Accept  json
 // @Produce  json
 // @Param player body models.UpdatePlayer true "Update player"
@@ -100,10 +101,11 @@ func (c *Controller) CreatePlayer(ctx *gin.Context) {
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /player/{id} [patch]
+// @Security BearerAuth
 func (c *Controller) UpdatePlayer(ctx *gin.Context) {
 	var payload models.UpdatePlayer
 	payload.Team = -1
-	err1 := ctx.Bind(payload)
+	err1 := ctx.BindJSON(payload)
 	player, err2 := c.getPlayerFromRequest(ctx)
 	user, err3 := c.getAuthenticatedUserFromRequest(ctx)
 	if err1 != nil || err2 != nil || err3 != nil {
@@ -143,8 +145,8 @@ func (c *Controller) UpdatePlayer(ctx *gin.Context) {
 
 // Handles a DELETE request to the player resource
 // @Summary Delete a player
-// @Description deletes a player
-// @Tags players
+// @Description Deletes a player
+// @Tags Players
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Player ID"
@@ -153,6 +155,7 @@ func (c *Controller) UpdatePlayer(ctx *gin.Context) {
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /player/{id} [delete]
+// @Security BearerAuth
 func (c *Controller) DeletePlayer(ctx *gin.Context) {
 	player, err := c.getPlayerFromRequest(ctx)
 	if err != nil {
@@ -187,11 +190,13 @@ func (c *Controller) getPlayerFromRequest(ctx *gin.Context) (models.Player, erro
 func (c *Controller) getPlayerPayload(p models.Player) models.ShowPlayer {
 	return models.ShowPlayer{
 		ID: p.ID,
-		FirstName:   p.FirstName,
-		LastName:    p.LastName,
-		Country:     p.Country,
-		Age:         p.Age,
-		MarketValue: int(p.MarketValue),
-		Position:    p.Position,
+		BasePlayer: models.BasePlayer{
+			FirstName:   p.FirstName,
+			LastName:    p.LastName,
+			Country:     p.Country,
+			Age:         p.Age,
+			MarketValue: p.MarketValue,
+			Position:    p.Position,
+		},
 	}
 }

@@ -11,7 +11,7 @@ func TestGetMe(t *testing.T) {
 	setupTest()
 	email := "test@gmail.com"
 	token := getUserToken(t, email)
-	resp, err := doGetRequest("user", token, http.StatusOK)
+	resp, err := doGetRequest("user/me", token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}

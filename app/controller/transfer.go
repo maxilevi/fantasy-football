@@ -33,9 +33,7 @@ func (c *Controller) ShowTransfer(ctx *gin.Context) {
 		return
 	}
 
-	httputil.NoError(ctx, map[string]interface{}{
-		"transfer": transfer,
-	})
+	httputil.NoError(ctx, transfer)
 }
 
 // Handle creating a transfer

@@ -11,9 +11,9 @@ import (
 )
 
 // Handles GET request to the user resource when no ID is provided
-// @Summary Get a user
-// @Description get user by ID
-// @Tags users
+// @Summary Get the logged in user
+// @Description Get user by ID
+// @Tags Users
 // @Accept  json
 // @Produce  json
 // @Param id path int true "User ID"
@@ -23,6 +23,7 @@ import (
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /user/me [get]
+// @Security BearerAuth[write, admin]
 func (c *Controller) ShowMyself(ctx *gin.Context) {
 	user, err := c.getAuthenticatedUserFromRequest(ctx)
 	if err != nil {
@@ -33,15 +34,13 @@ func (c *Controller) ShowMyself(ctx *gin.Context) {
 	if err != nil {
 		return
 	}
-	httputil.NoError(ctx, map[string]interface{}{
-		"me": payload,
-	})
+	httputil.NoError(ctx, payload)
 }
 
 // Handles GET request to the user resource
 // @Summary Get a user
-// @Description get user by ID
-// @Tags users
+// @Description Get user by ID
+// @Tags Users
 // @Accept  json
 // @Produce  json
 // @Param id path int true "User ID"
@@ -61,15 +60,13 @@ func (c *Controller) ShowUser(ctx *gin.Context) {
 		log.Println(err)
 		return
 	}
-	httputil.NoError(ctx, map[string]interface{}{
-		"user": payload,
-	})
+	httputil.NoError(ctx, payload)
 }
 
 // Handles DELETE requests to the user's resource
 // @Summary Delete a user
-// @Description delete user by ID
-// @Tags users
+// @Description Delete user by ID
+// @Tags Users
 // @Accept  json
 // @Produce  json
 // @Param id path int true "User ID"
@@ -79,6 +76,7 @@ func (c *Controller) ShowUser(ctx *gin.Context) {
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /user/{id} [delete]
+// @Security BearerAuth[write, admin]
 func (c *Controller) DeleteUser(ctx *gin.Context) {
 	user, err := c.getUserFromRequest(ctx)
 	if err != nil {
@@ -96,8 +94,8 @@ func (c *Controller) DeleteUser(ctx *gin.Context) {
 
 // Handles PATCH requests to the user's resource
 // @Summary Update a user
-// @Description update user by ID
-// @Tags users
+// @Description Update user by ID
+// @Tags Users
 // @Accept  json
 // @Produce  json
 // @Param id path int true "User ID"
@@ -108,6 +106,7 @@ func (c *Controller) DeleteUser(ctx *gin.Context) {
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /user/{id} [patch]
+// @Security BearerAuth[admin]
 func (c *Controller) UpdateUser(ctx *gin.Context) {
 	user, err := c.getUserFromRequest(ctx)
 	if err != nil {
@@ -115,7 +114,7 @@ func (c *Controller) UpdateUser(ctx *gin.Context) {
 	}
 
 	var t models.UpdateUser
-	err = ctx.Bind(&t)
+	err = ctx.BindJSON(&t)
 	if err != nil {
 		log.Println(err)
 		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")
@@ -134,19 +133,20 @@ func (c *Controller) UpdateUser(ctx *gin.Context) {
 
 // Handles POST request to the user resource
 // @Summary Create a user
-// @Description register a new user
-// @Tags users
+// @Description Register a new user
+// @Tags Users
 // @Accept  json
 // @Produce  json
-// @Param email body string true "Email"
-// @Param password body string true "Password"
+// @Param user body models.CreateUser true "CreateUser"
 // @Success 200
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
 // @Router /user [post]
+// @Security BearerAuth
 func (c *Controller) CreateUser(ctx *gin.Context) {
 	var t models.CreateUser
-	err := ctx.Bind(&t)
+	err := ctx.BindJSON(&t)
+	log.Println(err, t)
 	if err != nil {
 		log.Println(err)
 		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")

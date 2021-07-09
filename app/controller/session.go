@@ -12,9 +12,20 @@ import (
 )
 
 // Handles creating a new session
+// @Summary Create a new session
+// @Description Creates a new session for a given set of credentials, returns a JWT token to be used as Bearer token.
+// @Tags Session
+// @Accept  json
+// @Produce  json
+// @Param user body models.CreateSession true "Credentials"
+// @Success 200 {object} models.SessionToken
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /session [post]
 func (c *Controller) CreateSession(ctx *gin.Context) {
 	var t models.CreateSession
-	err := ctx.Bind(&t)
+	err := ctx.BindJSON(&t)
 
 	if err != nil {
 		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")

@@ -115,7 +115,7 @@ func getPlayer(t *testing.T, token string, player int) map[string]interface{} {
 func deletePlayer(t *testing.T, token string, player int) {
 	playerId := strconv.Itoa(player)
 	resp, err := doDeleteRequest("player/"+playerId, token, http.StatusOK)
-	if err != nil || resp["error"].(bool) {
+	if err != nil || int(resp["status"].(float64)) != 200 {
 		t.Fatal(err)
 	}
 }
@@ -123,14 +123,14 @@ func deletePlayer(t *testing.T, token string, player int) {
 func patchPlayer(t *testing.T, token string, player int, payload map[string]interface{}) {
 	playerId := strconv.Itoa(player)
 	resp, err := doPatchRequest("player/"+playerId, token, payload, http.StatusOK)
-	if err != nil || resp["error"].(bool) {
+	if err != nil || int(resp["status"].(float64)) != 200 {
 		t.Fatal(err)
 	}
 }
 
 func postPlayer(t *testing.T, token string, payload map[string]interface{}) map[string]interface{} {
 	resp, err := doPostRequest("player", token, payload, http.StatusOK)
-	if err != nil || resp["error"].(bool) {
+	if err != nil || int(resp["status"].(float64)) != 200 {
 		t.Fatal(err)
 	}
 	return resp

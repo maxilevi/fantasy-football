@@ -1,46 +1,75 @@
 basePath: /api/
 definitions:
+  Credentials:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  Token:
+    properties:
+      token:
+        type: string
+    type: object
   httputil.HTTPError:
     properties:
       code:
-        example: 400
         type: integer
       message:
-        example: status bad request
         type: string
     type: object
   models.CreatePlayer:
     properties:
       age:
+        example: 25
         type: integer
       country:
+        example: Germany
         type: string
-      firstName:
+      first_name:
+        example: Audrey
         type: string
-      lastName:
+      last_name:
+        example: Hepburn
         type: string
-      marketValue:
+      market_value:
+        example: 25000
         type: integer
       position:
+        example: 1
         type: integer
-      teamID:
+      team:
         type: integer
+    type: object
+  models.CreateUser:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
     type: object
   models.ShowPlayer:
     properties:
       age:
+        example: 25
         type: integer
       country:
+        example: Germany
         type: string
       first_name:
+        example: Audrey
         type: string
       id:
         type: integer
       last_name:
+        example: Hepburn
         type: string
       market_value:
+        example: 25000
         type: integer
       position:
+        example: 1
         type: integer
     type: object
   models.ShowTeam:
@@ -72,16 +101,22 @@ definitions:
   models.UpdatePlayer:
     properties:
       age:
+        example: 25
         type: integer
       country:
+        example: Germany
         type: string
       first_name:
+        example: Audrey
         type: string
       last_name:
+        example: Hepburn
         type: string
       market_value:
+        example: 25000
         type: integer
       position:
+        example: 1
         type: integer
       team:
         type: integer
@@ -95,8 +130,15 @@ definitions:
     type: object
 host: localhost:8080
 info:
-  contact: {}
-  description: This is a fantasy football manager service.
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: Fantasy football manager microservice.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
   title: Fantasy football manager API
   version: "1.0"
 paths:
@@ -104,7 +146,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: create a player
+      description: Create a player
       parameters:
       - description: Create player
         in: body
@@ -129,14 +171,16 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
       summary: Create a player
       tags:
-      - players
+      - Players
   /player/{id}:
     delete:
       consumes:
       - application/json
-      description: deletes a player
+      description: Deletes a player
       parameters:
       - description: Player ID
         in: path
@@ -160,13 +204,15 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
       summary: Delete a player
       tags:
-      - players
+      - Players
     get:
       consumes:
       - application/json
-      description: get a player by ID
+      description: Get a player by ID
       parameters:
       - description: Player ID
         in: path
@@ -194,11 +240,11 @@ paths:
             $ref: '#/definitions/httputil.HTTPError'
       summary: Show a player
       tags:
-      - players
+      - Players
     patch:
       consumes:
       - application/json
-      description: update a player
+      description: Update a player
       parameters:
       - description: Update player
         in: body
@@ -228,14 +274,51 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
       summary: Update a player
       tags:
-      - players
+      - Players
+  /session:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new session for a given set of credentials, returns a
+        JWT token to be used as Bearer token.
+      parameters:
+      - description: Credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/Credentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Token'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Create a new session
+      tags:
+      - Session
   /team:
     post:
       consumes:
       - application/json
-      description: create a new team
+      description: Create a new team
       produces:
       - application/json
       responses:
@@ -249,9 +332,11 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
       summary: Post a team
       tags:
-      - teams
+      - Teams
   /team/{id}:
     delete:
       consumes:
@@ -284,13 +369,15 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
       summary: Delete a team
       tags:
-      - teams
+      - Teams
     get:
       consumes:
       - application/json
-      description: get team by ID
+      description: Get team by ID
       parameters:
       - description: Team ID
         in: path
@@ -318,7 +405,7 @@ paths:
             $ref: '#/definitions/httputil.HTTPError'
       summary: Get a team
       tags:
-      - teams
+      - Teams
     patch:
       consumes:
       - application/json
@@ -350,27 +437,23 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
       summary: Update a team
       tags:
-      - teams
+      - Teams
   /user:
     post:
       consumes:
       - application/json
-      description: register a new user
+      description: Register a new user
       parameters:
-      - description: Email
+      - description: CreateUser
         in: body
-        name: email
+        name: user
         required: true
         schema:
-          type: string
-      - description: Password
-        in: body
-        name: password
-        required: true
-        schema:
-          type: string
+          $ref: '#/definitions/models.CreateUser'
       produces:
       - application/json
       responses:
@@ -384,14 +467,16 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
       summary: Create a user
       tags:
-      - users
+      - Users
   /user/{id}:
     delete:
       consumes:
       - application/json
-      description: delete user by ID
+      description: Delete user by ID
       parameters:
       - description: User ID
         in: path
@@ -419,13 +504,17 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth:
+        - write
+        - admin
       summary: Delete a user
       tags:
-      - users
+      - Users
     get:
       consumes:
       - application/json
-      description: get user by ID
+      description: Get user by ID
       parameters:
       - description: User ID
         in: path
@@ -453,11 +542,11 @@ paths:
             $ref: '#/definitions/httputil.HTTPError'
       summary: Get a user
       tags:
-      - users
+      - Users
     patch:
       consumes:
       - application/json
-      description: update user by ID
+      description: Update user by ID
       parameters:
       - description: User ID
         in: path
@@ -491,14 +580,17 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth:
+        - admin
       summary: Update a user
       tags:
-      - users
+      - Users
   /user/me:
     get:
       consumes:
       - application/json
-      description: get user by ID
+      description: Get user by ID
       parameters:
       - description: User ID
         in: path
@@ -528,7 +620,16 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/httputil.HTTPError'
-      summary: Get a user
+      security:
+      - BearerAuth:
+        - write
+        - admin
+      summary: Get the logged in user
       tags:
-      - users
+      - Users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

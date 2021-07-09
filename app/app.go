@@ -35,13 +35,13 @@ func (a *App) Configure() {
 	{
 		users := api.Group("/user")
 		{
-			users.GET("/{id}", c.ShowUser)
+			users.GET("/:id", c.ShowUser)
 			users.POST("", c.CreateUser)
 			users.Use(middleware.Auth(repo))
 			users.GET("/me", c.ShowMyself)
 			users.Use(middleware.Admin())
-			users.DELETE("/{id}", c.DeleteUser)
-			users.PATCH("/{id}", c.UpdateUser)
+			users.DELETE("/:id", c.DeleteUser)
+			users.PATCH("/:id", c.UpdateUser)
 		}
 		session := api.Group("/session")
 		{
@@ -49,21 +49,21 @@ func (a *App) Configure() {
 		}
 		team := api.Group("/team")
 		{
-			team.GET("/{id}", c.ShowTeam)
+			team.GET("/:id", c.ShowTeam)
 			team.Use(middleware.Auth(repo))
-			team.PATCH("/{id}", c.UpdateTeam)
+			team.PATCH("/:id", c.UpdateTeam)
 			team.Use(middleware.Admin())
 			team.POST("", c.CreateTeam)
-			team.DELETE("/{id}", c.DeleteTeam)
+			team.DELETE("/:id", c.DeleteTeam)
 		}
 		players := api.Group("/player")
 		{
-			players.GET("/{id}", c.ShowPlayer)
+			players.GET("/:id", c.ShowPlayer)
 			players.Use(middleware.Auth(repo))
-			players.PATCH("/{id}", c.UpdatePlayer)
+			players.PATCH("/:id", c.UpdatePlayer)
 			players.Use(middleware.Admin())
 			players.POST("", c.CreatePlayer)
-			players.DELETE("/{id}", c.DeletePlayer)
+			players.DELETE("/:id", c.DeletePlayer)
 		}
 	}
 	url := ginSwagger.URL("http://" + a.address + "/swagger/doc.json")

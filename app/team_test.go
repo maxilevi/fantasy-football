@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"gorm.io/gorm/utils/tests"
 	"net/http"
 	"strconv"
@@ -63,7 +62,7 @@ func TestPostTeam(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(resp)
+
 	teamRes := "team/" + strconv.Itoa(int(resp["id"].(float64)))
 	resp, err = doGetRequest(teamRes, token, http.StatusOK)
 	if err != nil {

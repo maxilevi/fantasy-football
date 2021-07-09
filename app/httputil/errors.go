@@ -1,6 +1,7 @@
 package httputil
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -17,11 +18,13 @@ func NoErrorEmpty(ctx *gin.Context) {
 	NoError(ctx, map[string]interface{}{})
 }
 
-func NoError(ctx *gin.Context, payload map[string]interface{}) {
+func NoError(ctx *gin.Context, payload interface{}) {
 	m := map[string]interface{}{
 		"status": http.StatusOK,
 	}
-	for k, v := range payload {
+	body, _ := json.Marshal(payload)
+	payload = json.Unmarshal(body, &m)
+	for k, v := range m {
 		m[k] = v
 	}
 	ctx.JSON(http.StatusOK, m)
@@ -29,6 +32,6 @@ func NoError(ctx *gin.Context, payload map[string]interface{}) {
 
 // HTTPError example
 type HTTPError struct {
-	Code    int    `json:"code" example:"400"`
-	Message string `json:"message" example:"status bad request"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }

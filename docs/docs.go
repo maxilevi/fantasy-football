@@ -17,7 +17,16 @@ var doc = `{
     "info": {
         "description": "{{.Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -25,7 +34,12 @@ var doc = `{
     "paths": {
         "/player": {
             "post": {
-                "description": "create a player",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a player",
                 "consumes": [
                     "application/json"
                 ],
@@ -33,7 +47,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "players"
+                    "Players"
                 ],
                 "summary": "Create a player",
                 "parameters": [
@@ -74,7 +88,7 @@ var doc = `{
         },
         "/player/{id}": {
             "get": {
-                "description": "get a player by ID",
+                "description": "Get a player by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -82,7 +96,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "players"
+                    "Players"
                 ],
                 "summary": "Show a player",
                 "parameters": [
@@ -122,7 +136,12 @@ var doc = `{
                 }
             },
             "delete": {
-                "description": "deletes a player",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Deletes a player",
                 "consumes": [
                     "application/json"
                 ],
@@ -130,7 +149,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "players"
+                    "Players"
                 ],
                 "summary": "Delete a player",
                 "parameters": [
@@ -167,7 +186,12 @@ var doc = `{
                 }
             },
             "patch": {
-                "description": "update a player",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update a player",
                 "consumes": [
                     "application/json"
                 ],
@@ -175,7 +199,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "players"
+                    "Players"
                 ],
                 "summary": "Update a player",
                 "parameters": [
@@ -221,9 +245,9 @@ var doc = `{
                 }
             }
         },
-        "/team": {
+        "/session": {
             "post": {
-                "description": "create a new team",
+                "description": "Creates a new session for a given set of credentials, returns a JWT token to be used as Bearer token.",
                 "consumes": [
                     "application/json"
                 ],
@@ -231,7 +255,64 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "teams"
+                    "Session"
+                ],
+                "summary": "Create a new session",
+                "parameters": [
+                    {
+                        "description": "Credentials",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Credentials"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/Token"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/team": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new team",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
                 ],
                 "summary": "Post a team",
                 "responses": {
@@ -255,7 +336,7 @@ var doc = `{
         },
         "/team/{id}": {
             "get": {
-                "description": "get team by ID",
+                "description": "Get team by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -263,7 +344,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "teams"
+                    "Teams"
                 ],
                 "summary": "Get a team",
                 "parameters": [
@@ -303,6 +384,11 @@ var doc = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a team and all of it's players",
                 "consumes": [
                     "application/json"
@@ -311,7 +397,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "teams"
+                    "Teams"
                 ],
                 "summary": "Delete a team",
                 "parameters": [
@@ -354,6 +440,11 @@ var doc = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update a team",
                 "consumes": [
                     "application/json"
@@ -362,7 +453,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "teams"
+                    "Teams"
                 ],
                 "summary": "Update a team",
                 "parameters": [
@@ -407,7 +498,12 @@ var doc = `{
         },
         "/user": {
             "post": {
-                "description": "register a new user",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Register a new user",
                 "consumes": [
                     "application/json"
                 ],
@@ -415,26 +511,17 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "Users"
                 ],
                 "summary": "Create a user",
                 "parameters": [
                     {
-                        "description": "Email",
-                        "name": "email",
+                        "description": "CreateUser",
+                        "name": "user",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "description": "Password",
-                        "name": "password",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/models.CreateUser"
                         }
                     }
                 ],
@@ -459,7 +546,15 @@ var doc = `{
         },
         "/user/me": {
             "get": {
-                "description": "get user by ID",
+                "security": [
+                    {
+                        "BearerAuth": [
+                            "write",
+                            "admin"
+                        ]
+                    }
+                ],
+                "description": "Get user by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -467,9 +562,9 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "Users"
                 ],
-                "summary": "Get a user",
+                "summary": "Get the logged in user",
                 "parameters": [
                     {
                         "type": "integer",
@@ -515,7 +610,7 @@ var doc = `{
         },
         "/user/{id}": {
             "get": {
-                "description": "get user by ID",
+                "description": "Get user by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -523,7 +618,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "Users"
                 ],
                 "summary": "Get a user",
                 "parameters": [
@@ -563,7 +658,15 @@ var doc = `{
                 }
             },
             "delete": {
-                "description": "delete user by ID",
+                "security": [
+                    {
+                        "BearerAuth": [
+                            "write",
+                            "admin"
+                        ]
+                    }
+                ],
+                "description": "Delete user by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -571,7 +674,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "Users"
                 ],
                 "summary": "Delete a user",
                 "parameters": [
@@ -614,7 +717,14 @@ var doc = `{
                 }
             },
             "patch": {
-                "description": "update user by ID",
+                "security": [
+                    {
+                        "BearerAuth": [
+                            "admin"
+                        ]
+                    }
+                ],
+                "description": "Update user by ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -622,7 +732,7 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "users"
+                    "Users"
                 ],
                 "summary": "Update a user",
                 "parameters": [
@@ -676,16 +786,33 @@ var doc = `{
         }
     },
     "definitions": {
+        "Credentials": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "Token": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
         "httputil.HTTPError": {
             "type": "object",
             "properties": {
                 "code": {
-                    "type": "integer",
-                    "example": 400
+                    "type": "integer"
                 },
                 "message": {
-                    "type": "string",
-                    "example": "status bad request"
+                    "type": "string"
                 }
             }
         },
@@ -693,25 +820,42 @@ var doc = `{
             "type": "object",
             "properties": {
                 "age": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 25
                 },
                 "country": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Germany"
                 },
-                "firstName": {
-                    "type": "string"
+                "first_name": {
+                    "type": "string",
+                    "example": "Audrey"
                 },
-                "lastName": {
-                    "type": "string"
+                "last_name": {
+                    "type": "string",
+                    "example": "Hepburn"
                 },
-                "marketValue": {
-                    "type": "integer"
+                "market_value": {
+                    "type": "integer",
+                    "example": 25000
                 },
                 "position": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
-                "teamID": {
+                "team": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.CreateUser": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
                 }
             }
         },
@@ -719,25 +863,31 @@ var doc = `{
             "type": "object",
             "properties": {
                 "age": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 25
                 },
                 "country": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Germany"
                 },
                 "first_name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Audrey"
                 },
                 "id": {
                     "type": "integer"
                 },
                 "last_name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Hepburn"
                 },
                 "market_value": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 25000
                 },
                 "position": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
@@ -785,22 +935,28 @@ var doc = `{
             "type": "object",
             "properties": {
                 "age": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 25
                 },
                 "country": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Germany"
                 },
                 "first_name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Audrey"
                 },
                 "last_name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Hepburn"
                 },
                 "market_value": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 25000
                 },
                 "position": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "team": {
                     "type": "integer"
@@ -817,6 +973,13 @@ var doc = `{
                     "type": "integer"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
@@ -837,7 +1000,7 @@ var SwaggerInfo = swaggerInfo{
 	BasePath:    "/api/",
 	Schemes:     []string{},
 	Title:       "Fantasy football manager API",
-	Description: "This is a fantasy football manager service.",
+	Description: "Fantasy football manager microservice.",
 }
 
 type s struct{}
