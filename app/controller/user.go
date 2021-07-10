@@ -84,7 +84,7 @@ func (c *Controller) DeleteUser(ctx *gin.Context) {
 	if err != nil {
 		return
 	}
-	err = c.Repo.RunInTransaction(func () error {
+	err = c.Repo.RunInTransaction(func() error {
 		team, err := c.Repo.GetUserTeam(user)
 		if err != nil {
 			return err

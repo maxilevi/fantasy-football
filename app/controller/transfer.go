@@ -60,7 +60,7 @@ func (c *Controller) ShowTransfer(ctx *gin.Context) {
 	if err != nil {
 		return
 	}
-	
+
 	payload := models.ShowTransfer{
 		Player: c.getPlayerPayload(transfer.Player),
 		Ask:    transfer.Ask,
@@ -232,10 +232,10 @@ func (c *Controller) getTransferFromRequest(ctx *gin.Context) (models.Transfer, 
 }
 
 // Parse URL parameters into a transferFilters object
-func (c* Controller) parseTransferFilters(ctx *gin.Context) transferFilters {
+func (c *Controller) parseTransferFilters(ctx *gin.Context) transferFilters {
 	filter := transferFilters{
-		Country: ctx.Param("country"),
-		TeamName: ctx.Param("team_name"),
+		Country:    ctx.Param("country"),
+		TeamName:   ctx.Param("team_name"),
 		PlayerName: ctx.Param("player_name"),
 	}
 
@@ -258,16 +258,16 @@ func (c* Controller) parseTransferFilters(ctx *gin.Context) transferFilters {
 
 // A group of filters to apply to matches
 type transferFilters struct {
-	Country string
-	TeamName string
-	PlayerName string
-	AgeFilter int
+	Country     string
+	TeamName    string
+	PlayerName  string
+	AgeFilter   int
 	ValueFilter int
 }
 
 // Returns a bool that tells if the transfer matches with the filter
 func (f *transferFilters) Matches(transfer models.Transfer) bool {
-	return strings.Contains(transfer.Player.FirstName + " " + transfer.Player.LastName, f.PlayerName) &&
+	return strings.Contains(transfer.Player.FirstName+" "+transfer.Player.LastName, f.PlayerName) &&
 		strings.Contains(transfer.Player.Team.Name, f.TeamName) &&
 		transfer.Ask > f.ValueFilter && transfer.Player.Age > f.AgeFilter
 }

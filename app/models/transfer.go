@@ -16,7 +16,7 @@ type ShowTransfer struct {
 }
 
 type UpdateTransfer struct {
-	Ask      int  `json:"ask"`
+	Ask int `json:"ask"`
 }
 
 type CreateTransfer struct {

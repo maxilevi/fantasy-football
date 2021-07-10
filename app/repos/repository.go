@@ -74,7 +74,7 @@ func doDeletePlayer(u Repository, player *models.Player) error {
 		transfer, err := u.GetTransferWithPlayer(player)
 		if err == nil {
 			// Transfer exists, delete it
-			if err := u.Delete(&transfer); err != nil{
+			if err := u.Delete(&transfer); err != nil {
 				return err
 			}
 		}
