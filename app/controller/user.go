@@ -22,7 +22,7 @@ import (
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /user/me [get]
+// @Router /users/me [get]
 // @Security BearerAuth[write, admin]
 func (c *Controller) ShowMyself(ctx *gin.Context) {
 	user, err := c.getAuthenticatedUserFromRequest(ctx)
@@ -48,7 +48,7 @@ func (c *Controller) ShowMyself(ctx *gin.Context) {
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /user/{id} [get]
+// @Router /users/{id} [get]
 func (c *Controller) ShowUser(ctx *gin.Context) {
 	user, err := c.getUserFromRequest(ctx)
 	if err != nil {
@@ -64,8 +64,8 @@ func (c *Controller) ShowUser(ctx *gin.Context) {
 }
 
 // Handles DELETE requests to the user's resource
-// @Summary Delete a user
-// @Description Delete user by ID
+// @Summary Delete a user and all of it's associated resources
+// @Description Delete a user by ID and all of it's associated resources
 // @Tags Users
 // @Accept  json
 // @Produce  json
@@ -75,15 +75,30 @@ func (c *Controller) ShowUser(ctx *gin.Context) {
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /user/{id} [delete]
+// @Router /users/{id} [delete]
 // @Security BearerAuth[write, admin]
 func (c *Controller) DeleteUser(ctx *gin.Context) {
 	user, err := c.getUserFromRequest(ctx)
 	if err != nil {
 		return
 	}
-
-	err = c.Repo.Delete(user)
+	err = c.Repo.RunInTransaction(func () error {
+		team, err := c.Repo.GetUserTeam(user)
+		if err != nil {
+			return err
+		}
+		players := c.Repo.GetPlayers(team.ID)
+		for _, p := range players {
+			if err = c.Repo.Delete(p); err != nil {
+				return err
+			}
+		}
+		err = c.Repo.Delete(team)
+		if err != nil {
+			return err
+		}
+		return c.Repo.Delete(user)
+	})
 	if err != nil {
 		log.Println(err)
 		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
@@ -105,7 +120,7 @@ func (c *Controller) DeleteUser(ctx *gin.Context) {
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /user/{id} [patch]
+// @Router /users/{id} [patch]
 // @Security BearerAuth[admin]
 func (c *Controller) UpdateUser(ctx *gin.Context) {
 	user, err := c.getUserFromRequest(ctx)
@@ -141,7 +156,7 @@ func (c *Controller) UpdateUser(ctx *gin.Context) {
 // @Success 200
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /user [post]
+// @Router /users [post]
 // @Security BearerAuth
 func (c *Controller) CreateUser(ctx *gin.Context) {
 	var t models.CreateUser

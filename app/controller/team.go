@@ -19,7 +19,7 @@ import (
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /team/{id} [get]
+// @Router /teams/{id} [get]
 func (c *Controller) ShowTeam(ctx *gin.Context) {
 	team, err := c.getTeamFromRequest(ctx)
 	if err != nil {
@@ -38,7 +38,7 @@ func (c *Controller) ShowTeam(ctx *gin.Context) {
 // @Success 200
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /team [post]
+// @Router /teams [post]
 // @Security BearerAuth
 func (c *Controller) CreateTeam(ctx *gin.Context) {
 	var t models.CreateTeam
@@ -67,7 +67,7 @@ func (c *Controller) CreateTeam(ctx *gin.Context) {
 }
 
 // Handles a DELETE request to a team resource
-// @Summary Delete a team
+// @Summary Delete a team and all of it's players
 // @Description Delete a team and all of it's players
 // @Tags Teams
 // @Accept  json
@@ -78,7 +78,7 @@ func (c *Controller) CreateTeam(ctx *gin.Context) {
 // @Failure 401 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /team/{id} [delete]
+// @Router /teams/{id} [delete]
 // @Security BearerAuth
 func (c *Controller) DeleteTeam(ctx *gin.Context) {
 	team, err := c.getTeamFromRequest(ctx)
@@ -97,6 +97,7 @@ func (c *Controller) DeleteTeam(ctx *gin.Context) {
 		return c.Repo.Delete(team)
 	})
 	if err != nil {
+		log.Println(err)
 		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -116,7 +117,7 @@ func (c *Controller) DeleteTeam(ctx *gin.Context) {
 // @Failure 401 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /team/{id} [patch]
+// @Router /teams/{id} [patch]
 // @Security BearerAuth
 func (c *Controller) UpdateTeam(ctx *gin.Context) {
 	user, err := c.getAuthenticatedUserFromRequest(ctx)

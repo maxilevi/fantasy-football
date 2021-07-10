@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -20,7 +19,7 @@ var app *App
 
 func TestMain(m *testing.M) {
 	app = setupTestApp()
-	log.SetOutput(ioutil.Discard)
+	//log.SetOutput(ioutil.Discard)
 	code := m.Run()
 	app.Close()
 	os.Exit(code)
@@ -74,7 +73,7 @@ func setupTestApp() *App {
 }
 
 func assertOkRegisteringUser(t *testing.T, email string, pass string) int {
-	resp, err := doPostRequest("user", "", map[string]interface{}{
+	resp, err := doPostRequest("users", "", map[string]interface{}{
 		"email":    email,
 		"password": pass,
 	}, http.StatusOK)
@@ -88,7 +87,7 @@ func assertOkRegisteringUser(t *testing.T, email string, pass string) int {
 }
 
 func assertOkCreatingSession(t *testing.T, email string, pass string) string {
-	resp, err := doPostRequest("session", "", map[string]interface{}{
+	resp, err := doPostRequest("sessions", "", map[string]interface{}{
 		"email":    email,
 		"password": pass,
 	}, http.StatusOK)
@@ -102,7 +101,7 @@ func assertOkCreatingSession(t *testing.T, email string, pass string) string {
 }
 
 func assertFailureWhenRegisteringUserWithMessage(t *testing.T, email string, pass string, msg string, statusCode int) {
-	resp, err := doPostRequest("user", "", map[string]interface{}{
+	resp, err := doPostRequest("users", "", map[string]interface{}{
 		"email":    email,
 		"password": pass,
 	}, statusCode)

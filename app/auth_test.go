@@ -17,7 +17,7 @@ func TestRegisteringUserAndCreatingNewSession(t *testing.T) {
 func TestCantLoginWithWrongPassword(t *testing.T) {
 	setupTest()
 	assertOkRegisteringUser(t, "test@gmail.com", "test1234")
-	resp, err := doPostRequest("session", "", map[string]interface{}{
+	resp, err := doPostRequest("sessions", "", map[string]interface{}{
 		"email":    "test@gmail.com",
 		"password": "asd12345",
 	}, http.StatusUnauthorized)
@@ -48,7 +48,7 @@ func TestCantCreateUserTwice(t *testing.T) {
 
 func TestCantQueryUserIfNotLoggedIn(t *testing.T) {
 	setupTest()
-	resp, err := doGetRequest("user/me", "", http.StatusUnauthorized)
+	resp, err := doGetRequest("users/me", "", http.StatusUnauthorized)
 	if err != nil || int(resp["code"].(float64)) == 200 {
 		t.Fatal(err)
 	}

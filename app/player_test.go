@@ -38,7 +38,7 @@ func TestPatchPlayer(t *testing.T) {
 	getResp := getPlayer(t, token, player)
 
 	for key, value := range getResp {
-		if key == "error" || key == "team" || key == "id" {
+		if key == "code" || key == "team" || key == "id" {
 			continue
 		}
 		tests.AssertEqual(t, value, payload[key])
@@ -54,7 +54,7 @@ func TestPostPlayer(t *testing.T) {
 	postResp := postPlayer(t, token, payload)
 	getResp := getPlayer(t, token, int(postResp["id"].(float64)))
 	for key, value := range getResp {
-		if key == "error" || key == "id" {
+		if key == "code" || key == "team" || key == "id" {
 			continue
 		}
 		tests.AssertEqual(t, value, payload[key])
@@ -62,7 +62,7 @@ func TestPostPlayer(t *testing.T) {
 }
 
 func getTeamIdFromUser(t *testing.T, token string) int {
-	resp, err := doGetRequest("user/me", token, http.StatusOK)
+	resp, err := doGetRequest("users/me", token, http.StatusOK)
 
 	if err != nil {
 		t.Fatal(err)
@@ -84,7 +84,7 @@ func getTokenAndPlayerIds(t *testing.T, admin bool) (string, []int) {
 }
 
 func getPlayersFromToken(t *testing.T, token string) []int {
-	resp, err := doGetRequest("user/me", token, http.StatusOK)
+	resp, err := doGetRequest("users/me", token, http.StatusOK)
 
 	if err != nil {
 		t.Fatal(err)
@@ -101,7 +101,7 @@ func getPlayersFromToken(t *testing.T, token string) []int {
 }
 
 func getPlayer(t *testing.T, token string, player int) map[string]interface{} {
-	resp, err := doGetRequest("player/"+strconv.Itoa(player), token, http.StatusOK)
+	resp, err := doGetRequest("players/"+strconv.Itoa(player), token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +110,7 @@ func getPlayer(t *testing.T, token string, player int) map[string]interface{} {
 
 func deletePlayer(t *testing.T, token string, player int) {
 	playerId := strconv.Itoa(player)
-	resp, err := doDeleteRequest("player/"+playerId, token, http.StatusOK)
+	resp, err := doDeleteRequest("players/"+playerId, token, http.StatusOK)
 	if err != nil || int(resp["code"].(float64)) != 200 {
 		t.Fatal(err)
 	}
@@ -118,14 +118,14 @@ func deletePlayer(t *testing.T, token string, player int) {
 
 func patchPlayer(t *testing.T, token string, player int, payload map[string]interface{}) {
 	playerId := strconv.Itoa(player)
-	resp, err := doPatchRequest("player/"+playerId, token, payload, http.StatusOK)
+	resp, err := doPatchRequest("players/"+playerId, token, payload, http.StatusOK)
 	if err != nil || int(resp["code"].(float64)) != 200 {
 		t.Fatal(err)
 	}
 }
 
 func postPlayer(t *testing.T, token string, payload map[string]interface{}) map[string]interface{} {
-	resp, err := doPostRequest("player", token, payload, http.StatusOK)
+	resp, err := doPostRequest("players/", token, payload, http.StatusOK)
 	if err != nil || int(resp["code"].(float64)) != 200 {
 		t.Fatal(err)
 	}

@@ -33,21 +33,21 @@ func (a *App) Configure() {
 
 	api := r.Group("/api")
 	{
-		users := api.Group("/user")
+		users := api.Group("/users")
 		{
-			users.GET("/:id", c.ShowUser)
 			users.POST("", c.CreateUser)
 			users.Use(middleware.Auth(repo))
 			users.GET("/me", c.ShowMyself)
 			users.Use(middleware.Admin())
 			users.DELETE("/:id", c.DeleteUser)
 			users.PATCH("/:id", c.UpdateUser)
+			users.GET("/:id", c.ShowUser)
 		}
-		session := api.Group("/session")
+		session := api.Group("/sessions")
 		{
 			session.POST("", c.CreateSession)
 		}
-		team := api.Group("/team")
+		team := api.Group("/teams")
 		{
 			team.GET("/:id", c.ShowTeam)
 			team.Use(middleware.Auth(repo))
@@ -56,7 +56,7 @@ func (a *App) Configure() {
 			team.POST("", c.CreateTeam)
 			team.DELETE("/:id", c.DeleteTeam)
 		}
-		players := api.Group("/player")
+		players := api.Group("/players")
 		{
 			players.GET("/:id", c.ShowPlayer)
 			players.Use(middleware.Auth(repo))

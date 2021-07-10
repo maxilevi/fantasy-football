@@ -22,7 +22,7 @@ import (
 // @Failure 401 {object} httputil.HTTPError
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /session [post]
+// @Router /sessions [post]
 func (c *Controller) CreateSession(ctx *gin.Context) {
 	var t models.CreateSession
 	err := ctx.BindJSON(&t)

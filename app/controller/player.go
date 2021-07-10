@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-// Handles GET requests to the user's resource
+// Handles GET requests to the players resource
 // @Summary Show a player
 // @Description Get a player by ID
 // @Tags Players
@@ -19,7 +19,7 @@ import (
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /player/{id} [get]
+// @Router /players/{id} [get]
 func (c *Controller) ShowPlayer(ctx *gin.Context) {
 	player, err := c.getPlayerFromRequest(ctx)
 	if err != nil {
@@ -51,7 +51,7 @@ func (c *Controller) ShowPlayer(ctx *gin.Context) {
 // @Failure 401 {object} httputil.HTTPError
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /player [post]
+// @Router /players [post]
 // @Security BearerAuth
 func (c *Controller) CreatePlayer(ctx *gin.Context) {
 	var payload models.CreatePlayer
@@ -88,7 +88,7 @@ func (c *Controller) CreatePlayer(ctx *gin.Context) {
 	})
 }
 
-// Handles a PUT request to the player resource
+// Handles a PATCH request to the player resource
 // @Summary Update a player
 // @Description Update a player
 // @Tags Players
@@ -100,15 +100,16 @@ func (c *Controller) CreatePlayer(ctx *gin.Context) {
 // @Failure 401 {object} httputil.HTTPError
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /player/{id} [patch]
+// @Router /players/{id} [patch]
 // @Security BearerAuth
 func (c *Controller) UpdatePlayer(ctx *gin.Context) {
 	var payload models.UpdatePlayer
 	payload.Team = -1
-	err1 := ctx.BindJSON(payload)
+	err1 := ctx.BindJSON(&payload)
 	player, err2 := c.getPlayerFromRequest(ctx)
 	user, err3 := c.getAuthenticatedUserFromRequest(ctx)
 	if err1 != nil || err2 != nil || err3 != nil {
+		log.Println(err1, err2, err3)
 		if err1 != nil {
 			httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")
 		}
@@ -154,7 +155,7 @@ func (c *Controller) UpdatePlayer(ctx *gin.Context) {
 // @Failure 401 {object} httputil.HTTPError
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /player/{id} [delete]
+// @Router /players/{id} [delete]
 // @Security BearerAuth
 func (c *Controller) DeletePlayer(ctx *gin.Context) {
 	player, err := c.getPlayerFromRequest(ctx)

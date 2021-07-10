@@ -11,7 +11,7 @@ func TestGetMe(t *testing.T) {
 	setupTest()
 	email := "test@gmail.com"
 	token := getUserToken(t, email)
-	resp, err := doGetRequest("user/me", token, http.StatusOK)
+	resp, err := doGetRequest("users/me", token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,7 +22,7 @@ func TestGetUser(t *testing.T) {
 	setupTest()
 	userId := assertOkRegisteringUser(t, "test@gmail.com", "12345678")
 	token := getAdminUserToken(t, "admin@gmail.com")
-	resp, err := doGetRequest("user/"+strconv.Itoa(userId), token, http.StatusOK)
+	resp, err := doGetRequest("users/"+strconv.Itoa(userId), token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func TestCantGetUserNotAdmin(t *testing.T) {
 	userId := assertOkRegisteringUser(t, "test@gmail.com", "12345678")
 	token := getUserToken(t, "admin@gmail.com")
 
-	_, err := doGetRequest("user/"+strconv.Itoa(userId), token, http.StatusUnauthorized)
+	_, err := doGetRequest("users/"+strconv.Itoa(userId), token, http.StatusUnauthorized)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,12 +45,12 @@ func TestDeleteUser(t *testing.T) {
 	userId := assertOkRegisteringUser(t, "test@gmail.com", "12345678")
 	token := getAdminUserToken(t, "admin@gmail.com")
 
-	_, err := doDeleteRequest("user/"+strconv.Itoa(userId), token, http.StatusOK)
+	_, err := doDeleteRequest("users/"+strconv.Itoa(userId), token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = doGetRequest("user/"+strconv.Itoa(userId), token, http.StatusNotFound)
+	_, err = doGetRequest("users/"+strconv.Itoa(userId), token, http.StatusNotFound)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,12 +65,12 @@ func TestPatchUser(t *testing.T) {
 		"email": "new_test@gmail.com",
 	}
 
-	_, err := doPatchRequest("user/"+strconv.Itoa(userId), token, payload, http.StatusOK)
+	_, err := doPatchRequest("users/"+strconv.Itoa(userId), token, payload, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	resp, err := doGetRequest("user/"+strconv.Itoa(userId), token, http.StatusOK)
+	resp, err := doGetRequest("users/"+strconv.Itoa(userId), token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
