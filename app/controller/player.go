@@ -163,7 +163,7 @@ func (c *Controller) DeletePlayer(ctx *gin.Context) {
 		return
 	}
 
-	err = c.Repo.Delete(player)
+	err = c.Repo.DeletePlayer(&player)
 	if err != nil {
 		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return

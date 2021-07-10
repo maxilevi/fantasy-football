@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
+	"strconv"
 )
 
 // Handles GET request to the user resource when no ID is provided
@@ -30,11 +31,7 @@ func (c *Controller) ShowMyself(ctx *gin.Context) {
 		return
 	}
 
-	payload, err := c.getShowUserPayload(ctx, user)
-	if err != nil {
-		return
-	}
-	httputil.NoError(ctx, payload)
+	ctx.Redirect(http.StatusFound, strconv.Itoa(int(user.ID)))
 }
 
 // Handles GET request to the user resource
@@ -50,8 +47,13 @@ func (c *Controller) ShowMyself(ctx *gin.Context) {
 // @Failure 500 {object} httputil.HTTPError
 // @Router /users/{id} [get]
 func (c *Controller) ShowUser(ctx *gin.Context) {
-	user, err := c.getUserFromRequest(ctx)
-	if err != nil {
+	authUser, err1 := c.getAuthenticatedUserFromRequest(ctx)
+	user, err2 := c.getUserFromRequest(ctx)
+	if err1 != nil || err2 != nil {
+		return
+	}
+	if !authUser.IsAdmin() && authUser.ID != user.ID {
+		httputil.NewError(ctx, http.StatusUnauthorized, "Can't another user information")
 		return
 	}
 
@@ -87,16 +89,12 @@ func (c *Controller) DeleteUser(ctx *gin.Context) {
 		if err != nil {
 			return err
 		}
-		players := c.Repo.GetPlayers(team.ID)
-		for _, p := range players {
-			if err = c.Repo.Delete(p); err != nil {
-				return err
-			}
-		}
-		err = c.Repo.Delete(team)
+
+		err = c.Repo.DeleteTeam(&team)
 		if err != nil {
 			return err
 		}
+
 		return c.Repo.Delete(user)
 	})
 	if err != nil {
@@ -229,6 +227,7 @@ func (c *Controller) getUserFromRequest(ctx *gin.Context) (models.User, error) {
 
 	user, err := c.Repo.GetUserById(id)
 	if err != nil {
+		log.Println(err)
 		httputil.NewError(ctx, http.StatusNotFound, "User not found")
 		return models.User{}, err
 	}

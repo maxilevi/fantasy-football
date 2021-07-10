@@ -38,10 +38,10 @@ func (a *App) Configure() {
 			users.POST("", c.CreateUser)
 			users.Use(middleware.Auth(repo))
 			users.GET("/me", c.ShowMyself)
+			users.GET("/:id", c.ShowUser)
 			users.Use(middleware.Admin())
 			users.DELETE("/:id", c.DeleteUser)
 			users.PATCH("/:id", c.UpdateUser)
-			users.GET("/:id", c.ShowUser)
 		}
 		session := api.Group("/sessions")
 		{
@@ -64,6 +64,15 @@ func (a *App) Configure() {
 			players.Use(middleware.Admin())
 			players.POST("", c.CreatePlayer)
 			players.DELETE("/:id", c.DeletePlayer)
+		}
+		transfers := api.Group("/transfers")
+		{
+			transfers.GET("", c.ListTransfers)
+			transfers.GET("/:id", c.ShowTransfer)
+			transfers.Use(middleware.Auth(repo))
+			transfers.DELETE("/:id", c.DeleteTransfer)
+			transfers.PATCH("/:id", c.UpdateTransfer)
+			transfers.POST("", c.CreateTransfer)
 		}
 	}
 	url := ginSwagger.URL("http://" + a.address + "/swagger/doc.json")

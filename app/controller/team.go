@@ -86,16 +86,7 @@ func (c *Controller) DeleteTeam(ctx *gin.Context) {
 		return
 	}
 
-	err = c.Repo.RunInTransaction(func() error {
-		players := c.Repo.GetPlayers(team.ID)
-		for _, p := range players {
-			err = c.Repo.Delete(&p)
-			if err != nil {
-				return err
-			}
-		}
-		return c.Repo.Delete(team)
-	})
+	err = c.Repo.DeleteTeam(&team)
 	if err != nil {
 		log.Println(err)
 		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")

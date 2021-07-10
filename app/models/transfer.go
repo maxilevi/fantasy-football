@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type Transfer struct {
 	gorm.Model
-	PlayerID int
+	PlayerID uint
 	Player   Player
 	Ask      int
 }
@@ -16,7 +16,6 @@ type ShowTransfer struct {
 }
 
 type UpdateTransfer struct {
-	PlayerID uint `json:"player_id"`
 	Ask      int  `json:"ask"`
 }
 

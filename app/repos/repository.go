@@ -21,6 +21,9 @@ type Repository interface {
 	GetTransfers() []models.Transfer
 	GetTransfer(id uint) (models.Transfer, error)
 	RunInTransaction(code func() error) error
+	DeleteTeam(team *models.Team) error
+	DeletePlayer(player *models.Player) error
+	GetTransferWithPlayer(player *models.Player) (models.Transfer, error)
 }
 
 func doCreateUser(u Repository, email string, hash []byte, permission int) (models.User, error) {
@@ -50,6 +53,32 @@ func doCreateUser(u Repository, email string, hash []byte, permission int) (mode
 			}
 		}
 		return nil
+	})
+}
+
+func doDeleteTeam(u Repository, team *models.Team) error {
+	return u.RunInTransaction(func() error {
+		players := u.GetPlayers(team.ID)
+		for _, p := range players {
+			err := u.DeletePlayer(&p)
+			if err != nil {
+				return err
+			}
+		}
+		return u.Delete(team)
+	})
+}
+
+func doDeletePlayer(u Repository, player *models.Player) error {
+	return u.RunInTransaction(func() error {
+		transfer, err := u.GetTransferWithPlayer(player)
+		if err == nil {
+			// Transfer exists, delete it
+			if err := u.Delete(&transfer); err != nil{
+				return err
+			}
+		}
+		return u.Delete(player)
 	})
 }
 
@@ -133,6 +162,23 @@ func (u RepositorySQL) RunInTransaction(code func() error) error {
 	}
 	tx.Commit()
 	return nil
+}
+
+func (u RepositorySQL) DeleteTeam(team *models.Team) error {
+	return doDeleteTeam(u, team)
+}
+
+func (u RepositorySQL) DeletePlayer(player *models.Player) error {
+	return doDeletePlayer(u, player)
+}
+
+func (u RepositorySQL) GetTransferWithPlayer(player *models.Player) (models.Transfer, error) {
+	var transfer models.Transfer
+	res := u.Db.Where(&models.Transfer{PlayerID: player.ID}).Find(&transfer)
+	if res.Error != nil {
+		return transfer, res.Error
+	}
+	return transfer, nil
 }
 
 type RepositoryMemory struct {
@@ -227,6 +273,23 @@ func (u *RepositoryMemory) GetTransfer(id uint) (models.Transfer, error) {
 
 func (u *RepositoryMemory) RunInTransaction(code func() error) error {
 	return code()
+}
+
+func (u *RepositoryMemory) DeleteTeam(team *models.Team) error {
+	return doDeleteTeam(u, team)
+}
+
+func (u *RepositoryMemory) DeletePlayer(player *models.Player) error {
+	return doDeletePlayer(u, player)
+}
+
+func (u *RepositoryMemory) GetTransferWithPlayer(player *models.Player) (models.Transfer, error) {
+	var t models.Transfer
+	err := u.getByFuncOfType(func(m interface{}) bool {
+		p := m.(models.Transfer)
+		return p.PlayerID == player.ID
+	}, &t)
+	return t, err
 }
 
 func (u *RepositoryMemory) getByIdOfType(id uint, t interface{}) error {
