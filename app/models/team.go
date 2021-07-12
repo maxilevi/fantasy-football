@@ -11,6 +11,7 @@ const (
 	defenderCount   = 6
 	midfielderCount = 6
 	attackerCount   = 5
+	DefaultTeamBudget = 5000000
 )
 
 type Team struct {
@@ -26,7 +27,7 @@ func RandomTeam() (Team, []Player) {
 	team := Team{
 		Name:    randomdata.SillyName(),
 		Country: randomdata.Country(randomdata.FullCountry),
-		Budget:  5000000,
+		Budget:  DefaultTeamBudget,
 	}
 	players := make([]Player, teamSize)
 	i := 0

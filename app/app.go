@@ -28,14 +28,11 @@ type App struct {
 func (a *App) Configure() {
 	repo := repos.RepositorySQL{Db: a.db}
 	r := gin.Default()
-	r.Use(gin.Recovery())
 
 	c := controller.NewController(repo)
 
 	// TODO: Document new routes
-	// TODO: Add option to execute transfer
 	// TODO: Add migrations
-	// TODO: Unify responses so that everything is a sub
 	api := r.Group("/api")
 	{
 		users := api.Group("/users")

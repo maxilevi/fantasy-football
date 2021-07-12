@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"reflect"
+	"time"
 )
 import "../models"
 
@@ -73,7 +74,7 @@ func doDeleteTeam(u Repository, team *models.Team) error {
 func doDeletePlayer(u Repository, player *models.Player) error {
 	return u.RunInTransaction(func() error {
 		transfer, err := u.GetTransferWithPlayer(player)
-		if err == nil && transfer.CreatedAt != (models.Transfer{}).CreatedAt {
+		if err == nil {
 			// Transfer exists, delete it
 			if err := u.Delete(&transfer); err != nil {
 				return err
@@ -94,30 +95,42 @@ func (u RepositorySQL) CreateUser(email string, hash []byte, permission int) (mo
 func (u RepositorySQL) GetUserByEmail(email string) (models.User, error) {
 	var user models.User
 	res := u.Db.Where(models.User{Email: email}).First(&user)
+	if res.Error == nil && user.CreatedAt == (time.Time{}) {
+		return user, fmt.Errorf("record not found")
+	}
 	return user, res.Error
 }
 
 func (u RepositorySQL) GetUserById(id uint) (models.User, error) {
 	var user models.User
-	res := u.Db.First(&user, id)
+	res := u.Db.Preload(clause.Associations).First(&user, id)
+	if res.Error == nil && user.CreatedAt == (time.Time{}) {
+		return user, fmt.Errorf("record not found")
+	}
 	return user, res.Error
 }
 
 func (u RepositorySQL) GetTeam(id uint) (models.Team, error) {
 	var team models.Team
-	res := u.Db.First(&team, id)
+	res := u.Db.Preload(clause.Associations).First(&team, id)
+	if res.Error == nil && team.CreatedAt == (time.Time{}) {
+		return team, fmt.Errorf("record not found")
+	}
 	return team, res.Error
 }
 
 func (u RepositorySQL) GetPlayers(teamId uint) []models.Player {
 	var players []models.Player
-	u.Db.Where(&models.Player{TeamID: teamId}).Find(&players)
+	u.Db.Preload(clause.Associations).Where(&models.Player{TeamID: teamId}).Find(&players)
 	return players
 }
 
 func (u RepositorySQL) GetPlayer(playerId uint) (models.Player, error) {
 	var player models.Player
 	res := u.Db.Preload(clause.Associations).Find(&player, playerId)
+	if res.Error == nil && player.CreatedAt == (time.Time{}) {
+		return player, fmt.Errorf("record not found")
+	}
 	return player, res.Error
 }
 
@@ -138,19 +151,25 @@ func (u RepositorySQL) Delete(model interface{}) error {
 
 func (u RepositorySQL) GetUserTeam(user models.User) (models.Team, error) {
 	var team models.Team
-	res := u.Db.Where(&models.Team{OwnerID: user.ID}).Find(&team)
+	res := u.Db.Preload(clause.Associations).Where(&models.Team{OwnerID: user.ID}).Find(&team)
+	if res.Error == nil && team.CreatedAt == (time.Time{}) {
+		return team, fmt.Errorf("record not found")
+	}
 	return team, res.Error
 }
 
 func (u RepositorySQL) GetTransfers() []models.Transfer {
 	var transfers []models.Transfer
-	u.Db.Where("1 = 1").Find(&transfers)
+	u.Db.Preload("Player.Team").Where("1 = 1").Find(&transfers)
 	return transfers
 }
 
 func (u RepositorySQL) GetTransfer(id uint) (models.Transfer, error) {
 	var transfer models.Transfer
-	res := u.Db.Find(&transfer, id)
+	res := u.Db.Preload("Player.Team").Find(&transfer, id)
+	if res.Error == nil && transfer.CreatedAt == (time.Time{}) {
+		return transfer, fmt.Errorf("record not found")
+	}
 	return transfer, res.Error
 }
 
@@ -175,12 +194,11 @@ func (u RepositorySQL) DeletePlayer(player *models.Player) error {
 
 func (u RepositorySQL) GetTransferWithPlayer(player *models.Player) (models.Transfer, error) {
 	var transfer models.Transfer
-	res := u.Db.Where(&models.Transfer{PlayerID: player.ID}).Find(&transfer)
-	if res.Error != nil {
-		return transfer, res.Error
+	res := u.Db.Preload(clause.Associations).Where(&models.Transfer{PlayerID: player.ID}).Find(&transfer)
+	if res.Error == nil && transfer.CreatedAt == (time.Time{}) {
+		return transfer, fmt.Errorf("record not found")
 	}
-
-	return transfer, nil
+	return transfer, res.Error
 }
 
 type RepositoryMemory struct {

@@ -167,14 +167,17 @@ func (c *Controller) CreateUser(ctx *gin.Context) {
 		return
 	}
 	if !c.validEmail(t.Email) {
+		log.Println(err)
 		httputil.NewError(ctx, http.StatusBadRequest, "Invalid email")
 		return
 	}
 	if c.emailExists(t.Email) {
+		log.Println(err)
 		httputil.NewError(ctx, http.StatusBadRequest, "Provided email is already registered")
 		return
 	}
 	if !c.validPassword(t.Password) {
+		log.Println(err)
 		httputil.NewError(ctx, http.StatusBadRequest, "Password needs a minimum of at least 8 characters")
 		return
 	}

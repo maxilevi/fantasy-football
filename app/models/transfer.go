@@ -7,10 +7,8 @@ type Transfer struct {
 	PlayerID uint
 	Player   Player
 	Ask      int
-	Open   bool
 	SellerID uint
 	Seller Team
-
 }
 
 type ShowTransfer struct {
@@ -21,7 +19,6 @@ type ShowTransfer struct {
 
 type UpdateTransfer struct {
 	Ask int `json:"ask"`
-	Open bool `json:"open"`
 }
 
 type CreateTransfer struct {

@@ -41,7 +41,9 @@ func (c *Controller) ListTransfers(ctx *gin.Context) {
 		})
 	}
 
-	httputil.NoError(ctx, transfers)
+	httputil.NoError(ctx, map[string]interface{}{
+		"transfers": transfers,
+	})
 }
 
 // Handles GET requests to the transfers resource
@@ -106,24 +108,31 @@ func (c *Controller) CreateTransfer(ctx *gin.Context) {
 		httputil.NewError(ctx, http.StatusUnauthorized, "Trying to create a transfer on a player not owned")
 		return
 	}
+	transfer, err := c.Repo.GetTransferWithPlayer(&player)
+	if err == nil {
+		httputil.NewError(ctx, http.StatusBadRequest, "Player already has an open transfer")
+		return
+	}
 
-	err = c.Repo.Update(&models.Transfer{
+	transfer = models.Transfer{
 		PlayerID: t.PlayerID,
 		Ask:      t.Ask,
-		Open: true,
 		SellerID: player.TeamID,
-	})
+	}
+	err = c.Repo.Create(&transfer)
 	if err != nil {
 		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
 
-	httputil.NoErrorEmpty(ctx)
+	httputil.NoError(ctx, map[string]interface{}{
+		"id": transfer.ID,
+	})
 }
 
 // Handles PATCH requests to the transfers resource
 // @Summary Updates a existing transfer.
-// @Description Updates a existing transfer by ID, if the transfer is ours then we update it, otherwise we buy it.
+// @Description Updates a existing transfer by ID
 // @Tags Transfers
 // @Accept  json
 // @Produce  json
@@ -149,15 +158,6 @@ func (c *Controller) UpdateTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if t.Open {
-		c.updateOwnedTransfer(ctx, transfer, user, t)
-	} else {
-		c.buyNotOwnedTransfer(ctx, transfer, user, t)
-	}
-}
-
-// Update the ask price of a transfer we own
-func (c *Controller) updateOwnedTransfer(ctx *gin.Context, transfer models.Transfer, user models.User, t models.UpdateTransfer) {
 	if !user.IsAdmin() && user.ID != transfer.Player.Team.OwnerID {
 		httputil.NewError(ctx, http.StatusUnauthorized, "Trying to update a not owned transfer")
 		return
@@ -165,7 +165,7 @@ func (c *Controller) updateOwnedTransfer(ctx *gin.Context, transfer models.Trans
 
 	transfer.Ask = t.Ask
 
-	err := c.Repo.Update(&transfer)
+	err = c.Repo.Update(&transfer)
 	if err != nil {
 		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
@@ -173,7 +173,7 @@ func (c *Controller) updateOwnedTransfer(ctx *gin.Context, transfer models.Trans
 
 	httputil.NoErrorEmpty(ctx)
 }
-
+/*
 // Buy a player from another team
 func (c *Controller) buyNotOwnedTransfer(ctx *gin.Context, transfer models.Transfer, user models.User, t models.UpdateTransfer) {
 
@@ -211,7 +211,7 @@ func (c *Controller) buyNotOwnedTransfer(ctx *gin.Context, transfer models.Trans
 
 	httputil.NoErrorEmpty(ctx)
 }
-
+*/
 // Handles DELETE requests to the transfers resource
 // @Summary Delete a transfer
 // @Description Delete a transfer by ID
@@ -238,8 +238,9 @@ func (c *Controller) DeleteTransfer(ctx *gin.Context) {
 		return
 	}
 
-	err := c.Repo.Delete(transfer)
+	err := c.Repo.Delete(&transfer)
 	if err != nil {
+		log.Println(err)
 		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -319,13 +320,12 @@ type transferFilters struct {
 func (f *transferFilters) Matches(transfer models.Transfer) bool {
 	return strings.Contains(transfer.Player.FirstName+" "+transfer.Player.LastName, f.PlayerName) &&
 		strings.Contains(transfer.Player.Team.Name, f.TeamName) &&
-		transfer.Ask > f.ValueFilter && transfer.Player.Age > f.AgeFilter && transfer.Open
+		transfer.Ask > f.ValueFilter && transfer.Player.Age > f.AgeFilter
 }
 
 /// Fill the transfer payload with default values
 func (c* Controller) fillDefaultTransferPayload(transfer models.Transfer) models.UpdateTransfer {
 	var payload models.UpdateTransfer
 	payload.Ask = transfer.Ask
-	payload.Open = transfer.Open
 	return payload
 }

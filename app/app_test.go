@@ -40,10 +40,10 @@ func getAdminUserToken(t *testing.T, email string) string {
 }
 
 func truncateDb() {
-	app.db.Where("1 = 1").Delete(&models.Player{})
-	app.db.Where("1 = 1").Delete(&models.Team{})
-	app.db.Where("1 = 1").Delete(&models.User{})
-	app.db.Where("1 = 1").Delete(&models.Transfer{})
+	app.db.Unscoped().Where("1 = 1").Delete(&models.Transfer{})
+	app.db.Unscoped().Where("1 = 1").Delete(&models.Player{})
+	app.db.Unscoped().Where("1 = 1").Delete(&models.Team{})
+	app.db.Unscoped().Where("1 = 1").Delete(&models.User{})
 }
 
 func setupTest() {
@@ -154,14 +154,16 @@ func doRequest(resource string, token string, method string, body map[string]int
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode != expectedStatusCode {
-		return nil, fmt.Errorf("unexpected status code %v", resp.StatusCode)
-	}
 
 	bodystr, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println(bodystr)
+		fmt.Println(string(bodystr))
 		return nil, err
+	}
+
+	if resp.StatusCode != expectedStatusCode {
+		fmt.Println(string(bodystr))
+		return nil, fmt.Errorf("unexpected status code %v", resp.StatusCode)
 	}
 
 	var m map[string]interface{}
