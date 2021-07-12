@@ -60,7 +60,7 @@ func TestPostTeam(t *testing.T) {
 		"budget":  100000,
 	}
 
-	resp, err := doPostRequest("team", token, payload, http.StatusOK)
+	resp, err := doPostRequest("users/me/team", token, payload, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}

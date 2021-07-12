@@ -25,13 +25,14 @@ import (
 // @Failure 500 {object} httputil.HTTPError
 // @Router /users/me [get]
 // @Security BearerAuth[write, admin]
-func (c *Controller) ShowMyself(ctx *gin.Context) {
+func (c *Controller) RedirectMyself(ctx *gin.Context) {
 	user, err := c.getAuthenticatedUserFromRequest(ctx)
 	if err != nil {
 		return
 	}
 
-	ctx.Redirect(http.StatusFound, strconv.Itoa(int(user.ID)))
+	ctx.Redirect(http.StatusTemporaryRedirect, "/api/users/" + strconv.Itoa(int(user.ID)) + ctx.Param("action"))
+
 }
 
 // Handles GET request to the user resource
@@ -126,7 +127,7 @@ func (c *Controller) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
-	var t models.UpdateUser
+	t := c.fillDefaultUserPayload(user)
 	err = ctx.BindJSON(&t)
 	if err != nil {
 		log.Println(err)
@@ -191,6 +192,27 @@ func (c *Controller) CreateUser(ctx *gin.Context) {
 	})
 }
 
+func (c *Controller) RedirectToTeam(ctx *gin.Context) {
+	user, err := c.getUserFromRequest(ctx)
+	if err != nil {
+		return
+	}
+
+	team, err := c.Repo.GetUserTeam(user)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusNotFound, "Team not found")
+		return
+	}
+
+	ctx.Set("TeamOwner", user.ID)
+	action := ctx.Param("action")
+	if ctx.Request.Method == "POST" && (action == "" || action == "/") {
+		ctx.Redirect(http.StatusTemporaryRedirect, "/api/teams/")
+	} else {
+		ctx.Redirect(http.StatusTemporaryRedirect, "/api/teams/" + strconv.Itoa(int(team.ID)) + action)
+	}
+}
+
 // Returns a bool to check if the password is valid
 func (c *Controller) validPassword(password string) bool {
 	return len(password) >= 8
@@ -220,7 +242,7 @@ func (c *Controller) registerUser(email, password string) (models.User, error) {
 
 // Parse a user from the request parameters or return an error if not found
 func (c *Controller) getUserFromRequest(ctx *gin.Context) (models.User, error) {
-	id, err := c.parseIdFromRequest(ctx)
+	id, err := c.parseIdFromRequest(ctx, "userId")
 	if err != nil {
 		return models.User{}, err
 	}
@@ -234,6 +256,7 @@ func (c *Controller) getUserFromRequest(ctx *gin.Context) (models.User, error) {
 	return user, err
 }
 
+// Get the payload for showing an user
 func (c *Controller) getShowUserPayload(ctx *gin.Context, user models.User) (models.ShowUser, error) {
 	team, err := c.Repo.GetUserTeam(user)
 	if err != nil {
@@ -246,4 +269,11 @@ func (c *Controller) getShowUserPayload(ctx *gin.Context, user models.User) (mod
 		Email: user.Email,
 		Team:  c.getTeamPayload(team),
 	}, nil
+}
+
+// Fill the user payload with default values
+func (c* Controller) fillDefaultUserPayload(user models.User) models.UpdateUser {
+	var payload models.UpdateUser
+	payload.Email = user.Email
+	return payload
 }

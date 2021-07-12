@@ -3,6 +3,7 @@ package repos
 import (
 	"fmt"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"reflect"
 )
 import "../models"
@@ -72,7 +73,7 @@ func doDeleteTeam(u Repository, team *models.Team) error {
 func doDeletePlayer(u Repository, player *models.Player) error {
 	return u.RunInTransaction(func() error {
 		transfer, err := u.GetTransferWithPlayer(player)
-		if err == nil {
+		if err == nil && transfer.CreatedAt != (models.Transfer{}).CreatedAt {
 			// Transfer exists, delete it
 			if err := u.Delete(&transfer); err != nil {
 				return err
@@ -116,7 +117,7 @@ func (u RepositorySQL) GetPlayers(teamId uint) []models.Player {
 
 func (u RepositorySQL) GetPlayer(playerId uint) (models.Player, error) {
 	var player models.Player
-	res := u.Db.Find(&player, playerId)
+	res := u.Db.Preload(clause.Associations).Find(&player, playerId)
 	return player, res.Error
 }
 
@@ -178,6 +179,7 @@ func (u RepositorySQL) GetTransferWithPlayer(player *models.Player) (models.Tran
 	if res.Error != nil {
 		return transfer, res.Error
 	}
+
 	return transfer, nil
 }
 

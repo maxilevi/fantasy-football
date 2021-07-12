@@ -5,6 +5,7 @@ import (
 	"../models"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -101,7 +102,7 @@ func (c *Controller) CreateTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if !user.IsAdmin() && player.Team.Owner.ID != user.ID {
+	if !user.IsAdmin() && player.Team.OwnerID != user.ID {
 		httputil.NewError(ctx, http.StatusUnauthorized, "Trying to create a transfer on a player not owned")
 		return
 	}
@@ -109,6 +110,8 @@ func (c *Controller) CreateTransfer(ctx *gin.Context) {
 	err = c.Repo.Update(&models.Transfer{
 		PlayerID: t.PlayerID,
 		Ask:      t.Ask,
+		Open: true,
+		SellerID: player.TeamID,
 	})
 	if err != nil {
 		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
@@ -119,8 +122,8 @@ func (c *Controller) CreateTransfer(ctx *gin.Context) {
 }
 
 // Handles PATCH requests to the transfers resource
-// @Summary Updates a existing transfer
-// @Description Updates a existing transfer by ID
+// @Summary Updates a existing transfer.
+// @Description Updates a existing transfer by ID, if the transfer is ours then we update it, otherwise we buy it.
 // @Tags Transfers
 // @Accept  json
 // @Produce  json
@@ -139,25 +142,72 @@ func (c *Controller) UpdateTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if !user.IsAdmin() && user.ID != transfer.Player.Team.OwnerID {
-		httputil.NewError(ctx, http.StatusUnauthorized, "Trying to update a not owned transfer")
-		return
-	}
-
-	var t models.UpdateTransfer
+	t := c.fillDefaultTransferPayload(transfer)
 	err := ctx.BindJSON(&t)
 	if err != nil {
 		httputil.NewError(ctx, http.StatusBadRequest, "Invalid body parameters")
 		return
 	}
 
+	if t.Open {
+		c.updateOwnedTransfer(ctx, transfer, user, t)
+	} else {
+		c.buyNotOwnedTransfer(ctx, transfer, user, t)
+	}
+}
+
+// Update the ask price of a transfer we own
+func (c *Controller) updateOwnedTransfer(ctx *gin.Context, transfer models.Transfer, user models.User, t models.UpdateTransfer) {
+	if !user.IsAdmin() && user.ID != transfer.Player.Team.OwnerID {
+		httputil.NewError(ctx, http.StatusUnauthorized, "Trying to update a not owned transfer")
+		return
+	}
+
 	transfer.Ask = t.Ask
 
-	err = c.Repo.Update(&transfer)
+	err := c.Repo.Update(&transfer)
 	if err != nil {
 		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
+
+	httputil.NoErrorEmpty(ctx)
+}
+
+// Buy a player from another team
+func (c *Controller) buyNotOwnedTransfer(ctx *gin.Context, transfer models.Transfer, user models.User, t models.UpdateTransfer) {
+
+	if  transfer.Player.Team.OwnerID == user.ID {
+		httputil.NewError(ctx, http.StatusBadRequest, "Cannot buy your own player")
+		return
+	}
+
+	if  transfer.Open && !t.Open {
+		httputil.NewError(ctx, http.StatusBadRequest, "Cannot reopen an already closed transfer")
+		return
+	}
+
+	seller, err1 := c.Repo.GetTeam(transfer.SellerID)
+	buyer, err2 := c.Repo.GetUserTeam(user)
+	if err1 != nil || err2 != nil {
+		log.Println(err1, err2)
+		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+	if buyer.Budget < transfer.Ask {
+		httputil.NewError(ctx, http.StatusBadRequest, fmt.Sprintf("Team does not have enough money to execute the purchase (%v < %v)", buyer.Budget, transfer.Ask))
+		return
+	}
+
+	transfer.Open = false
+
+	err := c.doExecuteTransfer(transfer, seller, buyer)
+	if err != nil {
+		log.Println(err)
+		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
 
 	httputil.NoErrorEmpty(ctx)
 }
@@ -222,7 +272,7 @@ func (c *Controller) doExecuteTransfer(transfer models.Transfer, seller, buyer m
 
 // Gets transfers from the request
 func (c *Controller) getTransferFromRequest(ctx *gin.Context) (models.Transfer, error) {
-	id, err := c.parseIdFromRequest(ctx)
+	id, err := c.parseIdFromRequest(ctx, "transferId")
 	transfer, err := c.Repo.GetTransfer(id)
 	if err != nil {
 		httputil.NewError(ctx, http.StatusNotFound, "Not found")
@@ -269,5 +319,13 @@ type transferFilters struct {
 func (f *transferFilters) Matches(transfer models.Transfer) bool {
 	return strings.Contains(transfer.Player.FirstName+" "+transfer.Player.LastName, f.PlayerName) &&
 		strings.Contains(transfer.Player.Team.Name, f.TeamName) &&
-		transfer.Ask > f.ValueFilter && transfer.Player.Age > f.AgeFilter
+		transfer.Ask > f.ValueFilter && transfer.Player.Age > f.AgeFilter && transfer.Open
+}
+
+/// Fill the transfer payload with default values
+func (c* Controller) fillDefaultTransferPayload(transfer models.Transfer) models.UpdateTransfer {
+	var payload models.UpdateTransfer
+	payload.Ask = transfer.Ask
+	payload.Open = transfer.Open
+	return payload
 }

@@ -55,6 +55,7 @@ type ShowTeam struct {
 }
 
 type CreateTeam struct {
+	Owner int `json:"owner"`
 	Name    string `json:"name"`
 	Country string `json:"country"`
 	Budget  int    `json:"budget"`

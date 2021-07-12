@@ -26,16 +26,7 @@ func (c *Controller) ShowPlayer(ctx *gin.Context) {
 		return
 	}
 
-	payload := models.ShowPlayer{
-		BasePlayer: models.BasePlayer{
-			FirstName:   player.FirstName,
-			LastName:    player.LastName,
-			MarketValue: player.MarketValue,
-			Age:         player.Age,
-			Country:     player.Country,
-			Position:    player.Position,
-		},
-	}
+	payload := c.getPlayerPayload(player)
 
 	httputil.NoError(ctx, payload)
 }
@@ -103,11 +94,11 @@ func (c *Controller) CreatePlayer(ctx *gin.Context) {
 // @Router /players/{id} [patch]
 // @Security BearerAuth
 func (c *Controller) UpdatePlayer(ctx *gin.Context) {
-	var payload models.UpdatePlayer
-	payload.Team = -1
-	err1 := ctx.BindJSON(&payload)
 	player, err2 := c.getPlayerFromRequest(ctx)
+	payload := c.fillDefaultPlayerPayload(player)
+	err1 := ctx.BindJSON(&payload)
 	user, err3 := c.getAuthenticatedUserFromRequest(ctx)
+
 	if err1 != nil || err2 != nil || err3 != nil {
 		log.Println(err1, err2, err3)
 		if err1 != nil {
@@ -116,7 +107,7 @@ func (c *Controller) UpdatePlayer(ctx *gin.Context) {
 		return
 	}
 
-	isTeamOwner, isAdmin := player.Team.Owner.ID == user.ID, user.IsAdmin()
+	isTeamOwner, isAdmin := player.Team.OwnerID == user.ID, user.IsAdmin()
 	if !isAdmin && !isTeamOwner {
 		httputil.NewError(ctx, http.StatusUnauthorized, "Only administrators or owners can edit players")
 		return
@@ -126,9 +117,7 @@ func (c *Controller) UpdatePlayer(ctx *gin.Context) {
 	player.LastName = payload.LastName
 	player.Country = payload.Country
 	if isAdmin {
-		if payload.Team >= 0 {
-			player.TeamID = uint(payload.Team)
-		}
+		player.TeamID = uint(payload.Team)
 		player.MarketValue = int32(payload.MarketValue)
 		player.Age = payload.Age
 		player.Position = payload.Position
@@ -165,6 +154,7 @@ func (c *Controller) DeletePlayer(ctx *gin.Context) {
 
 	err = c.Repo.DeletePlayer(&player)
 	if err != nil {
+		log.Println(err)
 		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
@@ -174,7 +164,7 @@ func (c *Controller) DeletePlayer(ctx *gin.Context) {
 
 // Gets a Player model from the id in the request
 func (c *Controller) getPlayerFromRequest(ctx *gin.Context) (models.Player, error) {
-	id, err := c.parseIdFromRequest(ctx)
+	id, err := c.parseIdFromRequest(ctx, "playerId")
 	if err != nil {
 		return models.Player{}, err
 	}
@@ -188,6 +178,20 @@ func (c *Controller) getPlayerFromRequest(ctx *gin.Context) (models.Player, erro
 	return player, nil
 }
 
+// Fill the player payload with default values
+func (c* Controller) fillDefaultPlayerPayload(player models.Player) models.UpdatePlayer {
+	var payload models.UpdatePlayer
+	payload.Team = int(player.TeamID)
+	payload.FirstName = player.FirstName
+	payload.LastName = player.LastName
+	payload.Country = player.Country
+	payload.Age = player.Age
+	payload.MarketValue = player.MarketValue
+	payload.Position = player.Position
+	return payload
+}
+
+// Create and fill the show player payload
 func (c *Controller) getPlayerPayload(p models.Player) models.ShowPlayer {
 	return models.ShowPlayer{
 		ID: p.ID,

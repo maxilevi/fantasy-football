@@ -23,7 +23,6 @@ type ShowUser struct {
 
 type UpdateUser struct {
 	Email string `json:"email"`
-	Team  uint   `json:"team"`
 }
 
 type CreateUser struct {

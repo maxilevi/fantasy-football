@@ -28,20 +28,26 @@ type App struct {
 func (a *App) Configure() {
 	repo := repos.RepositorySQL{Db: a.db}
 	r := gin.Default()
+	r.Use(gin.Recovery())
 
 	c := controller.NewController(repo)
 
+	// TODO: Document new routes
+	// TODO: Add option to execute transfer
+	// TODO: Add migrations
+	// TODO: Unify responses so that everything is a sub
 	api := r.Group("/api")
 	{
 		users := api.Group("/users")
 		{
+			users.Any("/:userId/team/*action", c.RedirectToTeam)
 			users.POST("", c.CreateUser)
 			users.Use(middleware.Auth(repo))
-			users.GET("/me", c.ShowMyself)
-			users.GET("/:id", c.ShowUser)
+			users.Any("/me/*action", c.RedirectMyself)
+			users.GET("/:userId", c.ShowUser)
 			users.Use(middleware.Admin())
-			users.DELETE("/:id", c.DeleteUser)
-			users.PATCH("/:id", c.UpdateUser)
+			users.DELETE("/:userId", c.DeleteUser)
+			users.PATCH("/:userId", c.UpdateUser)
 		}
 		session := api.Group("/sessions")
 		{
@@ -49,29 +55,32 @@ func (a *App) Configure() {
 		}
 		team := api.Group("/teams")
 		{
-			team.GET("/:id", c.ShowTeam)
+			team.Any("/:teamId/players/*action", c.RedirectToPlayers)
+			team.GET("/:teamId/players", c.ListTeamPlayers)
+			team.GET("/:teamId", c.ShowTeam)
 			team.Use(middleware.Auth(repo))
-			team.PATCH("/:id", c.UpdateTeam)
+			team.PATCH("/:teamId", c.UpdateTeam)
 			team.Use(middleware.Admin())
 			team.POST("", c.CreateTeam)
-			team.DELETE("/:id", c.DeleteTeam)
+			team.DELETE("/:teamId", c.DeleteTeam)
 		}
 		players := api.Group("/players")
 		{
-			players.GET("/:id", c.ShowPlayer)
+			//team.Any("/:playerId/transfers/*action", c.RedirectToTransfers)
+			players.GET("/:playerId", c.ShowPlayer)
 			players.Use(middleware.Auth(repo))
-			players.PATCH("/:id", c.UpdatePlayer)
+			players.PATCH("/:playerId", c.UpdatePlayer)
 			players.Use(middleware.Admin())
 			players.POST("", c.CreatePlayer)
-			players.DELETE("/:id", c.DeletePlayer)
+			players.DELETE("/:playerId", c.DeletePlayer)
 		}
 		transfers := api.Group("/transfers")
 		{
 			transfers.GET("", c.ListTransfers)
-			transfers.GET("/:id", c.ShowTransfer)
+			transfers.GET("/:transferId", c.ShowTransfer)
 			transfers.Use(middleware.Auth(repo))
-			transfers.DELETE("/:id", c.DeleteTransfer)
-			transfers.PATCH("/:id", c.UpdateTransfer)
+			transfers.DELETE("/:transferId", c.DeleteTransfer)
+			transfers.PATCH("/:transferId", c.UpdateTransfer)
 			transfers.POST("", c.CreateTransfer)
 		}
 	}
