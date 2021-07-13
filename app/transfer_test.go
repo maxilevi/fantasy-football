@@ -64,7 +64,7 @@ func TestBuyTransfer(t *testing.T) {
 	ask := 10000
 	token1, playerId, transferId := createTransfer(t, ask)
 	token2 := getUserToken(t, "hola@test.com")
-	_, err := doPutRequest("transfers/"+strconv.Itoa(transferId)+"/execute", token2, map[string]interface{}{}, http.StatusOK)
+	_, err := doPutRequest("transfers/"+strconv.Itoa(transferId)+"/buy", token2, map[string]interface{}{}, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +112,7 @@ func TestCantBuyTransferIfNotEnoughMoney(t *testing.T) {
 	setupTest()
 	_, _, transferId := createTransfer(t, 100000000000)
 	token2 := getUserToken(t, "hola@test.com")
-	_, err := doPutRequest("transfers/"+strconv.Itoa(transferId)+"/execute", token2, map[string]interface{}{}, http.StatusBadRequest)
+	_, err := doPutRequest("transfers/"+strconv.Itoa(transferId)+"/buy", token2, map[string]interface{}{}, http.StatusBadRequest)
 	if err != nil {
 		t.Fatal(err)
 	}

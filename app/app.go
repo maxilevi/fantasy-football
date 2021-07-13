@@ -79,7 +79,7 @@ func (a *App) Configure() {
 			transfers.DELETE("/:transferId", c.DeleteTransfer)
 			transfers.PATCH("/:transferId", c.UpdateTransfer)
 			transfers.POST("", c.CreateTransfer)
-			transfers.PUT("/:transferId/execute", c.BuyTransfer)
+			transfers.PUT("/:transferId/buy", c.BuyTransfer)
 		}
 	}
 	url := ginSwagger.URL("http://" + a.address + "/swagger/doc.json")
