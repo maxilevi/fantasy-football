@@ -53,14 +53,19 @@ func TestPatchTeam(t *testing.T) {
 func TestPostTeam(t *testing.T) {
 	setupTest()
 	token := getAdminUserToken(t, "test@gmail.com")
+	resp, err := doGetRequest("users/me", token, http.StatusOK)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	payload := map[string]interface{}{
+		"owner": int(resp["id"].(float64)),
 		"country": "argentina",
 		"name":    "los pumas",
 		"budget":  100000,
 	}
 
-	resp, err := doPostRequest("users/me/team", token, payload, http.StatusOK)
+	resp, err = doPostRequest("teams", token, payload, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
