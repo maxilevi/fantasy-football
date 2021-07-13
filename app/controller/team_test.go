@@ -24,7 +24,7 @@ func TestValidateTeamOwner(t *testing.T) {
 		},
 	}
 	team, _ := models.RandomTeam()
-	team.OwnerID = user1.ID
+	team.UserID = user1.ID
 	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
 	tests.AssertEqual(t, c.validateTeamOwner(ctx, user1, team), true)
 	tests.AssertEqual(t, c.validateTeamOwner(ctx, user2, team), false)
@@ -39,7 +39,7 @@ func TestGetTeamPayload(t *testing.T) {
 		marketValue += int(x.MarketValue)
 	}
 
-	show := c.getTeamPayload(p)
+	show := c.getTeamPayload(p, ps)
 	tests.AssertEqual(t, show.Country, p.Country)
 	tests.AssertEqual(t, show.ID, p.ID)
 	tests.AssertEqual(t, show.Budget, p.Budget)
@@ -53,10 +53,10 @@ func TestGetTeamPayload(t *testing.T) {
 func TestFillDefaultTeamPayload(t *testing.T) {
 	c := Controller{}
 	p, _ := models.RandomTeam()
-	p.OwnerID = 100
+	p.UserID = 100
 	update := c.fillDefaultTeamPayload(p)
 	tests.AssertEqual(t, update.Country, p.Country)
 	tests.AssertEqual(t, update.Budget, p.Budget)
 	tests.AssertEqual(t, update.Name, p.Name)
-	tests.AssertEqual(t, update.Owner, p.OwnerID)
+	tests.AssertEqual(t, update.Owner, p.UserID)
 }

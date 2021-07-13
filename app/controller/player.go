@@ -107,7 +107,7 @@ func (c *Controller) UpdatePlayer(ctx *gin.Context) {
 		return
 	}
 
-	isTeamOwner, isAdmin := player.Team.OwnerID == user.ID, user.IsAdmin()
+	isTeamOwner, isAdmin := player.Team.UserID == user.ID, user.IsAdmin()
 	if !isAdmin && !isTeamOwner {
 		httputil.NewError(ctx, http.StatusUnauthorized, "Only administrators or owners can edit players")
 		return

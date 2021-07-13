@@ -53,7 +53,7 @@ func (c *Controller) ShowTeam(ctx *gin.Context) {
 		return
 	}
 
-	httputil.NoError(ctx, c.getTeamPayload(team))
+	httputil.NoError(ctx, c.getTeamPayload(team, c.Repo.GetPlayers(team.ID)))
 }
 
 // Handles a POST request to a team resource
@@ -82,7 +82,7 @@ func (c *Controller) CreateTeam(ctx *gin.Context) {
 	}
 
 	team := models.Team{
-		OwnerID: uint(owner),
+		UserID:  uint(owner),
 		Name:    t.Name,
 		Country: t.Country,
 		Budget:  t.Budget,
@@ -181,14 +181,13 @@ func (c *Controller) RedirectToPlayers(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Set("PlayerOwner", team.OwnerID)
+	ctx.Set("PlayerOwner", team.UserID)
 	ctx.Redirect(http.StatusTemporaryRedirect, "/api/players/" + ctx.Param("action"))
 }
 
 // Generate a json from a team model
-func (c *Controller) getTeamPayload(team models.Team) models.ShowTeam {
+func (c *Controller) getTeamPayload(team models.Team, players []models.Player) models.ShowTeam {
 	marketValue := 0
-	players := c.Repo.GetPlayers(team.ID)
 
 	playerModels := make([]models.ShowPlayer, 0)
 	for _, p := range players {
@@ -222,7 +221,7 @@ func (c *Controller) getTeamFromRequest(ctx *gin.Context) (models.Team, error) {
 
 // Validate a team owner
 func (c *Controller) validateTeamOwner(ctx *gin.Context, user models.User, team models.Team) bool {
-	if user.ID != team.OwnerID {
+	if user.ID != team.UserID {
 		httputil.NewError(ctx, http.StatusUnauthorized, "unauthorized")
 		return false
 	}
@@ -232,7 +231,7 @@ func (c *Controller) validateTeamOwner(ctx *gin.Context, user models.User, team 
 /// Fill the team payload with default values
 func (c* Controller) fillDefaultTeamPayload(team models.Team) models.UpdateTeam {
 	var payload models.UpdateTeam
-	payload.Owner = int(team.OwnerID)
+	payload.Owner = int(team.UserID)
 	payload.Budget = team.Budget
 	payload.Name = team.Name
 	payload.Country = team.Country

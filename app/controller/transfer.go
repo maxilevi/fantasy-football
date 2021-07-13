@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
+	"math"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -21,8 +22,10 @@ import (
 // @Param country query string false "Filter by the player's country"
 // @Param team_name query string false "Filter by the player's team name"
 // @Param player_name query string false "Filter by the player's complete name"
-// @Param age query string false "Filter by the player's age"
-// @Param value query string false "Filter by the transfer ask value"
+// @Param min_age query string false "Filter by the player's age"
+// @Param max_age query string false "Filter by the player's age"
+// @Param min_value query string false "Filter by the transfer ask value"
+// @Param max_value query string false "Filter by the transfer ask value"
 // @Success 200 {array} models.ShowTransfer
 // @Router /transfers [get]
 func (c *Controller) ListTransfers(ctx *gin.Context) {
@@ -104,7 +107,7 @@ func (c *Controller) CreateTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if !user.IsAdmin() && player.Team.OwnerID != user.ID {
+	if !user.IsAdmin() && player.Team.UserID != user.ID {
 		httputil.NewError(ctx, http.StatusUnauthorized, "Trying to create a transfer on a player not owned")
 		return
 	}
@@ -117,7 +120,6 @@ func (c *Controller) CreateTransfer(ctx *gin.Context) {
 	transfer = models.Transfer{
 		PlayerID: t.PlayerID,
 		Ask:      t.Ask,
-		SellerID: player.TeamID,
 	}
 	err = c.Repo.Create(&transfer)
 	if err != nil {
@@ -158,7 +160,7 @@ func (c *Controller) UpdateTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if !user.IsAdmin() && user.ID != transfer.Player.Team.OwnerID {
+	if !user.IsAdmin() && user.ID != transfer.Player.Team.UserID {
 		httputil.NewError(ctx, http.StatusUnauthorized, "Trying to update a not owned transfer")
 		return
 	}
@@ -175,7 +177,7 @@ func (c *Controller) UpdateTransfer(ctx *gin.Context) {
 }
 
 // @Summary Buy a transfer
-// @Description Buys a transfer with a specific id and executes it. Updates budgets, values and finally deletes the transfer.
+// @Description Buys a transfer with a specific id and buys it. Updates budgets, values and finally deletes the transfer.
 // @Tags Transfers
 // @Accept  json
 // @Produce  json
@@ -185,7 +187,7 @@ func (c *Controller) UpdateTransfer(ctx *gin.Context) {
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /transfers/{id}/execute [put]
+// @Router /transfers/{id}/buy [put]
 // @Security BearerAuth
 func (c *Controller) BuyTransfer(ctx *gin.Context) {
 	transfer, err1 := c.getTransferFromRequest(ctx)
@@ -194,7 +196,7 @@ func (c *Controller) BuyTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if  transfer.Player.Team.OwnerID == user.ID {
+	if  transfer.Player.Team.UserID == user.ID {
 		httputil.NewError(ctx, http.StatusBadRequest, "Cannot buy your own player")
 		return
 	}
@@ -243,7 +245,7 @@ func (c *Controller) DeleteTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if !user.IsAdmin() && user.ID != transfer.Player.Team.OwnerID {
+	if !user.IsAdmin() && user.ID != transfer.Player.Team.UserID {
 		httputil.NewError(ctx, http.StatusUnauthorized, "Trying to delete a not owned transfer")
 		return
 	}
@@ -260,7 +262,7 @@ func (c *Controller) DeleteTransfer(ctx *gin.Context) {
 
 // Execute a transfer and update the records if successful
 func (c *Controller) doExecuteTransfer(transfer *models.Transfer, buyer models.Team) error {
-	seller := transfer.Seller
+	seller := transfer.Player.Team
 	// Randomly update the player value
 	player := transfer.Player
 	player.MarketValue = int32(float64(player.MarketValue) * (1.1 + rand.Float64()*0.9))
@@ -302,18 +304,32 @@ func (c *Controller) parseTransferFilters(ctx *gin.Context) transferFilters {
 		PlayerName: ctx.Param("player_name"),
 	}
 
-	ageFilter := ctx.Param("age")
+	ageFilter := ctx.Param("min_age")
 	if age, err := strconv.ParseInt(ageFilter, 10, 32); err != nil {
-		filter.AgeFilter = -1
+		filter.MinAgeFilter = -1
 	} else {
-		filter.AgeFilter = int(age)
+		filter.MinAgeFilter = int(age)
 	}
 
-	valueFilter := ctx.Param("value")
+	valueFilter := ctx.Param("min_value")
 	if value, err := strconv.ParseInt(valueFilter, 10, 32); err != nil {
-		filter.ValueFilter = -1
+		filter.MinValueFilter = -1
 	} else {
-		filter.ValueFilter = int(value)
+		filter.MinValueFilter = int(value)
+	}
+
+	ageFilter = ctx.Param("max_age")
+	if age, err := strconv.ParseInt(ageFilter, 10, 32); err != nil {
+		filter.MaxAgeFilter = math.MaxInt32
+	} else {
+		filter.MaxAgeFilter = int(age)
+	}
+
+	valueFilter = ctx.Param("max_value")
+	if value, err := strconv.ParseInt(valueFilter, 10, 32); err != nil {
+		filter.MaxValueFilter = math.MaxInt32
+	} else {
+		filter.MaxValueFilter = int(value)
 	}
 
 	return filter
@@ -324,15 +340,19 @@ type transferFilters struct {
 	Country     string
 	TeamName    string
 	PlayerName  string
-	AgeFilter   int
-	ValueFilter int
+	MinAgeFilter   int
+	MinValueFilter int
+	MaxAgeFilter   int
+	MaxValueFilter int
 }
 
 // Returns a bool that tells if the transfer matches with the filter
 func (f *transferFilters) Matches(transfer models.Transfer) bool {
 	return strings.Contains(strings.ToLower(transfer.Player.FirstName+" "+transfer.Player.LastName), strings.ToLower(f.PlayerName)) &&
 		strings.Contains(strings.ToLower(transfer.Player.Team.Name), strings.ToLower(f.TeamName)) &&
-		transfer.Ask > f.ValueFilter && transfer.Player.Age > f.AgeFilter
+		strings.Contains(strings.ToLower(transfer.Player.Country), strings.ToLower(f.Country)) &&
+		transfer.Ask >= f.MinValueFilter && transfer.Player.Age >= f.MinAgeFilter &&
+		transfer.Ask <= f.MaxValueFilter && transfer.Player.Age <= f.MaxAgeFilter
 }
 
 /// Fill the transfer payload with default values

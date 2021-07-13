@@ -7,8 +7,6 @@ type Transfer struct {
 	PlayerID uint
 	Player   Player
 	Ask      int
-	SellerID uint
-	Seller Team
 }
 
 type ShowTransfer struct {

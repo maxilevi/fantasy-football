@@ -41,7 +41,7 @@ func doCreateUser(u Repository, email string, hash []byte, permission int) (mode
 		}
 
 		team, players := models.RandomTeam()
-		team.OwnerID = user.ID
+		team.UserID = user.ID
 		err = u.Create(&team)
 		if err != nil {
 			return err
@@ -151,7 +151,7 @@ func (u RepositorySQL) Delete(model interface{}) error {
 
 func (u RepositorySQL) GetUserTeam(user models.User) (models.Team, error) {
 	var team models.Team
-	res := u.Db.Preload(clause.Associations).Where(&models.Team{OwnerID: user.ID}).Find(&team)
+	res := u.Db.Preload(clause.Associations).Where(&models.Team{UserID: user.ID}).Find(&team)
 	if res.Error == nil && team.CreatedAt == (time.Time{}) {
 		return team, fmt.Errorf("record not found")
 	}
@@ -255,7 +255,7 @@ func (u *RepositoryMemory) GetUserTeam(user models.User) (models.Team, error) {
 	var t models.Team
 	err := u.getByFuncOfType(func(m interface{}) bool {
 		p := m.(models.Team)
-		return p.OwnerID == user.ID
+		return p.UserID == user.ID
 	}, &t)
 	return t, err
 }

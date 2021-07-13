@@ -19,8 +19,8 @@ type Team struct {
 	Name    string
 	Country string
 	Budget  int
-	OwnerID uint
-	Owner   User
+	UserID  uint
+	User    User
 }
 
 func RandomTeam() (Team, []Player) {
