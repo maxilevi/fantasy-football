@@ -133,6 +133,10 @@ func doDeleteRequest(resource string, token string, expectedStatusCode int) (map
 	return doRequest(resource, token, "DELETE", map[string]interface{}{}, expectedStatusCode)
 }
 
+func doPutRequest(resource string, token string, body map[string]interface{}, expectedStatusCode int) (map[string]interface{}, error) {
+	return doRequest(resource, token, "PUT", body, expectedStatusCode)
+}
+
 func doRequest(resource string, token string, method string, body map[string]interface{}, expectedStatusCode int) (map[string]interface{}, error) {
 
 	postBody, err := json.Marshal(body)

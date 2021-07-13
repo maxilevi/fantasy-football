@@ -1,12 +1,12 @@
 package app
 
 import (
+	"./models"
 	"gorm.io/gorm/utils/tests"
 	"math/rand"
 	"net/http"
 	"strconv"
 	"testing"
-	"./models"
 )
 
 func TestGetTransfer(t *testing.T) {
@@ -65,7 +65,7 @@ func TestBuyTransfer(t *testing.T) {
 	ask := 10000
 	token1, playerId, transferId := createTransfer(t, ask)
 	token2 := getUserToken(t, "hola@test.com")
-	_, err := doPostRequest("transfers/"  + strconv.Itoa(transferId), token2, map[string]interface{}{}, http.StatusOK)
+	_, err := doPutRequest("transfers/"  + strconv.Itoa(transferId) + "/execute", token2, map[string]interface{}{}, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,7 +97,7 @@ func TestBuyTransfer(t *testing.T) {
 		}
 	}
 	if !isIn {
-		t.Fatal("player is not in  the dst team")
+		t.Fatal("player is not in the dst team")
 	}
 	// Assert team budgets
 	tests.AssertEqual(t, resp1["budget"], models.DefaultTeamBudget + ask)
@@ -113,7 +113,7 @@ func TestCantBuyTransferIfNotEnoughMoney(t *testing.T) {
 	setupTest()
 	_, _, transferId := createTransfer(t, 100000000000)
 	token2 := getUserToken(t, "hola@test.com")
-	_, err := doPostRequest("transfers/"+strconv.Itoa(transferId), token2, map[string]interface{}{}, http.StatusBadRequest)
+	_, err := doPutRequest("transfers/"+strconv.Itoa(transferId) + "/execute", token2, map[string]interface{}{}, http.StatusBadRequest)
 	if err != nil {
 		t.Fatal(err)
 	}

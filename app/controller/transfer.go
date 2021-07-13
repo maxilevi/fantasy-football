@@ -173,35 +173,45 @@ func (c *Controller) UpdateTransfer(ctx *gin.Context) {
 
 	httputil.NoErrorEmpty(ctx)
 }
-/*
-// Buy a player from another team
-func (c *Controller) buyNotOwnedTransfer(ctx *gin.Context, transfer models.Transfer, user models.User, t models.UpdateTransfer) {
+
+// @Summary Buy a transfer
+// @Description Buys a transfer with a specific id and executes it. Updates budgets, values and finally deletes the transfer.
+// @Tags Transfers
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Transfer ID"
+// @Success 200
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /transfers/{id} [put]
+// @Security BearerAuth
+func (c *Controller) BuyTransfer(ctx *gin.Context) {
+	transfer, err1 := c.getTransferFromRequest(ctx)
+	user, err2 := c.getAuthenticatedUserFromRequest(ctx)
+	if err1 != nil || err2 != nil {
+		return
+	}
 
 	if  transfer.Player.Team.OwnerID == user.ID {
 		httputil.NewError(ctx, http.StatusBadRequest, "Cannot buy your own player")
 		return
 	}
 
-	if  transfer.Open && !t.Open {
-		httputil.NewError(ctx, http.StatusBadRequest, "Cannot reopen an already closed transfer")
-		return
-	}
-
-	seller, err1 := c.Repo.GetTeam(transfer.SellerID)
-	buyer, err2 := c.Repo.GetUserTeam(user)
-	if err1 != nil || err2 != nil {
-		log.Println(err1, err2)
+	buyer, err := c.Repo.GetUserTeam(user)
+	if err != nil {
+		log.Println(err)
 		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
+
 	if buyer.Budget < transfer.Ask {
 		httputil.NewError(ctx, http.StatusBadRequest, fmt.Sprintf("Team does not have enough money to execute the purchase (%v < %v)", buyer.Budget, transfer.Ask))
 		return
 	}
 
-	transfer.Open = false
-
-	err := c.doExecuteTransfer(transfer, seller, buyer)
+	err = c.doExecuteTransfer(&transfer, buyer)
 	if err != nil {
 		log.Println(err)
 		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
@@ -211,7 +221,7 @@ func (c *Controller) buyNotOwnedTransfer(ctx *gin.Context, transfer models.Trans
 
 	httputil.NoErrorEmpty(ctx)
 }
-*/
+
 // Handles DELETE requests to the transfers resource
 // @Summary Delete a transfer
 // @Description Delete a transfer by ID
@@ -249,7 +259,8 @@ func (c *Controller) DeleteTransfer(ctx *gin.Context) {
 }
 
 // Execute a transfer and update the records if successful
-func (c *Controller) doExecuteTransfer(transfer models.Transfer, seller, buyer models.Team) error {
+func (c *Controller) doExecuteTransfer(transfer *models.Transfer, buyer models.Team) error {
+	seller := transfer.Seller
 	// Randomly update the player value
 	player := transfer.Player
 	player.MarketValue = int32(float64(player.MarketValue) * (1.1 + rand.Float64()*0.9))
@@ -264,7 +275,8 @@ func (c *Controller) doExecuteTransfer(transfer models.Transfer, seller, buyer m
 		err1 := c.Repo.Update(&player)
 		err2 := c.Repo.Update(&buyer)
 		err3 := c.Repo.Update(&seller)
-		if err1 != nil || err2 != nil || err3 != nil {
+		err4 := c.Repo.Delete(&transfer)
+		if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
 			return fmt.Errorf("failed to save models")
 		}
 		return nil
