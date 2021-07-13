@@ -330,8 +330,8 @@ type transferFilters struct {
 
 // Returns a bool that tells if the transfer matches with the filter
 func (f *transferFilters) Matches(transfer models.Transfer) bool {
-	return strings.Contains(transfer.Player.FirstName+" "+transfer.Player.LastName, f.PlayerName) &&
-		strings.Contains(transfer.Player.Team.Name, f.TeamName) &&
+	return strings.Contains(strings.ToLower(transfer.Player.FirstName+" "+transfer.Player.LastName), strings.ToLower(f.PlayerName)) &&
+		strings.Contains(strings.ToLower(transfer.Player.Team.Name), strings.ToLower(f.TeamName)) &&
 		transfer.Ask > f.ValueFilter && transfer.Player.Age > f.AgeFilter
 }
 
