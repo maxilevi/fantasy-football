@@ -13,7 +13,7 @@ func TestGetTransfer(t *testing.T) {
 	setupTest()
 	ask := 10000
 	token, playerId, transferId := createTransfer(t, ask)
-	resp, err := doGetRequest("transfers/" + strconv.Itoa(transferId), token, http.StatusOK)
+	resp, err := doGetRequest("transfers/"+strconv.Itoa(transferId), token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,7 +28,7 @@ func TestGetAllTransfers(t *testing.T) {
 	transfers := make([]int, 0)
 
 	for i := 0; i < 10; i++ {
-		ask := int(10000 + rand.Float64() * 10000)
+		ask := int(10000 + rand.Float64()*10000)
 		transferId := createTransferUsing(t, ask, token, players[i])
 		asks = append(asks, ask)
 		transfers = append(transfers, transferId)
@@ -41,7 +41,6 @@ func TestGetAllTransfers(t *testing.T) {
 	tests.AssertEqual(t, len(arr), 10)
 }
 
-
 func TestCreateTransfer(t *testing.T) {
 	setupTest()
 	_, _, _ = createTransfer(t, 10000)
@@ -53,7 +52,7 @@ func TestCreateTransferOnSamePlayerFails(t *testing.T) {
 	_ = createTransferUsing(t, 10, token, players[0])
 	_, err := doPostRequest("transfers", token, map[string]interface{}{
 		"player_id": players[0],
-		"ask": 10000,
+		"ask":       10000,
 	}, http.StatusBadRequest)
 	if err != nil {
 		t.Fatal(err)
@@ -65,7 +64,7 @@ func TestBuyTransfer(t *testing.T) {
 	ask := 10000
 	token1, playerId, transferId := createTransfer(t, ask)
 	token2 := getUserToken(t, "hola@test.com")
-	_, err := doPutRequest("transfers/"  + strconv.Itoa(transferId) + "/execute", token2, map[string]interface{}{}, http.StatusOK)
+	_, err := doPutRequest("transfers/"+strconv.Itoa(transferId)+"/execute", token2, map[string]interface{}{}, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,10 +99,10 @@ func TestBuyTransfer(t *testing.T) {
 		t.Fatal("player is not in the dst team")
 	}
 	// Assert team budgets
-	tests.AssertEqual(t, resp1["budget"], models.DefaultTeamBudget + ask)
-	tests.AssertEqual(t, resp2["budget"], models.DefaultTeamBudget - ask)
+	tests.AssertEqual(t, resp1["budget"], models.DefaultTeamBudget+ask)
+	tests.AssertEqual(t, resp2["budget"], models.DefaultTeamBudget-ask)
 
-	_, err = doGetRequest("transfers/" + strconv.Itoa(transferId), token1, http.StatusNotFound)
+	_, err = doGetRequest("transfers/"+strconv.Itoa(transferId), token1, http.StatusNotFound)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +112,7 @@ func TestCantBuyTransferIfNotEnoughMoney(t *testing.T) {
 	setupTest()
 	_, _, transferId := createTransfer(t, 100000000000)
 	token2 := getUserToken(t, "hola@test.com")
-	_, err := doPutRequest("transfers/"+strconv.Itoa(transferId) + "/execute", token2, map[string]interface{}{}, http.StatusBadRequest)
+	_, err := doPutRequest("transfers/"+strconv.Itoa(transferId)+"/execute", token2, map[string]interface{}{}, http.StatusBadRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,14 +121,14 @@ func TestCantBuyTransferIfNotEnoughMoney(t *testing.T) {
 func TestEditTransfer(t *testing.T) {
 	setupTest()
 	token, _, transferId := createTransfer(t, 10000)
-	_, err := doPatchRequest("transfers/"  + strconv.Itoa(transferId), token, map[string]interface{}{
+	_, err := doPatchRequest("transfers/"+strconv.Itoa(transferId), token, map[string]interface{}{
 		"ask": 1000000000,
 	}, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	resp, err := doGetRequest("transfers/" + strconv.Itoa(transferId), token, http.StatusOK)
+	resp, err := doGetRequest("transfers/"+strconv.Itoa(transferId), token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,7 +139,7 @@ func TestEditNotOwnedTransfer(t *testing.T) {
 	setupTest()
 	_, _, transferId := createTransfer(t, 10000)
 	token := getUserToken(t, "hola@tes.com")
-	_, err := doPatchRequest("transfers/"  + strconv.Itoa(transferId), token, map[string]interface{}{
+	_, err := doPatchRequest("transfers/"+strconv.Itoa(transferId), token, map[string]interface{}{
 		"ask": 1000000000,
 	}, http.StatusUnauthorized)
 
@@ -153,12 +152,12 @@ func TestDeleteTransfer(t *testing.T) {
 	setupTest()
 	token, _, transferId := createTransfer(t, 10000)
 
-	_, err := doDeleteRequest("transfers/" + strconv.Itoa(transferId), token, http.StatusOK)
+	_, err := doDeleteRequest("transfers/"+strconv.Itoa(transferId), token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = doGetRequest("transfers/" + strconv.Itoa(transferId), token, http.StatusNotFound)
+	_, err = doGetRequest("transfers/"+strconv.Itoa(transferId), token, http.StatusNotFound)
 	if err != nil {
 		t.Fatal("found deleted transfer")
 	}
@@ -168,7 +167,7 @@ func createTransfer(t *testing.T, ask int) (string, int, int) {
 	token, players := getTokenAndPlayerIds(t, false)
 	resp, err := doPostRequest("transfers", token, map[string]interface{}{
 		"player_id": players[0],
-		"ask": ask,
+		"ask":       ask,
 	}, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
@@ -179,7 +178,7 @@ func createTransfer(t *testing.T, ask int) (string, int, int) {
 func createTransferUsing(t *testing.T, ask int, token string, playerId int) int {
 	resp, err := doPostRequest("transfers", token, map[string]interface{}{
 		"player_id": playerId,
-		"ask": ask,
+		"ask":       ask,
 	}, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)

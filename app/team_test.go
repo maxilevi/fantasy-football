@@ -59,7 +59,7 @@ func TestPostTeam(t *testing.T) {
 	}
 
 	payload := map[string]interface{}{
-		"owner": int(resp["id"].(float64)),
+		"owner":   int(resp["id"].(float64)),
 		"country": "argentina",
 		"name":    "los pumas",
 		"budget":  100000,

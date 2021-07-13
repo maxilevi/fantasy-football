@@ -185,7 +185,7 @@ func (c *Controller) UpdateTransfer(ctx *gin.Context) {
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /transfers/{id} [put]
+// @Router /transfers/{id}/execute [put]
 // @Security BearerAuth
 func (c *Controller) BuyTransfer(ctx *gin.Context) {
 	transfer, err1 := c.getTransferFromRequest(ctx)
