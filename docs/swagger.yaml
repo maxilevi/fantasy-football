@@ -89,6 +89,15 @@ definitions:
           $ref: '#/definitions/models.ShowPlayer'
         type: array
     type: object
+  models.ShowTransfer:
+    properties:
+      ask:
+        type: integer
+      id:
+        type: integer
+      player:
+        $ref: '#/definitions/models.ShowPlayer'
+    type: object
   models.ShowUser:
     properties:
       email:
@@ -125,8 +134,6 @@ definitions:
     properties:
       email:
         type: string
-      team:
-        type: integer
     type: object
 host: localhost:8080
 info:
@@ -142,7 +149,7 @@ info:
   title: Fantasy football manager API
   version: "1.0"
 paths:
-  /player:
+  /players:
     post:
       consumes:
       - application/json
@@ -176,7 +183,7 @@ paths:
       summary: Create a player
       tags:
       - Players
-  /player/{id}:
+  /players/{id}:
     delete:
       consumes:
       - application/json
@@ -279,7 +286,7 @@ paths:
       summary: Update a player
       tags:
       - Players
-  /session:
+  /sessions:
     post:
       consumes:
       - application/json
@@ -314,7 +321,7 @@ paths:
       summary: Create a new session
       tags:
       - Session
-  /team:
+  /teams:
     post:
       consumes:
       - application/json
@@ -337,7 +344,7 @@ paths:
       summary: Post a team
       tags:
       - Teams
-  /team/{id}:
+  /teams/{id}:
     delete:
       consumes:
       - application/json
@@ -371,7 +378,7 @@ paths:
             $ref: '#/definitions/httputil.HTTPError'
       security:
       - BearerAuth: []
-      summary: Delete a team
+      summary: Delete a team and all of it's players
       tags:
       - Teams
     get:
@@ -442,7 +449,266 @@ paths:
       summary: Update a team
       tags:
       - Teams
-  /user:
+  /teams/{id}/players:
+    get:
+      consumes:
+      - application/json
+      description: List all the players of a team
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ShowPlayer'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: List players of a team
+      tags:
+      - Teams
+  /transfers:
+    get:
+      consumes:
+      - application/json
+      description: Show all transfers and filter by country, team name, player name,
+        age and value
+      parameters:
+      - description: Filter by the player's country
+        in: query
+        name: country
+        type: string
+      - description: Filter by the player's team name
+        in: query
+        name: team_name
+        type: string
+      - description: Filter by the player's complete name
+        in: query
+        name: player_name
+        type: string
+      - description: Filter by the player's age
+        in: query
+        name: min_age
+        type: string
+      - description: Filter by the player's age
+        in: query
+        name: max_age
+        type: string
+      - description: Filter by the transfer ask value
+        in: query
+        name: min_value
+        type: string
+      - description: Filter by the transfer ask value
+        in: query
+        name: max_value
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ShowTransfer'
+            type: array
+      summary: Show all transfers
+      tags:
+      - Transfers
+    post:
+      consumes:
+      - application/json
+      description: Create a new transfer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Create a new transfer
+      tags:
+      - Transfers
+  /transfers/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a transfer by ID
+      parameters:
+      - description: Transfer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth:
+        - write
+        - admin
+      summary: Delete a transfer
+      tags:
+      - Transfers
+    get:
+      consumes:
+      - application/json
+      description: Get a transfer by ID
+      parameters:
+      - description: Transfer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ShowTransfer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      summary: Show a transfer
+      tags:
+      - Transfers
+    patch:
+      consumes:
+      - application/json
+      description: Updates a existing transfer by ID
+      parameters:
+      - description: Transfer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth:
+        - write
+        - admin
+      summary: Updates a existing transfer.
+      tags:
+      - Transfers
+  /transfers/{id}/buy:
+    put:
+      consumes:
+      - application/json
+      description: Buys a transfer with a specific id and buys it. Updates budgets,
+        values and finally deletes the transfer.
+      parameters:
+      - description: Transfer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Buy a transfer
+      tags:
+      - Transfers
+  /users:
     post:
       consumes:
       - application/json
@@ -472,11 +738,11 @@ paths:
       summary: Create a user
       tags:
       - Users
-  /user/{id}:
+  /users/{id}:
     delete:
       consumes:
       - application/json
-      description: Delete user by ID
+      description: Delete a user by ID and all of it's associated resources
       parameters:
       - description: User ID
         in: path
@@ -508,7 +774,7 @@ paths:
       - BearerAuth:
         - write
         - admin
-      summary: Delete a user
+      summary: Delete a user and all of it's associated resources
       tags:
       - Users
     get:
@@ -586,7 +852,7 @@ paths:
       summary: Update a user
       tags:
       - Users
-  /user/me:
+  /users/me:
     get:
       consumes:
       - application/json

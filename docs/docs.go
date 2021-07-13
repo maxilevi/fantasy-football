@@ -32,7 +32,7 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/player": {
+        "/players": {
             "post": {
                 "security": [
                     {
@@ -86,7 +86,7 @@ var doc = `{
                 }
             }
         },
-        "/player/{id}": {
+        "/players/{id}": {
             "get": {
                 "description": "Get a player by ID",
                 "consumes": [
@@ -245,7 +245,7 @@ var doc = `{
                 }
             }
         },
-        "/session": {
+        "/sessions": {
             "post": {
                 "description": "Creates a new session for a given set of credentials, returns a JWT token to be used as Bearer token.",
                 "consumes": [
@@ -297,7 +297,7 @@ var doc = `{
                 }
             }
         },
-        "/team": {
+        "/teams": {
             "post": {
                 "security": [
                     {
@@ -334,7 +334,7 @@ var doc = `{
                 }
             }
         },
-        "/team/{id}": {
+        "/teams/{id}": {
             "get": {
                 "description": "Get team by ID",
                 "consumes": [
@@ -399,7 +399,7 @@ var doc = `{
                 "tags": [
                     "Teams"
                 ],
-                "summary": "Delete a team",
+                "summary": "Delete a team and all of it's players",
                 "parameters": [
                     {
                         "type": "integer",
@@ -496,7 +496,403 @@ var doc = `{
                 }
             }
         },
-        "/user": {
+        "/teams/{id}/players": {
+            "get": {
+                "description": "List all the players of a team",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "List players of a team",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Team ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ShowPlayer"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/transfers": {
+            "get": {
+                "description": "Show all transfers and filter by country, team name, player name, age and value",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transfers"
+                ],
+                "summary": "Show all transfers",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by the player's country",
+                        "name": "country",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by the player's team name",
+                        "name": "team_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by the player's complete name",
+                        "name": "player_name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by the player's age",
+                        "name": "min_age",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by the player's age",
+                        "name": "max_age",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by the transfer ask value",
+                        "name": "min_value",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by the transfer ask value",
+                        "name": "max_value",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.ShowTransfer"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a new transfer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transfers"
+                ],
+                "summary": "Create a new transfer",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/transfers/{id}": {
+            "get": {
+                "description": "Get a transfer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transfers"
+                ],
+                "summary": "Show a transfer",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Transfer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.ShowTransfer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": [
+                            "write",
+                            "admin"
+                        ]
+                    }
+                ],
+                "description": "Delete a transfer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transfers"
+                ],
+                "summary": "Delete a transfer",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Transfer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": [
+                            "write",
+                            "admin"
+                        ]
+                    }
+                ],
+                "description": "Updates a existing transfer by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transfers"
+                ],
+                "summary": "Updates a existing transfer.",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Transfer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/transfers/{id}/buy": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Buys a transfer with a specific id and buys it. Updates budgets, values and finally deletes the transfer.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transfers"
+                ],
+                "summary": "Buy a transfer",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Transfer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.HTTPError"
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
             "post": {
                 "security": [
                     {
@@ -544,7 +940,7 @@ var doc = `{
                 }
             }
         },
-        "/user/me": {
+        "/users/me": {
             "get": {
                 "security": [
                     {
@@ -608,7 +1004,7 @@ var doc = `{
                 }
             }
         },
-        "/user/{id}": {
+        "/users/{id}": {
             "get": {
                 "description": "Get user by ID",
                 "consumes": [
@@ -666,7 +1062,7 @@ var doc = `{
                         ]
                     }
                 ],
-                "description": "Delete user by ID",
+                "description": "Delete a user by ID and all of it's associated resources",
                 "consumes": [
                     "application/json"
                 ],
@@ -676,7 +1072,7 @@ var doc = `{
                 "tags": [
                     "Users"
                 ],
-                "summary": "Delete a user",
+                "summary": "Delete a user and all of it's associated resources",
                 "parameters": [
                     {
                         "type": "integer",
@@ -917,6 +1313,20 @@ var doc = `{
                 }
             }
         },
+        "models.ShowTransfer": {
+            "type": "object",
+            "properties": {
+                "ask": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "player": {
+                    "$ref": "#/definitions/models.ShowPlayer"
+                }
+            }
+        },
         "models.ShowUser": {
             "type": "object",
             "properties": {
@@ -968,9 +1378,6 @@ var doc = `{
             "properties": {
                 "email": {
                     "type": "string"
-                },
-                "team": {
-                    "type": "integer"
                 }
             }
         }
