@@ -50,8 +50,7 @@ func TestPostPlayer(t *testing.T) {
 	token := getAdminUserToken(t, "test@gmail.com")
 
 	payload := getPlayerPayload()
-	payload["team"] = getTeamIdFromUser(t, token)
-	postResp := postPlayer(t, token, payload)
+	postResp := postPlayer(t, token, getTeamIdFromUser(t, token), payload)
 	getResp := getPlayer(t, token, int(postResp["id"].(float64)))
 	for key, value := range getResp {
 		if key == "code" || key == "team" || key == "id" {
@@ -124,8 +123,8 @@ func patchPlayer(t *testing.T, token string, player int, payload map[string]inte
 	}
 }
 
-func postPlayer(t *testing.T, token string, payload map[string]interface{}) map[string]interface{} {
-	resp, err := doPostRequest("players/", token, payload, http.StatusOK)
+func postPlayer(t *testing.T, token string, team int, payload map[string]interface{}) map[string]interface{} {
+	resp, err := doPostRequest("team/" + strconv.Itoa(team) + "/players/", token, payload, http.StatusOK)
 	if err != nil || int(resp["code"].(float64)) != 200 {
 		t.Fatal(err)
 	}

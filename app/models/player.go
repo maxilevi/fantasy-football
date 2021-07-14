@@ -56,7 +56,6 @@ type ShowPlayer struct {
 
 type CreatePlayer struct {
 	BasePlayer
-	Team uint `json:"team"`
 }
 
 type UpdatePlayer struct {

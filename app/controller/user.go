@@ -35,6 +35,115 @@ func (c *Controller) RedirectMyself(ctx *gin.Context) {
 
 }
 
+// @Summary Get the logged in user's team
+// @Description Get the logged in user's team
+// @Tags Users
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} models.ShowUser
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /users/me/team [get]
+// @Security BearerAuth
+func (c *Controller) GetMyTeam(ctx *gin.Context) {
+	c.RedirectMyTeam(ctx, "")
+}
+
+// @Summary Edit the logged in user's team
+// @Description Edit the logged in user's team
+// @Tags Users
+// @Accept  json
+// @Produce  json
+// @Success 200
+// @Param team body models.UpdateTeam true "Update team payload"
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /users/me/team [patch]
+// @Security BearerAuth
+func (c *Controller) EditMyTeam(ctx *gin.Context) {
+	c.RedirectMyTeam(ctx, "")
+}
+
+// @Summary Get the logged in user's team players
+// @Description Get the logged in user's team players
+// @Tags Users
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} models.ShowPlayer
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /users/me/team/players [get]
+// @Security BearerAuth
+func (c *Controller) GetMyPlayers(ctx *gin.Context) {
+	c.RedirectMyTeam(ctx, "/players")
+}
+
+// @Summary Edit the logged in user's team players
+// @Description Get the logged in user's team players
+// @Tags Users
+// @Accept  json
+// @Produce  json
+// @Success 200
+// @Param player body models.UpdatePlayer true "Update player"
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /users/me/team/players/{id} [patch]
+// @Security BearerAuth
+func (c *Controller) EditMyPlayer(ctx *gin.Context) {
+	c.RedirectMyPlayers(ctx)
+}
+
+// @Summary Get the logged in user's team player
+// @Description Get the logged in user's team player
+// @Tags Users
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} models.ShowPlayer
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /users/me/team/players/{id} [get]
+// @Security BearerAuth
+func (c *Controller) GetMyPlayer(ctx *gin.Context) {
+	c.RedirectMyPlayers(ctx)
+}
+
+// Redirect to the players resource
+func (c *Controller) RedirectMyPlayers(ctx *gin.Context) {
+	id, err := c.parseIdFromRequest(ctx, "playerId")
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, "A bad player id provided")
+		return
+	}
+	c.RedirectMyTeam(ctx, "/players/" + strconv.Itoa(int(id)))
+}
+
+// Redirect to the team resource
+func (c *Controller) RedirectMyTeam(ctx *gin.Context, postfix string) {
+	user, err := c.getAuthenticatedUserFromRequest(ctx)
+	if err != nil {
+		return
+	}
+
+	team, err := c.Repo.GetUserTeam(user)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusUnauthorized, "Internal server error")
+		return
+	}
+
+	ctx.Redirect(http.StatusTemporaryRedirect, "/api/teams/" + strconv.Itoa(int(team.ID)) + postfix)
+}
+
+
 // Handles GET request to the user resource
 // @Summary Get a user
 // @Description Get user by ID

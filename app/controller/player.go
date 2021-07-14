@@ -31,54 +31,6 @@ func (c *Controller) ShowPlayer(ctx *gin.Context) {
 	httputil.NoError(ctx, payload)
 }
 
-// Handles a POST request to the player resource
-// @Summary Create a player
-// @Description Create a player
-// @Tags Players
-// @Accept  json
-// @Produce  json
-// @Param player body models.CreatePlayer true "Create player"
-// @Success 200
-// @Failure 401 {object} httputil.HTTPError
-// @Failure 400 {object} httputil.HTTPError
-// @Failure 500 {object} httputil.HTTPError
-// @Router /players [post]
-// @Security BearerAuth
-func (c *Controller) CreatePlayer(ctx *gin.Context) {
-	var payload models.CreatePlayer
-	err := ctx.BindJSON(&payload)
-	if err != nil {
-		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")
-		return
-	}
-
-	player := models.Player{
-		FirstName:   payload.FirstName,
-		LastName:    payload.LastName,
-		Country:     payload.Country,
-		Age:         payload.Age,
-		MarketValue: payload.MarketValue,
-		Position:    payload.Position,
-		TeamID:      payload.Team,
-	}
-
-	if _, err = c.Repo.GetTeam(payload.Team); err != nil {
-		httputil.NewError(ctx, http.StatusBadRequest, "An invalid team id was provided")
-		return
-	}
-
-	err = c.Repo.Update(&player)
-	if err != nil {
-		log.Println(err)
-		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
-		return
-	}
-
-	httputil.NoError(ctx, map[string]interface{}{
-		"id": player.ID,
-	})
-}
-
 // Handles a PATCH request to the player resource
 // @Summary Update a player
 // @Description Update a player

@@ -31,16 +31,18 @@ func (a *App) Configure() {
 
 	c := controller.NewController(repo)
 
-	// TODO: Document new routes
-	// TODO: Add migrations
 	api := r.Group("/api")
 	{
 		users := api.Group("/users")
 		{
-			users.Any("/:userId/team/*action", c.RedirectToTeam)
 			users.POST("", c.CreateUser)
 			users.Use(middleware.Auth(repo))
-			users.Any("/me/*action", c.RedirectMyself)
+			users.GET("/me/", c.RedirectMyself)
+			users.GET("/me/team/", c.GetMyTeam)
+			users.PATCH("/me/team/", c.EditMyTeam)
+			users.GET("/me/team/players", c.GetMyPlayers)
+			users.GET("/me/team/players/:playerId", c.GetMyPlayer)
+			users.PATCH("/me/team/players/:playerId", c.EditMyPlayer)
 			users.GET("/:userId", c.ShowUser)
 			users.Use(middleware.Admin())
 			users.DELETE("/:userId", c.DeleteUser)
@@ -52,23 +54,23 @@ func (a *App) Configure() {
 		}
 		team := api.Group("/teams")
 		{
-			team.Any("/:teamId/players/*action", c.RedirectToPlayers)
 			team.GET("/:teamId/players", c.ListTeamPlayers)
+			team.GET("/:teamId/players/:playerId", c.GetMyPlayerFromTeam)
+			team.PATCH("/:teamId/players/:playerId", c.EditMyPlayerFromTeam)
 			team.GET("/:teamId", c.ShowTeam)
 			team.Use(middleware.Auth(repo))
 			team.PATCH("/:teamId", c.UpdateTeam)
 			team.Use(middleware.Admin())
+			team.POST("/:teamId/players", c.CreateNewPlayerOnTeam)
 			team.POST("", c.CreateTeam)
 			team.DELETE("/:teamId", c.DeleteTeam)
 		}
 		players := api.Group("/players")
 		{
-			//team.Any("/:playerId/transfers/*action", c.RedirectToTransfers)
 			players.GET("/:playerId", c.ShowPlayer)
 			players.Use(middleware.Auth(repo))
 			players.PATCH("/:playerId", c.UpdatePlayer)
 			players.Use(middleware.Admin())
-			players.POST("", c.CreatePlayer)
 			players.DELETE("/:playerId", c.DeletePlayer)
 		}
 		transfers := api.Group("/transfers")

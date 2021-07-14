@@ -24,7 +24,7 @@ func getMigrations() []*gormigrate.Migration {
 			Migrate: func(tx *gorm.DB) error {
 				type User struct {
 					gorm.Model
-					Email           string
+					Email           string `gorm:"primary_key"`
 					PasswordHash    []byte
 					PermissionLevel int
 				}

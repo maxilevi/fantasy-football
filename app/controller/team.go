@@ -6,7 +6,42 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"strconv"
 )
+
+// @Summary Show a player from a team
+// @Description Get a player by ID from a team.
+// @Tags Teams
+// @Accept  json
+// @Produce  json
+// @Param id path int true "Player ID"
+// @Param teamId path int true "Team ID"
+// @Success 200 {object} models.ShowPlayer
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /teams/{teamId}/players/{id} [get]
+func (c *Controller) GetMyPlayerFromTeam(ctx *gin.Context) {
+	c.RedirectToTeamPlayers(ctx)
+}
+
+// @Summary Update a player from a team
+// @Description Update a player from a team
+// @Tags Teams
+// @Accept  json
+// @Produce  json
+// @Param player body models.UpdatePlayer true "Update player"
+// @Param id path int true "Player ID"
+// @Param teamId path int true "Team ID"
+// @Success 200
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /teams/{teamId}/players/{id} [patch]
+// @Security BearerAuth
+func (c *Controller) EditMyPlayerFromTeam(ctx *gin.Context) {
+	c.RedirectToTeamPlayers(ctx)
+}
 
 // @Summary List players of a team
 // @Description List all the players of a team
@@ -54,6 +89,54 @@ func (c *Controller) ShowTeam(ctx *gin.Context) {
 	}
 
 	httputil.NoError(ctx, c.getTeamPayload(team, c.Repo.GetPlayers(team.ID)))
+}
+
+// @Summary Create a player on a new team
+// @Description Create a player on a new team
+// @Tags Teams
+// @Accept  json
+// @Produce  json
+// @Param player body models.CreatePlayer true "Create player"
+// @Param id path int true "Team ID"
+// @Success 200
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /teams/{id}/players [post]
+// @Security BearerAuth
+func (c *Controller) CreateNewPlayerOnTeam(ctx *gin.Context) {
+	team, err := c.getTeamFromRequest(ctx)
+	if err != nil {
+		return
+	}
+
+	var payload models.CreatePlayer
+	err = ctx.BindJSON(&payload)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")
+		return
+	}
+
+	player := models.Player{
+		FirstName:   payload.FirstName,
+		LastName:    payload.LastName,
+		Country:     payload.Country,
+		Age:         payload.Age,
+		MarketValue: payload.MarketValue,
+		Position:    payload.Position,
+		TeamID:      team.ID,
+	}
+
+	err = c.Repo.Update(&player)
+	if err != nil {
+		log.Println(err)
+		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	httputil.NoError(ctx, map[string]interface{}{
+		"id": player.ID,
+	})
 }
 
 // Handles a POST request to a team resource
@@ -137,6 +220,7 @@ func (c *Controller) DeleteTeam(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Team ID"
+// @Param team body models.UpdateTeam true "Update team payload"
 // @Success 200
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 401 {object} httputil.HTTPError
@@ -175,14 +259,14 @@ func (c *Controller) UpdateTeam(ctx *gin.Context) {
 	httputil.NoErrorEmpty(ctx)
 }
 
-func (c *Controller) RedirectToPlayers(ctx *gin.Context) {
-	team, err := c.getTeamFromRequest(ctx)
+// Redirect the request to the players resource
+func (c *Controller) RedirectToTeamPlayers(ctx *gin.Context) {
+	id, err := c.parseIdFromRequest(ctx, "playerId")
 	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, "A bad player id was provided")
 		return
 	}
-
-	ctx.Set("PlayerOwner", team.UserID)
-	ctx.Redirect(http.StatusTemporaryRedirect, "/api/players/" + ctx.Param("action"))
+	ctx.Redirect(http.StatusTemporaryRedirect, "/api/players/" + strconv.Itoa(int(id)))
 }
 
 // Generate a json from a team model
