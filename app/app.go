@@ -37,9 +37,9 @@ func (a *App) Configure() {
 		{
 			users.POST("", c.CreateUser)
 			users.Use(middleware.Auth(repo))
-			users.GET("/me/", c.RedirectMyself)
-			users.GET("/me/team/", c.GetMyTeam)
-			users.PATCH("/me/team/", c.EditMyTeam)
+			users.GET("/me", c.RedirectMyself)
+			users.GET("/me/team", c.GetMyTeam)
+			users.PATCH("/me/team", c.EditMyTeam)
 			users.GET("/me/team/players", c.GetMyPlayers)
 			users.GET("/me/team/players/:playerId", c.GetMyPlayer)
 			users.PATCH("/me/team/players/:playerId", c.EditMyPlayer)

@@ -31,7 +31,7 @@ func (c *Controller) RedirectMyself(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Redirect(http.StatusTemporaryRedirect, "/api/users/" + strconv.Itoa(int(user.ID)) + ctx.Param("action"))
+	ctx.Redirect(http.StatusTemporaryRedirect, "/api/users/" + strconv.Itoa(int(user.ID)))
 
 }
 
@@ -163,7 +163,7 @@ func (c *Controller) ShowUser(ctx *gin.Context) {
 		return
 	}
 	if !authUser.IsAdmin() && authUser.ID != user.ID {
-		httputil.NewError(ctx, http.StatusUnauthorized, "Can't another user information")
+		httputil.NewError(ctx, http.StatusUnauthorized, "Can't query another user's information")
 		return
 	}
 
@@ -205,7 +205,7 @@ func (c *Controller) DeleteUser(ctx *gin.Context) {
 			return err
 		}
 
-		return c.Repo.Delete(user)
+		return c.Repo.Delete(&user)
 	})
 	if err != nil {
 		log.Println(err)
