@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	teamSize        = 20
-	goalKeeperCount = 3
-	defenderCount   = 6
-	midfielderCount = 6
-	attackerCount   = 5
+	teamSize          = 20
+	goalKeeperCount   = 3
+	defenderCount     = 6
+	midfielderCount   = 6
+	attackerCount     = 5
 	DefaultTeamBudget = 5000000
 )
 
@@ -58,7 +58,7 @@ type ShowTeam struct {
 } //@name ShowTeam
 
 type CreateTeam struct {
-	Owner int `json:"owner"`
+	Owner   int    `json:"owner"`
 	Name    string `json:"name"`
 	Country string `json:"country"`
 	Budget  int    `json:"budget"`

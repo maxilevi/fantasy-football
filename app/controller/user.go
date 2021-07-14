@@ -30,7 +30,7 @@ func (c *Controller) RedirectMyself(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Redirect(http.StatusTemporaryRedirect, "/api/users/" + strconv.Itoa(int(user.ID)))
+	ctx.Redirect(http.StatusTemporaryRedirect, "/api/users/"+strconv.Itoa(int(user.ID)))
 
 }
 
@@ -123,7 +123,7 @@ func (c *Controller) RedirectMyPlayers(ctx *gin.Context) {
 		httputil.NewError(ctx, http.StatusBadRequest, "A bad player id provided")
 		return
 	}
-	c.RedirectMyTeam(ctx, "/players/" + strconv.Itoa(int(id)))
+	c.RedirectMyTeam(ctx, "/players/"+strconv.Itoa(int(id)))
 }
 
 // Redirect to the team resource
@@ -139,9 +139,8 @@ func (c *Controller) RedirectMyTeam(ctx *gin.Context, postfix string) {
 		return
 	}
 
-	ctx.Redirect(http.StatusTemporaryRedirect, "/api/teams/" + strconv.Itoa(int(team.ID)) + postfix)
+	ctx.Redirect(http.StatusTemporaryRedirect, "/api/teams/"+strconv.Itoa(int(team.ID))+postfix)
 }
-
 
 // Handles GET request to the user resource
 // @Summary Get a user
@@ -319,7 +318,7 @@ func (c *Controller) RedirectToTeam(ctx *gin.Context) {
 	if ctx.Request.Method == "POST" && (action == "" || action == "/") {
 		ctx.Redirect(http.StatusTemporaryRedirect, "/api/teams/")
 	} else {
-		ctx.Redirect(http.StatusTemporaryRedirect, "/api/teams/" + strconv.Itoa(int(team.ID)) + action)
+		ctx.Redirect(http.StatusTemporaryRedirect, "/api/teams/"+strconv.Itoa(int(team.ID))+action)
 	}
 }
 
@@ -382,7 +381,7 @@ func (c *Controller) getShowUserPayload(ctx *gin.Context, user models.User) (mod
 }
 
 // Fill the user payload with default values
-func (c* Controller) fillDefaultUserPayload(user models.User) models.UpdateUser {
+func (c *Controller) fillDefaultUserPayload(user models.User) models.UpdateUser {
 	var payload models.UpdateUser
 	payload.Email = user.Email
 	return payload

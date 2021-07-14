@@ -266,7 +266,7 @@ func (c *Controller) RedirectToTeamPlayers(ctx *gin.Context) {
 		httputil.NewError(ctx, http.StatusBadRequest, "A bad player id was provided")
 		return
 	}
-	ctx.Redirect(http.StatusTemporaryRedirect, "/api/players/" + strconv.Itoa(int(id)))
+	ctx.Redirect(http.StatusTemporaryRedirect, "/api/players/"+strconv.Itoa(int(id)))
 }
 
 // Generate a json from a team model
@@ -313,7 +313,7 @@ func (c *Controller) validateTeamOwner(ctx *gin.Context, user models.User, team 
 }
 
 /// Fill the team payload with default values
-func (c* Controller) fillDefaultTeamPayload(team models.Team) models.UpdateTeam {
+func (c *Controller) fillDefaultTeamPayload(team models.Team) models.UpdateTeam {
 	var payload models.UpdateTeam
 	payload.Budget = team.Budget
 	payload.Name = team.Name

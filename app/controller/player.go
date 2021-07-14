@@ -137,7 +137,7 @@ func (c *Controller) getPlayerFromRequest(ctx *gin.Context) (models.Player, erro
 }
 
 // Fill the player payload with default values
-func (c* Controller) fillDefaultPlayerPayload(player models.Player) models.UpdatePlayer {
+func (c *Controller) fillDefaultPlayerPayload(player models.Player) models.UpdatePlayer {
 	var payload models.UpdatePlayer
 	payload.Team = int(player.TeamID)
 	payload.FirstName = player.FirstName

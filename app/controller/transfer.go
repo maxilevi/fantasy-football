@@ -191,7 +191,7 @@ func (c *Controller) BuyTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if  transfer.Player.Team.UserID == user.ID {
+	if transfer.Player.Team.UserID == user.ID {
 		log.Println("Trying to buy own player")
 		httputil.NewError(ctx, http.StatusBadRequest, "Cannot buy your own player")
 		return
@@ -218,7 +218,6 @@ func (c *Controller) BuyTransfer(ctx *gin.Context) {
 	p, _ := c.Repo.GetPlayer(transfer.PlayerID)
 	fmt.Println(p.TeamID, buyer.ID)
 	fmt.Println(len(c.Repo.GetPlayers(buyer.ID)))
-
 
 	httputil.NoErrorEmpty(ctx)
 }
@@ -338,14 +337,14 @@ func (c *Controller) parseTransferFilters(q url.Values) transferFilters {
 
 // A group of filters to apply to matches
 type transferFilters struct {
-	Country     string
-	TeamName    string
-	PlayerName  string
+	Country        string
+	TeamName       string
+	PlayerName     string
 	MinAgeFilter   int
 	MinValueFilter int
 	MaxAgeFilter   int
 	MaxValueFilter int
-	ValueType string
+	ValueType      string
 }
 
 // Returns a bool that tells if the transfer matches with the filter
@@ -362,14 +361,14 @@ func (f *transferFilters) Matches(transfer models.Transfer) bool {
 }
 
 /// Fill the transfer payload with default values
-func (c* Controller) fillDefaultTransferPayload(transfer models.Transfer) models.UpdateTransfer {
+func (c *Controller) fillDefaultTransferPayload(transfer models.Transfer) models.UpdateTransfer {
 	var payload models.UpdateTransfer
 	payload.Ask = transfer.Ask
 	return payload
 }
 
 // Get a show transfer payload from a transfer
-func (c* Controller) getTransferPayload(transfer models.Transfer) models.ShowTransfer {
+func (c *Controller) getTransferPayload(transfer models.Transfer) models.ShowTransfer {
 	return models.ShowTransfer{
 		ID:     transfer.ID,
 		Player: c.getPlayerPayload(transfer.Player),

@@ -12,14 +12,14 @@ import (
 func TestControllerParseTransferFilters(t *testing.T) {
 	c := Controller{}
 	params := map[string]interface{}{
-		"country": "argentina",
-		"team_name": "la seleccion",
+		"country":     "argentina",
+		"team_name":   "la seleccion",
 		"player_name": "messi",
-		"max_age": 38,
-		"max_value": 1000000,
-		"min_age": 19,
-		"min_value": 1000,
-		"value_type": "market",
+		"max_age":     38,
+		"max_value":   1000000,
+		"min_age":     19,
+		"min_value":   1000,
+		"value_type":  "market",
 	}
 	p := url.Values{}
 	for k, v := range params {
@@ -59,23 +59,23 @@ func TestEmptyFiltersMatchEverything(t *testing.T) {
 			},
 		},
 		{
-			Player:   models.Player{
+			Player: models.Player{
 				LastName: "messi",
 			},
 		},
 		{
-			Player:   models.Player{
+			Player: models.Player{
 				LastName: "messi",
-				Age: 0,
+				Age:      0,
 			},
 		},
 		{
-			Player:   models.Player{
+			Player: models.Player{
 				Age: 123,
 			},
 		},
 		{
-			Player:   models.Player{
+			Player: models.Player{
 				Country: "bolivia",
 			},
 		},
@@ -91,60 +91,60 @@ func TestEmptyFiltersMatchEverything(t *testing.T) {
 func TestControllerTransferFilterMatches(t *testing.T) {
 	shouldMatch := []models.Transfer{
 		{
-			Player:   models.Player{
+			Player: models.Player{
 				FirstName: "tito",
-				Age: 26,
+				Age:       26,
 			},
 		},
 		{
-			Player:   models.Player{
+			Player: models.Player{
 				FirstName: "timirton",
-				Age: 24,
+				Age:       24,
 			},
 		},
 		{
-			Player:   models.Player{
+			Player: models.Player{
 				FirstName: "tim",
-				Age: 32,
+				Age:       32,
 			},
 			Ask: 500,
 		},
 	}
 	shouldNotMatch := []models.Transfer{
 		{
-			Player:   models.Player{
+			Player: models.Player{
 				FirstName: "tobias",
 			},
 		},
 		{
-			Player:   models.Player{
+			Player: models.Player{
 				FirstName: "tim",
-				Age: 18,
+				Age:       18,
 			},
 		},
 		{
-			Player:   models.Player{
+			Player: models.Player{
 				FirstName: "tim",
-				Age: 55,
+				Age:       55,
 			},
 		},
 		{
-			Player:   models.Player{
+			Player: models.Player{
 				FirstName: "tim",
-				Age: 30,
+				Age:       30,
 			},
 			Ask: 5000,
 		},
 	}
 	filter := transferFilters{
-		Country:     "",
-		TeamName:    "",
-		PlayerName:  "ti",
+		Country:        "",
+		TeamName:       "",
+		PlayerName:     "ti",
 		MinAgeFilter:   24,
 		MinValueFilter: -1,
 		MaxAgeFilter:   40,
 		MaxValueFilter: 1000,
-		ValueType: "ask",
+		ValueType:      "ask",
 	}
 
 	for _, transfer := range shouldMatch {

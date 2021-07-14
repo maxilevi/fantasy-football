@@ -39,7 +39,7 @@ func (c *Controller) getAuthenticatedUserFromRequest(ctx *gin.Context) (models.U
 func (c *Controller) parseIdFromRequest(ctx *gin.Context, paramName string) (uint, error) {
 	id, ok := strconv.ParseInt(ctx.Param(paramName), 10, 32)
 	if ok != nil {
-		httputil.NewError(ctx, http.StatusBadRequest, "Invalid " + paramName)
+		httputil.NewError(ctx, http.StatusBadRequest, "Invalid "+paramName)
 		return 0, fmt.Errorf("invalid " + paramName)
 	}
 	return uint(id), nil

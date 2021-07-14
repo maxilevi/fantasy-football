@@ -10,7 +10,6 @@ import (
 	"testing"
 )
 
-
 func TestValidateTeamOwner(t *testing.T) {
 	c := Controller{}
 	user1 := models.User{
@@ -48,7 +47,6 @@ func TestGetTeamPayload(t *testing.T) {
 	tests.AssertEqual(t, show.MarketValue, marketValue)
 	tests.AssertEqual(t, show.ID, p.ID)
 }
-
 
 func TestFillDefaultTeamPayload(t *testing.T) {
 	c := Controller{}

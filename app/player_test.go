@@ -124,7 +124,7 @@ func patchPlayer(t *testing.T, token string, player int, payload map[string]inte
 }
 
 func postPlayer(t *testing.T, token string, team int, payload map[string]interface{}) map[string]interface{} {
-	resp, err := doPostRequest("teams/" + strconv.Itoa(team) + "/players", token, payload, http.StatusOK)
+	resp, err := doPostRequest("teams/"+strconv.Itoa(team)+"/players", token, payload, http.StatusOK)
 	if err != nil || int(resp["code"].(float64)) != 200 {
 		t.Fatal(err)
 	}
