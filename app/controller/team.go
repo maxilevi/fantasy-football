@@ -315,7 +315,6 @@ func (c *Controller) validateTeamOwner(ctx *gin.Context, user models.User, team 
 /// Fill the team payload with default values
 func (c* Controller) fillDefaultTeamPayload(team models.Team) models.UpdateTeam {
 	var payload models.UpdateTeam
-	payload.Owner = int(team.UserID)
 	payload.Budget = team.Budget
 	payload.Name = team.Name
 	payload.Country = team.Country

@@ -2,6 +2,7 @@ package app
 
 import (
 	"./models"
+	"fmt"
 	"gorm.io/gorm/utils/tests"
 	"math/rand"
 	"net/http"
@@ -80,7 +81,8 @@ func TestBuyTransfer(t *testing.T) {
 
 	players1 := resp1["players"].([]interface{})
 	players2 := resp2["players"].([]interface{})
-
+	fmt.Println(len(players1))
+	fmt.Println(len(players2))
 	for _, m := range players1 {
 		p := m.(map[string]interface{})
 		if int(p["id"].(float64)) == playerId {

@@ -58,5 +58,4 @@ func TestFillDefaultTeamPayload(t *testing.T) {
 	tests.AssertEqual(t, update.Country, p.Country)
 	tests.AssertEqual(t, update.Budget, p.Budget)
 	tests.AssertEqual(t, update.Name, p.Name)
-	tests.AssertEqual(t, update.Owner, p.UserID)
 }

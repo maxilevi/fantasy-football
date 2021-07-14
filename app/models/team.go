@@ -63,5 +63,7 @@ type CreateTeam struct {
 }
 
 type UpdateTeam struct {
-	CreateTeam
+	Name    string `json:"name"`
+	Country string `json:"country"`
+	Budget  int    `json:"budget"`
 }

@@ -197,6 +197,7 @@ func (c *Controller) BuyTransfer(ctx *gin.Context) {
 	}
 
 	if  transfer.Player.Team.UserID == user.ID {
+		log.Println("Trying to buy own player")
 		httputil.NewError(ctx, http.StatusBadRequest, "Cannot buy your own player")
 		return
 	}
@@ -219,6 +220,9 @@ func (c *Controller) BuyTransfer(ctx *gin.Context) {
 		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
 		return
 	}
+	p, _ := c.Repo.GetPlayer(transfer.PlayerID)
+	fmt.Println(p.TeamID, buyer.ID)
+	fmt.Println(len(c.Repo.GetPlayers(buyer.ID)))
 
 
 	httputil.NoErrorEmpty(ctx)
@@ -269,6 +273,7 @@ func (c *Controller) doExecuteTransfer(transfer *models.Transfer, buyer models.T
 
 	// Actually do the transfer
 	player.TeamID = buyer.ID
+	player.Team = buyer
 
 	seller.Budget += transfer.Ask
 	buyer.Budget -= transfer.Ask

@@ -141,6 +141,7 @@ func (u RepositorySQL) Create(model interface{}) error {
 
 func (u RepositorySQL) Update(model interface{}) error {
 	res := u.Db.Save(model)
+	fmt.Println(res)
 	return res.Error
 }
 

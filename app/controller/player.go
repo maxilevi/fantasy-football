@@ -69,7 +69,13 @@ func (c *Controller) UpdatePlayer(ctx *gin.Context) {
 	player.LastName = payload.LastName
 	player.Country = payload.Country
 	if isAdmin {
+		team, err := c.Repo.GetTeam(uint(payload.Team))
+		if err != nil {
+			httputil.NewError(ctx, http.StatusNotFound, "Team not found")
+			return
+		}
 		player.TeamID = uint(payload.Team)
+		player.Team = team
 		player.MarketValue = int32(payload.MarketValue)
 		player.Age = payload.Age
 		player.Position = payload.Position
