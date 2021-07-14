@@ -1,5 +1,8 @@
 # Endpoints
 
+The project uses `swaggo` to generate an `OpenAPI` specification for each endpoint. To view this documentation using swagger run `go run .` and visit `http://localhost:8080/swagger/index.html#/`.
+ (Note: you may have to recompile the docs with `swag init`)
+
 # Packages
 The project is divided in different packages, inside each package `_test.go` files represent unit tests.
 
@@ -9,11 +12,10 @@ The main package, here we define our `App` structure which holds
  
 `app_test.go` contains our integration tests
  
-## app/handlers
+## app/controller
 
-The code here is separated on different files depending on the endpoint. 
-Each file contains a function to register all the routes for a specific REST
- resource, they also handle validation and response codes.
+The code here is separated on different files depending on the resource. 
+Each file contains the appropiate methods which are then mapped to endpoint in `app.go`
  
 ## app/repos
 
@@ -27,7 +29,7 @@ on specific endpoints
   
 ## app/models
 
-This package holds all of our database models.
+This package holds all of our database models and response models.
 
 # Authentication
 
@@ -39,4 +41,4 @@ Registering happens on the endpoint `POST api/user` while login occurs in `POST 
 
 # Migrations
 
-Migrations are executed automatically when the app starts. See the `runMigrations` function on `app.go`
+Migrations are executed automatically when the app starts. See the `runner.go` file in the `app/migrations` package.
