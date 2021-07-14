@@ -40,6 +40,13 @@ definitions:
         example: 1
         type: integer
     type: object
+  models.CreateTransfer:
+    properties:
+      ask:
+        type: integer
+      player_id:
+        type: integer
+    type: object
   models.CreateUser:
     properties:
       email:
@@ -136,7 +143,10 @@ definitions:
         type: string
       name:
         type: string
-      owner:
+    type: object
+  models.UpdateTransfer:
+    properties:
+      ask:
         type: integer
     type: object
   models.UpdateUser:
@@ -635,6 +645,13 @@ paths:
       consumes:
       - application/json
       description: Create a new transfer
+      parameters:
+      - description: Create transfer
+        in: body
+        name: transfer
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateTransfer'
       produces:
       - application/json
       responses:
@@ -742,6 +759,12 @@ paths:
         name: id
         required: true
         type: integer
+      - description: Update transfer
+        in: body
+        name: transfer
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateTransfer'
       produces:
       - application/json
       responses:

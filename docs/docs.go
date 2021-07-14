@@ -772,6 +772,17 @@ var doc = `{
                     "Transfers"
                 ],
                 "summary": "Create a new transfer",
+                "parameters": [
+                    {
+                        "description": "Create transfer",
+                        "name": "transfer",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateTransfer"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": ""
@@ -938,6 +949,15 @@ var doc = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Update transfer",
+                        "name": "transfer",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.UpdateTransfer"
+                        }
                     }
                 ],
                 "responses": {
@@ -1653,6 +1673,17 @@ var doc = `{
                 }
             }
         },
+        "models.CreateTransfer": {
+            "type": "object",
+            "properties": {
+                "ask": {
+                    "type": "integer"
+                },
+                "player_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.CreateUser": {
             "type": "object",
             "properties": {
@@ -1793,8 +1824,13 @@ var doc = `{
                 },
                 "name": {
                     "type": "string"
-                },
-                "owner": {
+                }
+            }
+        },
+        "models.UpdateTransfer": {
+            "type": "object",
+            "properties": {
+                "ask": {
                     "type": "integer"
                 }
             }
