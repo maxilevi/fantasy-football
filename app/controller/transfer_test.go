@@ -3,10 +3,9 @@ package controller
 import (
 	"../models"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm/utils/tests"
 	"math"
-	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
@@ -20,17 +19,13 @@ func TestControllerParseTransferFilters(t *testing.T) {
 		"max_value": 1000000,
 		"min_age": 19,
 		"min_value": 1000,
+		"value_type": "market",
 	}
-	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
-	var p []gin.Param
+	p := url.Values{}
 	for k, v := range params {
-		p = append(p, gin.Param{
-			Key: k,
-			Value: fmt.Sprintf("%v", v),
-		})
+		p.Add(k, fmt.Sprintf("%v", v))
 	}
-	ctx.Params = p
-	filters := c.parseTransferFilters(ctx)
+	filters := c.parseTransferFilters(p)
 
 	tests.AssertEqual(t, filters.Country, params["country"])
 	tests.AssertEqual(t, filters.TeamName, params["team_name"])
@@ -39,12 +34,12 @@ func TestControllerParseTransferFilters(t *testing.T) {
 	tests.AssertEqual(t, filters.MaxValueFilter, params["max_value"])
 	tests.AssertEqual(t, filters.MinAgeFilter, params["min_age"])
 	tests.AssertEqual(t, filters.MinValueFilter, params["min_value"])
+	tests.AssertEqual(t, filters.ValueType, params["value_type"])
 }
 
 func TestControllerParseEmptyTransferFilters(t *testing.T) {
 	c := Controller{}
-	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
-	filters := c.parseTransferFilters(ctx)
+	filters := c.parseTransferFilters(url.Values{})
 
 	tests.AssertEqual(t, filters.Country, "")
 	tests.AssertEqual(t, filters.TeamName, "")
@@ -53,6 +48,7 @@ func TestControllerParseEmptyTransferFilters(t *testing.T) {
 	tests.AssertEqual(t, filters.MinValueFilter, -1)
 	tests.AssertEqual(t, filters.MaxAgeFilter, math.MaxInt32)
 	tests.AssertEqual(t, filters.MaxValueFilter, math.MaxInt32)
+	tests.AssertEqual(t, filters.ValueType, "")
 }
 
 func TestEmptyFiltersMatchEverything(t *testing.T) {
@@ -85,8 +81,7 @@ func TestEmptyFiltersMatchEverything(t *testing.T) {
 		},
 	}
 	c := Controller{}
-	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
-	filters := c.parseTransferFilters(ctx)
+	filters := c.parseTransferFilters(url.Values{})
 
 	for _, transfer := range shouldMatch {
 		tests.AssertEqual(t, filters.Matches(transfer), true)
@@ -149,6 +144,7 @@ func TestControllerTransferFilterMatches(t *testing.T) {
 		MinValueFilter: -1,
 		MaxAgeFilter:   40,
 		MaxValueFilter: 1000,
+		ValueType: "ask",
 	}
 
 	for _, transfer := range shouldMatch {

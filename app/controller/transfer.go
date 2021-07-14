@@ -9,6 +9,7 @@ import (
 	"math"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -26,10 +27,11 @@ import (
 // @Param max_age query string false "Filter by the player's age"
 // @Param min_value query string false "Filter by the transfer ask value"
 // @Param max_value query string false "Filter by the transfer ask value"
+// @Param value_type query string false "Type of value to filter by. Can be 'market' or 'ask'. Defaults to 'ask'"
 // @Success 200 {array} models.ShowTransfer
 // @Router /transfers [get]
 func (c *Controller) ListTransfers(ctx *gin.Context) {
-	filter := c.parseTransferFilters(ctx)
+	filter := c.parseTransferFilters(ctx.Request.URL.Query())
 	transfers := c.Repo.GetTransfers()
 
 	arr := make([]models.ShowTransfer, 0)
@@ -37,11 +39,7 @@ func (c *Controller) ListTransfers(ctx *gin.Context) {
 		if !filter.Matches(transfer) {
 			continue
 		}
-		arr = append(arr, models.ShowTransfer{
-			ID:     transfer.ID,
-			Player: c.getPlayerPayload(transfer.Player),
-			Ask:    transfer.Ask,
-		})
+		arr = append(arr, c.getTransferPayload(transfer))
 	}
 
 	httputil.NoError(ctx, map[string]interface{}{
@@ -67,12 +65,7 @@ func (c *Controller) ShowTransfer(ctx *gin.Context) {
 		return
 	}
 
-	payload := models.ShowTransfer{
-		Player: c.getPlayerPayload(transfer.Player),
-		Ask:    transfer.Ask,
-	}
-
-	httputil.NoError(ctx, payload)
+	httputil.NoError(ctx, c.getTransferPayload(transfer))
 }
 
 // Handles a POST request to a transfer resource
@@ -304,35 +297,36 @@ func (c *Controller) getTransferFromRequest(ctx *gin.Context) (models.Transfer, 
 }
 
 // Parse URL parameters into a transferFilters object
-func (c *Controller) parseTransferFilters(ctx *gin.Context) transferFilters {
+func (c *Controller) parseTransferFilters(q url.Values) transferFilters {
 	filter := transferFilters{
-		Country:    ctx.Param("country"),
-		TeamName:   ctx.Param("team_name"),
-		PlayerName: ctx.Param("player_name"),
+		Country:    q.Get("country"),
+		TeamName:   q.Get("team_name"),
+		PlayerName: q.Get("player_name"),
+		ValueType:  q.Get("value_type"),
 	}
 
-	ageFilter := ctx.Param("min_age")
+	ageFilter := q.Get("min_age")
 	if age, err := strconv.ParseInt(ageFilter, 10, 32); err != nil {
 		filter.MinAgeFilter = -1
 	} else {
 		filter.MinAgeFilter = int(age)
 	}
 
-	valueFilter := ctx.Param("min_value")
+	valueFilter := q.Get("min_value")
 	if value, err := strconv.ParseInt(valueFilter, 10, 32); err != nil {
 		filter.MinValueFilter = -1
 	} else {
 		filter.MinValueFilter = int(value)
 	}
 
-	ageFilter = ctx.Param("max_age")
+	ageFilter = q.Get("max_age")
 	if age, err := strconv.ParseInt(ageFilter, 10, 32); err != nil {
 		filter.MaxAgeFilter = math.MaxInt32
 	} else {
 		filter.MaxAgeFilter = int(age)
 	}
 
-	valueFilter = ctx.Param("max_value")
+	valueFilter = q.Get("max_value")
 	if value, err := strconv.ParseInt(valueFilter, 10, 32); err != nil {
 		filter.MaxValueFilter = math.MaxInt32
 	} else {
@@ -351,15 +345,20 @@ type transferFilters struct {
 	MinValueFilter int
 	MaxAgeFilter   int
 	MaxValueFilter int
+	ValueType string
 }
 
 // Returns a bool that tells if the transfer matches with the filter
 func (f *transferFilters) Matches(transfer models.Transfer) bool {
+	value := transfer.Ask
+	if f.ValueType == "market" {
+		value = int(transfer.Player.MarketValue)
+	}
 	return strings.Contains(strings.ToLower(transfer.Player.FirstName+" "+transfer.Player.LastName), strings.ToLower(f.PlayerName)) &&
 		strings.Contains(strings.ToLower(transfer.Player.Team.Name), strings.ToLower(f.TeamName)) &&
 		strings.Contains(strings.ToLower(transfer.Player.Country), strings.ToLower(f.Country)) &&
-		transfer.Ask >= f.MinValueFilter && transfer.Player.Age >= f.MinAgeFilter &&
-		transfer.Ask <= f.MaxValueFilter && transfer.Player.Age <= f.MaxAgeFilter
+		value >= f.MinValueFilter && transfer.Player.Age >= f.MinAgeFilter &&
+		value <= f.MaxValueFilter && transfer.Player.Age <= f.MaxAgeFilter
 }
 
 /// Fill the transfer payload with default values
@@ -367,4 +366,13 @@ func (c* Controller) fillDefaultTransferPayload(transfer models.Transfer) models
 	var payload models.UpdateTransfer
 	payload.Ask = transfer.Ask
 	return payload
+}
+
+// Get a show transfer payload from a transfer
+func (c* Controller) getTransferPayload(transfer models.Transfer) models.ShowTransfer {
+	return models.ShowTransfer{
+		ID:     transfer.ID,
+		Player: c.getPlayerPayload(transfer.Player),
+		Ask:    transfer.Ask,
+	}
 }
