@@ -10,7 +10,7 @@ import (
 func TestQueryUserAndTeamInformation(t *testing.T) {
 	setupTest()
 	token := getUserToken(t, "test@gmail.com")
-	resp, err := doGetRequest("users/me", token, http.StatusOK)
+	resp, err := doGetRequest("me", token, http.StatusOK)
 
 	if err != nil || resp["email"].(string) != "test@gmail.com" {
 		t.Fatal(err)
@@ -27,7 +27,7 @@ func TestQueryUserAndTeamInformation(t *testing.T) {
 func TestPatchTeam(t *testing.T) {
 	setupTest()
 	token := getUserToken(t, "test@gmail.com")
-	resp, err := doGetRequest("users/me", token, http.StatusOK)
+	resp, err := doGetRequest("me", token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestPatchTeam(t *testing.T) {
 func TestPostTeam(t *testing.T) {
 	setupTest()
 	token := getAdminUserToken(t, "test@gmail.com")
-	resp, err := doGetRequest("users/me", token, http.StatusOK)
+	resp, err := doGetRequest("me", token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +81,7 @@ func TestDeleteTeam(t *testing.T) {
 	setupTest()
 	token := getAdminUserToken(t, "test@gmail.com")
 
-	resp, err := doGetRequest("users/me", token, http.StatusOK)
+	resp, err := doGetRequest("me", token, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}

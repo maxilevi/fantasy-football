@@ -35,16 +35,20 @@ func (a *App) Configure() {
 
 	api := r.Group("/api")
 	{
+		me := api.Group("/me")
+		{
+			me.Use(middleware.Auth(repo))
+			me.GET("", c.RedirectMyself)
+			me.GET("/team", c.GetMyTeam)
+			me.PATCH("/team", c.EditMyTeam)
+			me.GET("/team/players", c.GetMyPlayers)
+			me.GET("/team/players/:playerId", c.GetMyPlayer)
+			me.PATCH("/team/players/:playerId", c.EditMyPlayer)
+		}
 		users := api.Group("/users")
 		{
 			users.POST("", c.CreateUser)
 			users.Use(middleware.Auth(repo))
-			users.GET("/me", c.RedirectMyself)
-			users.GET("/me/team", c.GetMyTeam)
-			users.PATCH("/me/team", c.EditMyTeam)
-			users.GET("/me/team/players", c.GetMyPlayers)
-			users.GET("/me/team/players/:playerId", c.GetMyPlayer)
-			users.PATCH("/me/team/players/:playerId", c.EditMyPlayer)
 			users.GET("/:userId", c.ShowUser)
 			users.Use(middleware.Admin())
 			users.DELETE("/:userId", c.DeleteUser)

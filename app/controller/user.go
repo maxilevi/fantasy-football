@@ -14,16 +14,15 @@ import (
 // Handles GET request to the user resource when no ID is provided
 // @Summary Get the logged in user
 // @Description Get user by ID
-// @Tags Users
+// @Tags Me
 // @Accept  json
 // @Produce  json
-// @Param id path int true "User ID"
 // @Success 200 {object} models.ShowUser
 // @Failure 401 {object} httputil.HTTPError
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /users/me [get]
+// @Router /me [get]
 // @Security BearerAuth[write, admin]
 func (c *Controller) RedirectMyself(ctx *gin.Context) {
 	user, err := c.getAuthenticatedUserFromRequest(ctx)
@@ -37,7 +36,7 @@ func (c *Controller) RedirectMyself(ctx *gin.Context) {
 
 // @Summary Get the logged in user's team
 // @Description Get the logged in user's team
-// @Tags Users
+// @Tags Me
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} models.ShowUser
@@ -45,7 +44,7 @@ func (c *Controller) RedirectMyself(ctx *gin.Context) {
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /users/me/team [get]
+// @Router /me/team [get]
 // @Security BearerAuth
 func (c *Controller) GetMyTeam(ctx *gin.Context) {
 	c.RedirectMyTeam(ctx, "")
@@ -53,7 +52,7 @@ func (c *Controller) GetMyTeam(ctx *gin.Context) {
 
 // @Summary Edit the logged in user's team
 // @Description Edit the logged in user's team
-// @Tags Users
+// @Tags Me
 // @Accept  json
 // @Produce  json
 // @Success 200
@@ -62,7 +61,7 @@ func (c *Controller) GetMyTeam(ctx *gin.Context) {
 // @Failure 401 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /users/me/team [patch]
+// @Router /me/team [patch]
 // @Security BearerAuth
 func (c *Controller) EditMyTeam(ctx *gin.Context) {
 	c.RedirectMyTeam(ctx, "")
@@ -70,7 +69,7 @@ func (c *Controller) EditMyTeam(ctx *gin.Context) {
 
 // @Summary Get the logged in user's team players
 // @Description Get the logged in user's team players
-// @Tags Users
+// @Tags Me
 // @Accept  json
 // @Produce  json
 // @Success 200 {array} models.ShowPlayer
@@ -78,7 +77,7 @@ func (c *Controller) EditMyTeam(ctx *gin.Context) {
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /users/me/team/players [get]
+// @Router /me/team/players [get]
 // @Security BearerAuth
 func (c *Controller) GetMyPlayers(ctx *gin.Context) {
 	c.RedirectMyTeam(ctx, "/players")
@@ -86,7 +85,7 @@ func (c *Controller) GetMyPlayers(ctx *gin.Context) {
 
 // @Summary Edit the logged in user's team players
 // @Description Get the logged in user's team players
-// @Tags Users
+// @Tags Me
 // @Accept  json
 // @Produce  json
 // @Success 200
@@ -95,7 +94,7 @@ func (c *Controller) GetMyPlayers(ctx *gin.Context) {
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /users/me/team/players/{id} [patch]
+// @Router /team/players/{id} [patch]
 // @Security BearerAuth
 func (c *Controller) EditMyPlayer(ctx *gin.Context) {
 	c.RedirectMyPlayers(ctx)
@@ -103,7 +102,7 @@ func (c *Controller) EditMyPlayer(ctx *gin.Context) {
 
 // @Summary Get the logged in user's team player
 // @Description Get the logged in user's team player
-// @Tags Users
+// @Tags Me
 // @Accept  json
 // @Produce  json
 // @Success 200 {object} models.ShowPlayer
@@ -111,7 +110,7 @@ func (c *Controller) EditMyPlayer(ctx *gin.Context) {
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
-// @Router /users/me/team/players/{id} [get]
+// @Router /me/team/players/{id} [get]
 // @Security BearerAuth
 func (c *Controller) GetMyPlayer(ctx *gin.Context) {
 	c.RedirectMyPlayers(ctx)

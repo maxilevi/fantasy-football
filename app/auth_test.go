@@ -48,7 +48,7 @@ func TestCantCreateUserTwice(t *testing.T) {
 
 func TestCantQueryUserIfNotLoggedIn(t *testing.T) {
 	setupTest()
-	resp, err := doGetRequest("users/me", "", http.StatusUnauthorized)
+	resp, err := doGetRequest("me", "", http.StatusUnauthorized)
 	if err != nil || int(resp["code"].(float64)) == 200 {
 		t.Fatal(err)
 	}

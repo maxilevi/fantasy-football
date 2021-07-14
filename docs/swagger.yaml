@@ -1,25 +1,6 @@
 basePath: /api/
 definitions:
-  Credentials:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    type: object
-  Token:
-    properties:
-      token:
-        type: string
-    type: object
-  httputil.HTTPError:
-    properties:
-      code:
-        type: integer
-      message:
-        type: string
-    type: object
-  models.CreatePlayer:
+  CreatePlayer:
     properties:
       age:
         example: 25
@@ -40,21 +21,28 @@ definitions:
         example: 1
         type: integer
     type: object
-  models.CreateTransfer:
+  CreateTransfer:
     properties:
       ask:
         type: integer
       player_id:
         type: integer
     type: object
-  models.CreateUser:
+  CreateUser:
     properties:
       email:
         type: string
       password:
         type: string
     type: object
-  models.ShowPlayer:
+  Credentials:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  ShowPlayer:
     properties:
       age:
         example: 25
@@ -77,7 +65,7 @@ definitions:
         example: 1
         type: integer
     type: object
-  models.ShowTeam:
+  ShowTeam:
     properties:
       budget:
         type: integer
@@ -91,28 +79,33 @@ definitions:
         type: string
       players:
         items:
-          $ref: '#/definitions/models.ShowPlayer'
+          $ref: '#/definitions/ShowPlayer'
         type: array
     type: object
-  models.ShowTransfer:
+  ShowTransfer:
     properties:
       ask:
         type: integer
       id:
         type: integer
       player:
-        $ref: '#/definitions/models.ShowPlayer'
+        $ref: '#/definitions/ShowPlayer'
     type: object
-  models.ShowUser:
+  ShowUser:
     properties:
       email:
         type: string
       id:
         type: integer
       team:
-        $ref: '#/definitions/models.ShowTeam'
+        $ref: '#/definitions/ShowTeam'
     type: object
-  models.UpdatePlayer:
+  Token:
+    properties:
+      token:
+        type: string
+    type: object
+  UpdatePlayer:
     properties:
       age:
         example: 25
@@ -135,7 +128,7 @@ definitions:
       team:
         type: integer
     type: object
-  models.UpdateTeam:
+  UpdateTeam:
     properties:
       budget:
         type: integer
@@ -144,14 +137,21 @@ definitions:
       name:
         type: string
     type: object
-  models.UpdateTransfer:
+  UpdateTransfer:
     properties:
       ask:
         type: integer
     type: object
-  models.UpdateUser:
+  UpdateUser:
     properties:
       email:
+        type: string
+    type: object
+  httputil.HTTPError:
+    properties:
+      code:
+        type: integer
+      message:
         type: string
     type: object
 host: localhost:8080
@@ -168,6 +168,179 @@ info:
   title: Fantasy football manager API
   version: "1.0"
 paths:
+  /me:
+    get:
+      consumes:
+      - application/json
+      description: Get user by ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ShowUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth:
+        - write
+        - admin
+      summary: Get the logged in user
+      tags:
+      - Me
+  /me/team:
+    get:
+      consumes:
+      - application/json
+      description: Get the logged in user's team
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ShowUser'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Get the logged in user's team
+      tags:
+      - Me
+    patch:
+      consumes:
+      - application/json
+      description: Edit the logged in user's team
+      parameters:
+      - description: Update team payload
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateTeam'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Edit the logged in user's team
+      tags:
+      - Me
+  /me/team/players:
+    get:
+      consumes:
+      - application/json
+      description: Get the logged in user's team players
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ShowPlayer'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Get the logged in user's team players
+      tags:
+      - Me
+  /me/team/players/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get the logged in user's team player
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ShowPlayer'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Get the logged in user's team player
+      tags:
+      - Me
   /players/{id}:
     delete:
       consumes:
@@ -217,7 +390,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ShowPlayer'
+            $ref: '#/definitions/ShowPlayer'
         "400":
           description: Bad Request
           schema:
@@ -243,7 +416,7 @@ paths:
         name: player
         required: true
         schema:
-          $ref: '#/definitions/models.UpdatePlayer'
+          $ref: '#/definitions/UpdatePlayer'
       - description: Player ID
         in: path
         name: id
@@ -306,6 +479,44 @@ paths:
       summary: Create a new session
       tags:
       - Session
+  /team/players/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Get the logged in user's team players
+      parameters:
+      - description: Update player
+        in: body
+        name: player
+        required: true
+        schema:
+          $ref: '#/definitions/UpdatePlayer'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.HTTPError'
+      security:
+      - BearerAuth: []
+      summary: Edit the logged in user's team players
+      tags:
+      - Me
   /teams:
     post:
       consumes:
@@ -382,7 +593,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ShowTeam'
+            $ref: '#/definitions/ShowTeam'
         "400":
           description: Bad Request
           schema:
@@ -413,7 +624,7 @@ paths:
         name: team
         required: true
         schema:
-          $ref: '#/definitions/models.UpdateTeam'
+          $ref: '#/definitions/UpdateTeam'
       produces:
       - application/json
       responses:
@@ -458,7 +669,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.ShowPlayer'
+              $ref: '#/definitions/ShowPlayer'
             type: array
         "400":
           description: Bad Request
@@ -485,7 +696,7 @@ paths:
         name: player
         required: true
         schema:
-          $ref: '#/definitions/models.CreatePlayer'
+          $ref: '#/definitions/CreatePlayer'
       - description: Team ID
         in: path
         name: id
@@ -535,7 +746,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ShowPlayer'
+            $ref: '#/definitions/ShowPlayer'
         "400":
           description: Bad Request
           schema:
@@ -561,7 +772,7 @@ paths:
         name: player
         required: true
         schema:
-          $ref: '#/definitions/models.UpdatePlayer'
+          $ref: '#/definitions/UpdatePlayer'
       - description: Player ID
         in: path
         name: id
@@ -629,6 +840,11 @@ paths:
         in: query
         name: max_value
         type: string
+      - description: Type of value to filter by. Can be 'market' or 'ask'. Defaults
+          to 'ask'
+        in: query
+        name: value_type
+        type: string
       produces:
       - application/json
       responses:
@@ -636,7 +852,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.ShowTransfer'
+              $ref: '#/definitions/ShowTransfer'
             type: array
       summary: Show all transfers
       tags:
@@ -651,7 +867,7 @@ paths:
         name: transfer
         required: true
         schema:
-          $ref: '#/definitions/models.CreateTransfer'
+          $ref: '#/definitions/CreateTransfer'
       produces:
       - application/json
       responses:
@@ -733,7 +949,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ShowTransfer'
+            $ref: '#/definitions/ShowTransfer'
         "400":
           description: Bad Request
           schema:
@@ -764,7 +980,7 @@ paths:
         name: transfer
         required: true
         schema:
-          $ref: '#/definitions/models.UpdateTransfer'
+          $ref: '#/definitions/UpdateTransfer'
       produces:
       - application/json
       responses:
@@ -842,7 +1058,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/models.CreateUser'
+          $ref: '#/definitions/CreateUser'
       produces:
       - application/json
       responses:
@@ -916,7 +1132,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ShowUser'
+            $ref: '#/definitions/ShowUser'
         "400":
           description: Bad Request
           schema:
@@ -947,7 +1163,7 @@ paths:
         name: email
         required: true
         schema:
-          $ref: '#/definitions/models.UpdateUser'
+          $ref: '#/definitions/UpdateUser'
       produces:
       - application/json
       responses:
@@ -973,222 +1189,6 @@ paths:
       - BearerAuth:
         - admin
       summary: Update a user
-      tags:
-      - Users
-  /users/me:
-    get:
-      consumes:
-      - application/json
-      description: Get user by ID
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.ShowUser'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-      security:
-      - BearerAuth:
-        - write
-        - admin
-      summary: Get the logged in user
-      tags:
-      - Users
-  /users/me/team:
-    get:
-      consumes:
-      - application/json
-      description: Get the logged in user's team
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.ShowUser'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-      security:
-      - BearerAuth: []
-      summary: Get the logged in user's team
-      tags:
-      - Users
-    patch:
-      consumes:
-      - application/json
-      description: Edit the logged in user's team
-      parameters:
-      - description: Update team payload
-        in: body
-        name: team
-        required: true
-        schema:
-          $ref: '#/definitions/models.UpdateTeam'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-      security:
-      - BearerAuth: []
-      summary: Edit the logged in user's team
-      tags:
-      - Users
-  /users/me/team/players:
-    get:
-      consumes:
-      - application/json
-      description: Get the logged in user's team players
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/models.ShowPlayer'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-      security:
-      - BearerAuth: []
-      summary: Get the logged in user's team players
-      tags:
-      - Users
-  /users/me/team/players/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get the logged in user's team player
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.ShowPlayer'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-      security:
-      - BearerAuth: []
-      summary: Get the logged in user's team player
-      tags:
-      - Users
-    patch:
-      consumes:
-      - application/json
-      description: Get the logged in user's team players
-      parameters:
-      - description: Update player
-        in: body
-        name: player
-        required: true
-        schema:
-          $ref: '#/definitions/models.UpdatePlayer'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ""
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/httputil.HTTPError'
-      security:
-      - BearerAuth: []
-      summary: Edit the logged in user's team players
       tags:
       - Users
 securityDefinitions:

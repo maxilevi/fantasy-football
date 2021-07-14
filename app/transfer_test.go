@@ -70,11 +70,11 @@ func TestBuyTransfer(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp1, err := doGetRequest("users/me/team", token1, http.StatusOK)
+	resp1, err := doGetRequest("me/team", token1, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}
-	resp2, err := doGetRequest("users/me/team", token2, http.StatusOK)
+	resp2, err := doGetRequest("me/team", token2, http.StatusOK)
 	if err != nil {
 		t.Fatal(err)
 	}

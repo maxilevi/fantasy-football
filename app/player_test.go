@@ -61,7 +61,7 @@ func TestPostPlayer(t *testing.T) {
 }
 
 func getTeamIdFromUser(t *testing.T, token string) int {
-	resp, err := doGetRequest("users/me", token, http.StatusOK)
+	resp, err := doGetRequest("me", token, http.StatusOK)
 
 	if err != nil {
 		t.Fatal(err)
@@ -83,7 +83,7 @@ func getTokenAndPlayerIds(t *testing.T, admin bool) (string, []int) {
 }
 
 func getPlayersFromToken(t *testing.T, token string) []int {
-	resp, err := doGetRequest("users/me", token, http.StatusOK)
+	resp, err := doGetRequest("me", token, http.StatusOK)
 
 	if err != nil {
 		t.Fatal(err)
