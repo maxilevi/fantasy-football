@@ -18,6 +18,7 @@ import (
 	"net/http"
 )
 
+// A struct holding of our server info
 type App struct {
 	address   string
 	db        *gorm.DB
@@ -25,6 +26,7 @@ type App struct {
 	IsRunning bool
 }
 
+// Configure the app routes and its data source
 func (a *App) Configure() {
 	repo := repos.RepositorySQL{Db: a.db}
 	r := gin.Default()
@@ -89,6 +91,7 @@ func (a *App) Configure() {
 	a.router = r
 }
 
+// Create a new app with the given parameters
 func CreateApp(address, host, user, password, dbname, port string) (*App, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s",
 		host, user, password, dbname, port)
@@ -114,6 +117,7 @@ func CreateApp(address, host, user, password, dbname, port string) (*App, error)
 	return &app, nil
 }
 
+// Listen on the specified address and serve requests
 func (a *App) Run() {
 	http.Handle("/", a.router)
 	log.Printf("Listening on address %s\n", a.address)
@@ -126,6 +130,7 @@ func (a *App) Run() {
 	log.Fatal(http.Serve(l, nil))
 }
 
+// Close the app and all it's resources
 func (a *App) Close() {
 	sqlDB, err := a.db.DB()
 	if err != nil {

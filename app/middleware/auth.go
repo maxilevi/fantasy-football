@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// Get the secret from the environmental variables
 var JWTKey = []byte(os.Getenv("JWT_SECRET"))
 
 type AuthClaims struct {
@@ -19,6 +20,7 @@ type AuthClaims struct {
 	jwt.StandardClaims
 }
 
+// Validates the request is authenticated with a valid user
 func Auth(repo repos.Repository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if len(c.GetHeader("Authorization")) == 0 {
@@ -27,6 +29,7 @@ func Auth(repo repos.Repository) gin.HandlerFunc {
 			return
 		}
 
+		// Verify JWT token
 		authHeader := c.GetHeader("Authorization")
 		splitToken := strings.Split(authHeader, "Bearer ")
 		if len(splitToken) != 2 {
@@ -58,6 +61,7 @@ func Auth(repo repos.Repository) gin.HandlerFunc {
 				httputil.NewError(c, http.StatusUnauthorized, "Invalid token")
 				c.Abort()
 			}
+			// Save the user so the handlers can use it
 			c.Set("user", user)
 			log.Println(fmt.Sprintf("user %v succesfully authenticated for request %v", claims.Email, c.Request.RequestURI))
 			c.Next()

@@ -269,7 +269,6 @@ func (c *Controller) UpdateUser(ctx *gin.Context) {
 func (c *Controller) CreateUser(ctx *gin.Context) {
 	var t models.CreateUser
 	err := ctx.BindJSON(&t)
-	log.Println(err, t)
 	if err != nil {
 		log.Println(err)
 		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")

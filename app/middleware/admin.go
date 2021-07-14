@@ -9,6 +9,7 @@ import (
 	"net/http"
 )
 
+// Validates an already authenticated user has admin privileges
 func Admin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		v, ok := c.Get("user")

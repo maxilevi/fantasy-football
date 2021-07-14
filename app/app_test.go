@@ -51,6 +51,7 @@ func setupTest() {
 	truncateDb()
 }
 
+// Create a test app with test credentials
 func setupTestApp() *App {
 	err := godotenv.Load("../.env")
 	if err != nil {

@@ -14,6 +14,7 @@ const (
 	DefaultTeamBudget = 5000000
 )
 
+// Team DB model
 type Team struct {
 	gorm.Model
 	Name    string
@@ -23,6 +24,7 @@ type Team struct {
 	User    User
 }
 
+// Create a team with a random name, default budget and random players
 func RandomTeam() (Team, []Player) {
 	team := Team{
 		Name:    randomdata.SillyName(),
@@ -53,17 +55,17 @@ type ShowTeam struct {
 	Budget      int          `json:"budget"`
 	MarketValue int          `json:"market_value"`
 	Players     []ShowPlayer `json:"players"`
-}
+} //@name ShowTeam
 
 type CreateTeam struct {
 	Owner int `json:"owner"`
 	Name    string `json:"name"`
 	Country string `json:"country"`
 	Budget  int    `json:"budget"`
-}
+} //@name CreateTeam
 
 type UpdateTeam struct {
 	Name    string `json:"name"`
 	Country string `json:"country"`
 	Budget  int    `json:"budget"`
-}
+} //@name UpdateTeam

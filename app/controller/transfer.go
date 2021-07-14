@@ -45,7 +45,7 @@ func (c *Controller) ListTransfers(ctx *gin.Context) {
 	}
 
 	httputil.NoError(ctx, map[string]interface{}{
-		"transfers": transfers,
+		"transfers": arr,
 	})
 }
 
@@ -82,6 +82,7 @@ func (c *Controller) ShowTransfer(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Success 200
+// @Param transfer body models.CreateTransfer true "Create transfer"
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 401 {object} httputil.HTTPError
 // @Failure 404 {object} httputil.HTTPError
@@ -139,6 +140,7 @@ func (c *Controller) CreateTransfer(ctx *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param id path int true "Transfer ID"
+// @Param transfer body models.UpdateTransfer true "Update transfer"
 // @Success 200
 // @Failure 401 {object} httputil.HTTPError
 // @Failure 400 {object} httputil.HTTPError

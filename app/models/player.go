@@ -13,6 +13,7 @@ const (
 	attacker
 )
 
+// DB player model
 type Player struct {
 	gorm.Model
 	FirstName   string
@@ -25,6 +26,7 @@ type Player struct {
 	Team        Team
 }
 
+// Create a player with random characteristics
 func RandomPlayer(position int) Player {
 	return Player{
 		MarketValue: 1000000,
@@ -36,6 +38,7 @@ func RandomPlayer(position int) Player {
 	}
 }
 
+// Get a random age between 18 and 40
 func randomAge() int {
 	return rand.Intn(40-18) + 18
 }
@@ -52,13 +55,13 @@ type BasePlayer struct {
 type ShowPlayer struct {
 	BasePlayer
 	ID uint `json:"id"`
-}
+} //@name ShowPlayer
 
 type CreatePlayer struct {
 	BasePlayer
-}
+} //@name CreatePlayer
 
 type UpdatePlayer struct {
 	BasePlayer
 	Team int `json:"team"`
-}
+} //@name UpdatePlayer
