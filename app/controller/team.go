@@ -91,7 +91,6 @@ func (c *Controller) ShowTeam(ctx *gin.Context) {
 	httputil.NoError(ctx, c.getTeamPayload(team, c.Repo.GetPlayers(team.ID)))
 }
 
-
 // Handles a POST request to a team resource
 // @Summary Post a team
 // @Description Create a new team
