@@ -4,6 +4,7 @@ import (
 	"../httputil"
 	"../models"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator"
 	"log"
 	"net/http"
 )
@@ -54,6 +55,12 @@ func (c *Controller) CreateNewPlayerOnTeam(ctx *gin.Context) {
 	err = ctx.ShouldBindJSON(&payload)
 	if err != nil {
 		httputil.NewError(ctx, http.StatusBadRequest, "Missing body parameters")
+		return
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(&payload); err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, "Position was out of range")
 		return
 	}
 

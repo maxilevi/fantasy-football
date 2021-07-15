@@ -49,7 +49,8 @@ type BasePlayer struct {
 	Country     string `json:"country" example:"Germany"`
 	Age         int    `json:"age" example:"25"`
 	MarketValue int32  `json:"market_value" example:"25000"`
-	Position    int    `json:"position" example:"1"`
+	// This is the position identifier 0 for goalkeeper, 1 for defender, 2 for goalkeeper, 3 for attacker
+	Position int `json:"position" example:"1" validate:"min=0,max=3" minimum:"0" maximum:"3"`
 }
 
 type ShowPlayer struct {
@@ -63,7 +64,8 @@ type CreatePlayer struct {
 	Country     string `json:"country" example:"Germany" binding:"required"`
 	Age         int    `json:"age" example:"25" binding:"required"`
 	MarketValue int32  `json:"market_value" example:"25000" binding:"required"`
-	Position    int    `json:"position" example:"1" binding:"required"`
+	// This is the position identifier 0 for goalkeeper, 1 for defender, 2 for goalkeeper, 3 for attacker
+	Position int `json:"position" example:"1" binding:"required" validate:"min=0,max=3" minimum:"0" maximum:"3"`
 } //@name CreatePlayer
 
 type UpdatePlayer struct {
