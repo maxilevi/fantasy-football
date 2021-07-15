@@ -20,6 +20,13 @@ definitions:
       position:
         example: 1
         type: integer
+    required:
+    - age
+    - country
+    - first_name
+    - last_name
+    - market_value
+    - position
     type: object
   CreateTransfer:
     properties:
@@ -27,6 +34,9 @@ definitions:
         type: integer
       player_id:
         type: integer
+    required:
+    - ask
+    - player_id
     type: object
   CreateUser:
     properties:
@@ -34,12 +44,25 @@ definitions:
         type: string
       password:
         type: string
+    required:
+    - email
+    - password
     type: object
   Credentials:
     properties:
       email:
         type: string
       password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  HTTPError:
+    properties:
+      code:
+        type: integer
+      message:
         type: string
     type: object
   ShowPlayer:
@@ -147,13 +170,6 @@ definitions:
       email:
         type: string
     type: object
-  httputil.HTTPError:
-    properties:
-      code:
-        type: integer
-      message:
-        type: string
-    type: object
 host: localhost:8080
 info:
   contact:
@@ -183,19 +199,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth:
         - write
@@ -218,19 +234,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Get the logged in user's team
@@ -255,19 +271,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Edit the logged in user's team
@@ -290,19 +306,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Get the logged in user's team players
@@ -323,19 +339,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Get the logged in user's team player
@@ -360,15 +376,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Delete a player
@@ -394,15 +410,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       summary: Show a player
       tags:
       - Players
@@ -430,15 +446,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Update a player
@@ -467,15 +483,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       summary: Create a new session
       tags:
       - Session
@@ -499,19 +515,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Edit the logged in user's team players
@@ -530,11 +546,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Post a team
@@ -559,19 +575,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Delete a team and all of it's players
@@ -597,15 +613,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       summary: Get a team
       tags:
       - Teams
@@ -633,19 +649,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Update a team
@@ -674,15 +690,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       summary: List players of a team
       tags:
       - Teams
@@ -710,15 +726,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Create a player on a new team
@@ -750,15 +766,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       summary: Show a player from a team
       tags:
       - Teams
@@ -791,15 +807,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Update a player from a team
@@ -876,19 +892,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Create a new transfer
@@ -913,19 +929,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth:
         - write
@@ -953,15 +969,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       summary: Show a transfer
       tags:
       - Transfers
@@ -989,19 +1005,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth:
         - write
@@ -1029,19 +1045,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Buy a transfer
@@ -1067,11 +1083,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
       summary: Create a user
@@ -1096,19 +1112,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth:
         - write
@@ -1136,15 +1152,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       summary: Get a user
       tags:
       - Users
@@ -1172,19 +1188,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httputil.HTTPError'
+            $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth:
         - admin
