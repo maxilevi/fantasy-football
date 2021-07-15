@@ -1,6 +1,6 @@
 # Endpoints
 
-The project uses `swaggo` to generate an `OpenAPI` specification for each endpoint. To view this documentation using swagger run `go run .` and visit `http://localhost:8080/swagger/index.html#/`.
+The project uses `swaggo` to generate an `OpenAPI` specification for each endpoint. To view this documentation using swagger run `go run .` and visit [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html#/).
  (Note: you may have to recompile the docs with `swag init`)
 
 # Tests
@@ -18,7 +18,8 @@ The project is divided in different packages, inside each package `_test.go` fil
 The main package, here we define our `App` structure which holds
  all the relevant server data like the db connection and the router.
  
-`app_test.go` contains our integration tests
+ 
+`app_test.go` contains useful function for our integration tests
  
 ## app/controller
 
@@ -50,3 +51,19 @@ Registering happens on the endpoint `POST api/user` while login occurs in `POST 
 # Migrations
 
 Migrations are executed automatically when the app starts. See the `runner.go` file in the `app/migrations` package.
+
+# Environment variables
+A `.env` file should be created in the root directory with the following environmental variables defined.
+`
+DB_NAME=
+DB_HOST=
+DB_PORT=
+DB_USER=
+DB_PASSWORD=
+TEST_DB_NAME=
+TEST_DB_HOST=
+TEST_DB_PORT=
+TEST_DB_USER=
+TEST_DB_PASSWORD=
+JWT_SECRET=
+ `
