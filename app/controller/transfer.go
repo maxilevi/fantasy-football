@@ -89,7 +89,7 @@ func (c *Controller) CreateTransfer(ctx *gin.Context) {
 	}
 
 	var t models.CreateTransfer
-	err = ctx.BindJSON(&t)
+	err = ctx.ShouldBindJSON(&t)
 	if err != nil {
 		httputil.NewError(ctx, http.StatusBadRequest, "Invalid body parameters")
 		return
@@ -149,7 +149,7 @@ func (c *Controller) UpdateTransfer(ctx *gin.Context) {
 	}
 
 	t := c.fillDefaultTransferPayload(transfer)
-	err := ctx.BindJSON(&t)
+	err := ctx.ShouldBindJSON(&t)
 	if err != nil {
 		httputil.NewError(ctx, http.StatusBadRequest, "Invalid body parameters")
 		return

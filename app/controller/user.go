@@ -235,7 +235,7 @@ func (c *Controller) UpdateUser(ctx *gin.Context) {
 	}
 
 	t := c.fillDefaultUserPayload(user)
-	err = ctx.BindJSON(&t)
+	err = ctx.ShouldBindJSON(&t)
 	if err != nil {
 		log.Println(err)
 		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")
@@ -266,7 +266,7 @@ func (c *Controller) UpdateUser(ctx *gin.Context) {
 // @Security BearerAuth
 func (c *Controller) CreateUser(ctx *gin.Context) {
 	var t models.CreateUser
-	err := ctx.BindJSON(&t)
+	err := ctx.ShouldBindJSON(&t)
 	if err != nil {
 		log.Println(err)
 		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")

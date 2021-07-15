@@ -38,4 +38,4 @@ func NoError(ctx *gin.Context, payload interface{}) {
 type HTTPError struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
-}
+} // @name HTTPError

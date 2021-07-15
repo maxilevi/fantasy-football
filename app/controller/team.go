@@ -91,53 +91,6 @@ func (c *Controller) ShowTeam(ctx *gin.Context) {
 	httputil.NoError(ctx, c.getTeamPayload(team, c.Repo.GetPlayers(team.ID)))
 }
 
-// @Summary Create a player on a new team
-// @Description Create a player on a new team
-// @Tags Teams
-// @Accept  json
-// @Produce  json
-// @Param player body models.CreatePlayer true "Create player"
-// @Param id path int true "Team ID"
-// @Success 200
-// @Failure 401 {object} httputil.HTTPError
-// @Failure 400 {object} httputil.HTTPError
-// @Failure 500 {object} httputil.HTTPError
-// @Router /teams/{id}/players [post]
-// @Security BearerAuth
-func (c *Controller) CreateNewPlayerOnTeam(ctx *gin.Context) {
-	team, err := c.getTeamFromRequest(ctx)
-	if err != nil {
-		return
-	}
-
-	var payload models.CreatePlayer
-	err = ctx.BindJSON(&payload)
-	if err != nil {
-		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")
-		return
-	}
-
-	player := models.Player{
-		FirstName:   payload.FirstName,
-		LastName:    payload.LastName,
-		Country:     payload.Country,
-		Age:         payload.Age,
-		MarketValue: payload.MarketValue,
-		Position:    payload.Position,
-		TeamID:      team.ID,
-	}
-
-	err = c.Repo.Update(&player)
-	if err != nil {
-		log.Println(err)
-		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
-		return
-	}
-
-	httputil.NoError(ctx, map[string]interface{}{
-		"id": player.ID,
-	})
-}
 
 // Handles a POST request to a team resource
 // @Summary Post a team
@@ -153,7 +106,7 @@ func (c *Controller) CreateNewPlayerOnTeam(ctx *gin.Context) {
 func (c *Controller) CreateTeam(ctx *gin.Context) {
 	var t models.CreateTeam
 	t.Owner = -1
-	err := ctx.BindJSON(&t)
+	err := ctx.ShouldBindJSON(&t)
 	owner := t.Owner
 	if _, ok := ctx.Get("TeamOwner"); owner == -1 && ok {
 		owner = ctx.GetInt("TeamOwner")
@@ -236,7 +189,7 @@ func (c *Controller) UpdateTeam(ctx *gin.Context) {
 	}
 
 	t := c.fillDefaultTeamPayload(team)
-	err = ctx.BindJSON(&t)
+	err = ctx.ShouldBindJSON(&t)
 	if err != nil {
 		log.Println(err)
 		httputil.NewError(ctx, http.StatusBadRequest, "Bad request")

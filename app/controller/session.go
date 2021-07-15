@@ -25,7 +25,7 @@ import (
 // @Router /sessions [post]
 func (c *Controller) CreateSession(ctx *gin.Context) {
 	var t models.CreateSession
-	err := ctx.BindJSON(&t)
+	err := ctx.ShouldBindJSON(&t)
 
 	if err != nil {
 		httputil.NewError(ctx, http.StatusBadRequest, "Incorrect body parameters")

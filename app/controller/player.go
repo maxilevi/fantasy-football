@@ -31,6 +31,54 @@ func (c *Controller) ShowPlayer(ctx *gin.Context) {
 	httputil.NoError(ctx, payload)
 }
 
+// @Summary Create a player on a new team
+// @Description Create a player on a new team
+// @Tags Teams
+// @Accept  json
+// @Produce  json
+// @Param player body models.CreatePlayer true "Create player"
+// @Param id path int true "Team ID"
+// @Success 200
+// @Failure 401 {object} httputil.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
+// @Router /teams/{id}/players [post]
+// @Security BearerAuth
+func (c *Controller) CreateNewPlayerOnTeam(ctx *gin.Context) {
+	team, err := c.getTeamFromRequest(ctx)
+	if err != nil {
+		return
+	}
+
+	var payload models.CreatePlayer
+	err = ctx.ShouldBindJSON(&payload)
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, "Missing body parameters")
+		return
+	}
+
+	player := models.Player{
+		FirstName:   payload.FirstName,
+		LastName:    payload.LastName,
+		Country:     payload.Country,
+		Age:         payload.Age,
+		MarketValue: payload.MarketValue,
+		Position:    payload.Position,
+		TeamID:      team.ID,
+	}
+
+	err = c.Repo.Update(&player)
+	if err != nil {
+		log.Println(err)
+		httputil.NewError(ctx, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	httputil.NoError(ctx, map[string]interface{}{
+		"id": player.ID,
+	})
+}
+
 // Handles a PATCH request to the player resource
 // @Summary Update a player
 // @Description Update a player
@@ -48,7 +96,7 @@ func (c *Controller) ShowPlayer(ctx *gin.Context) {
 func (c *Controller) UpdatePlayer(ctx *gin.Context) {
 	player, err2 := c.getPlayerFromRequest(ctx)
 	payload := c.fillDefaultPlayerPayload(player)
-	err1 := ctx.BindJSON(&payload)
+	err1 := ctx.ShouldBindJSON(&payload)
 	user, err3 := c.getAuthenticatedUserFromRequest(ctx)
 
 	if err1 != nil || err2 != nil || err3 != nil {

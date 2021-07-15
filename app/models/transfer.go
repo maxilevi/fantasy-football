@@ -21,6 +21,6 @@ type UpdateTransfer struct {
 } //@name UpdateTransfer
 
 type CreateTransfer struct {
-	PlayerID uint `json:"player_id"`
-	Ask      int  `json:"ask"`
+	PlayerID uint `json:"player_id" binding:"required"`
+	Ask      int  `json:"ask" binding:"required"`
 } //@name CreateTransfer

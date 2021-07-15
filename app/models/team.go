@@ -58,10 +58,10 @@ type ShowTeam struct {
 } //@name ShowTeam
 
 type CreateTeam struct {
-	Owner   int    `json:"owner"`
-	Name    string `json:"name"`
-	Country string `json:"country"`
-	Budget  int    `json:"budget"`
+	Owner   int    `json:"owner" binding:"required"`
+	Name    string `json:"name" binding:"required"`
+	Country string `json:"country" binding:"required"`
+	Budget  int    `json:"budget" binding:"required"`
 } //@name CreateTeam
 
 type UpdateTeam struct {

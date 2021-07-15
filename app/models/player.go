@@ -58,7 +58,12 @@ type ShowPlayer struct {
 } //@name ShowPlayer
 
 type CreatePlayer struct {
-	BasePlayer
+	FirstName   string `json:"first_name" example:"Audrey" binding:"required"`
+	LastName    string `json:"last_name" example:"Hepburn" binding:"required"`
+	Country     string `json:"country" example:"Germany" binding:"required"`
+	Age         int    `json:"age" example:"25" binding:"required"`
+	MarketValue int32  `json:"market_value" example:"25000" binding:"required"`
+	Position    int    `json:"position" example:"1" binding:"required"`
 } //@name CreatePlayer
 
 type UpdatePlayer struct {
