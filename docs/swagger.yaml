@@ -18,7 +18,11 @@ definitions:
         example: 25000
         type: integer
       position:
+        description: This is the position identifier 0 for goalkeeper, 1 for defender,
+          2 for goalkeeper, 3 for attacker
         example: 1
+        maximum: 3
+        minimum: 0
         type: integer
     required:
     - age
@@ -85,7 +89,11 @@ definitions:
         example: 25000
         type: integer
       position:
+        description: This is the position identifier 0 for goalkeeper, 1 for defender,
+          2 for goalkeeper, 3 for attacker
         example: 1
+        maximum: 3
+        minimum: 0
         type: integer
     type: object
   ShowTeam:
@@ -146,7 +154,11 @@ definitions:
         example: 25000
         type: integer
       position:
+        description: This is the position identifier 0 for goalkeeper, 1 for defender,
+          2 for goalkeeper, 3 for attacker
         example: 1
+        maximum: 3
+        minimum: 0
         type: integer
       team:
         type: integer

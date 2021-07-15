@@ -1645,7 +1645,10 @@ var doc = `{
                     "example": 25000
                 },
                 "position": {
+                    "description": "This is the position identifier 0 for goalkeeper, 1 for defender, 2 for goalkeeper, 3 for attacker",
                     "type": "integer",
+                    "maximum": 3,
+                    "minimum": 0,
                     "example": 1
                 }
             }
@@ -1733,7 +1736,10 @@ var doc = `{
                     "example": 25000
                 },
                 "position": {
+                    "description": "This is the position identifier 0 for goalkeeper, 1 for defender, 2 for goalkeeper, 3 for attacker",
                     "type": "integer",
+                    "maximum": 3,
+                    "minimum": 0,
                     "example": 1
                 }
             }
@@ -1824,7 +1830,10 @@ var doc = `{
                     "example": 25000
                 },
                 "position": {
+                    "description": "This is the position identifier 0 for goalkeeper, 1 for defender, 2 for goalkeeper, 3 for attacker",
                     "type": "integer",
+                    "maximum": 3,
+                    "minimum": 0,
                     "example": 1
                 },
                 "team": {
