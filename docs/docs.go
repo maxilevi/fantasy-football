@@ -592,7 +592,18 @@ var doc = `{
                 "tags": [
                     "Teams"
                 ],
-                "summary": "Post a team",
+                "summary": "Create a team",
+                "parameters": [
+                    {
+                        "description": "Create team payload",
+                        "name": "team",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CreateTeam"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": ""
@@ -1650,6 +1661,29 @@ var doc = `{
                     "maximum": 3,
                     "minimum": 0,
                     "example": 1
+                }
+            }
+        },
+        "CreateTeam": {
+            "type": "object",
+            "required": [
+                "budget",
+                "country",
+                "name",
+                "owner"
+            ],
+            "properties": {
+                "budget": {
+                    "type": "integer"
+                },
+                "country": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner": {
+                    "type": "integer"
                 }
             }
         },

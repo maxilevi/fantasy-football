@@ -160,7 +160,7 @@ func (u RepositorySQL) Update(model interface{}) error {
 
 // Delete a new record given a model
 func (u RepositorySQL) Delete(model interface{}) error {
-	res := u.Db.Delete(model)
+	res := u.Db.Unscoped().Delete(model)
 	return res.Error
 }
 

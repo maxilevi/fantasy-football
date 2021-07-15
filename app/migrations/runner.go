@@ -24,7 +24,7 @@ func getMigrations() []*gormigrate.Migration {
 			Migrate: func(tx *gorm.DB) error {
 				type User struct {
 					gorm.Model
-					Email           string `gorm:"primary_key"`
+					Email           string `gorm:"primary_key,unique"`
 					PasswordHash    []byte
 					PermissionLevel int
 				}
@@ -38,12 +38,16 @@ func getMigrations() []*gormigrate.Migration {
 		{
 			ID: "202104072129",
 			Migrate: func(tx *gorm.DB) error {
+				type User struct {
+					gorm.Model
+				}
 				type Team struct {
 					gorm.Model
 					Name    string
 					Country string
 					Budget  int
 					UserID  uint
+					User    User
 				}
 
 				return tx.AutoMigrate(&Team{})
@@ -55,6 +59,9 @@ func getMigrations() []*gormigrate.Migration {
 		{
 			ID: "202104072130",
 			Migrate: func(tx *gorm.DB) error {
+				type Team struct {
+					gorm.Model
+				}
 				type Player struct {
 					gorm.Model
 					FirstName   string
@@ -64,6 +71,7 @@ func getMigrations() []*gormigrate.Migration {
 					MarketValue int32
 					Position    int
 					TeamID      uint
+					Team        Team
 				}
 
 				return tx.AutoMigrate(&Player{})
@@ -75,9 +83,13 @@ func getMigrations() []*gormigrate.Migration {
 		{
 			ID: "202104072131",
 			Migrate: func(tx *gorm.DB) error {
+				type Player struct {
+					gorm.Model
+				}
 				type Transfer struct {
 					gorm.Model
 					PlayerID uint
+					Player   Player
 					Ask      int
 				}
 

@@ -135,7 +135,7 @@ func (c *Controller) RedirectMyTeam(ctx *gin.Context, postfix string) {
 
 	team, err := c.Repo.GetUserTeam(user)
 	if err != nil {
-		httputil.NewError(ctx, http.StatusUnauthorized, "Internal server error")
+		httputil.NewError(ctx, http.StatusNotFound, "Not found")
 		return
 	}
 

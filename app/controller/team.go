@@ -92,11 +92,12 @@ func (c *Controller) ShowTeam(ctx *gin.Context) {
 }
 
 // Handles a POST request to a team resource
-// @Summary Post a team
+// @Summary Create a team
 // @Description Create a new team
 // @Tags Teams
 // @Accept  json
 // @Produce  json
+// @Param team body models.CreateTeam true "Create team payload"
 // @Success 200
 // @Failure 400 {object} httputil.HTTPError
 // @Failure 500 {object} httputil.HTTPError
@@ -104,20 +105,21 @@ func (c *Controller) ShowTeam(ctx *gin.Context) {
 // @Security BearerAuth
 func (c *Controller) CreateTeam(ctx *gin.Context) {
 	var t models.CreateTeam
-	t.Owner = -1
 	err := ctx.ShouldBindJSON(&t)
-	owner := t.Owner
-	if _, ok := ctx.Get("TeamOwner"); owner == -1 && ok {
-		owner = ctx.GetInt("TeamOwner")
+	if err != nil {
+		httputil.NewError(ctx, http.StatusBadRequest, "Invalid body parameters")
+		return
 	}
-	if err != nil || owner == -1 {
-		log.Println(err, owner, ctx.GetInt("TeamOwner"))
-		httputil.NewError(ctx, http.StatusBadRequest, "Bad request")
+
+	user, err := c.Repo.GetUserById(uint(t.Owner))
+	if err != nil {
+		httputil.NewError(ctx, http.StatusNotFound, "User not found")
 		return
 	}
 
 	team := models.Team{
-		UserID:  uint(owner),
+		UserID:  uint(t.Owner),
+		User:    user,
 		Name:    t.Name,
 		Country: t.Country,
 		Budget:  t.Budget,

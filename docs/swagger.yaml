@@ -32,6 +32,22 @@ definitions:
     - market_value
     - position
     type: object
+  CreateTeam:
+    properties:
+      budget:
+        type: integer
+      country:
+        type: string
+      name:
+        type: string
+      owner:
+        type: integer
+    required:
+    - budget
+    - country
+    - name
+    - owner
+    type: object
   CreateTransfer:
     properties:
       ask:
@@ -550,6 +566,13 @@ paths:
       consumes:
       - application/json
       description: Create a new team
+      parameters:
+      - description: Create team payload
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/CreateTeam'
       produces:
       - application/json
       responses:
@@ -565,7 +588,7 @@ paths:
             $ref: '#/definitions/HTTPError'
       security:
       - BearerAuth: []
-      summary: Post a team
+      summary: Create a team
       tags:
       - Teams
   /teams/{id}:
