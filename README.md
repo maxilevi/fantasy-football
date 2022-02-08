@@ -54,7 +54,7 @@ Migrations are executed automatically when the app starts. See the `runner.go` f
 
 # Environment variables
 A `.env` file should be created in the root directory with the following environmental variables defined.
-`
+```
 DB_NAME=
 DB_HOST=
 DB_PORT=
@@ -66,4 +66,4 @@ TEST_DB_PORT=
 TEST_DB_USER=
 TEST_DB_PASSWORD=
 JWT_SECRET=
- `
+ ```
